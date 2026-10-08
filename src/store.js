@@ -3,6 +3,8 @@ import { matchRecords as sampleMatches, pitRecords as samplePits, pathFiles as s
 import { MatchRecord, PitRecord, RobotPathFile, ScheduledMatch, VideoAsset } from './models.js';
 
 let state = {
+  competitions: [],
+  currentCompetitionId: null,
   matches: [],
   pits: [],
   paths: [],
@@ -30,11 +32,127 @@ export const store = {
   getState() {
     return state;
   },
-  
+
   subscribe(callback) {
     listeners.add(callback);
     callback(state);
     return () => listeners.delete(callback);
+  },
+
+  // Competition Management
+  createCompetition(name, eventKey) {
+    const id = Date.now().toString();
+    const newCompetition = {
+      id,
+      name,
+      eventKey,
+      createdAt: new Date().toISOString(),
+      matches: [],
+      pits: [],
+      paths: [],
+      schedule: [],
+      videos: [],
+      importLog: []
+    };
+    state = { ...state, competitions: [...state.competitions, newCompetition] };
+    this.switchCompetition(id);
+    this.saveCompetitions();
+    this.appendLog(`Created competition: ${name}`);
+  },
+
+  switchCompetition(id) {
+    const competition = state.competitions.find(c => c.id === id);
+    if (!competition) return;
+
+    state = {
+      ...state,
+      currentCompetitionId: id,
+      matches: competition.matches || [],
+      pits: competition.pits || [],
+      paths: competition.paths || [],
+      schedule: competition.schedule || [],
+      videos: competition.videos || [],
+      importLog: competition.importLog || []
+    };
+    this.saveCompetitions();
+    notify();
+  },
+
+  deleteCompetition(id) {
+    const filtered = state.competitions.filter(c => c.id !== id);
+    state = { ...state, competitions: filtered };
+
+    if (state.currentCompetitionId === id) {
+      if (filtered.length > 0) {
+        this.switchCompetition(filtered[0].id);
+      } else {
+        state = { ...state, currentCompetitionId: null, matches: [], pits: [], paths: [], schedule: [], videos: [], importLog: [] };
+        notify();
+      }
+    }
+    this.saveCompetitions();
+    this.appendLog(`Deleted competition`);
+  },
+
+  getCurrentCompetition() {
+    return state.competitions.find(c => c.id === state.currentCompetitionId) || null;
+  },
+
+  saveCompetitions() {
+    const competitionsData = state.competitions.map(c => ({
+      ...c,
+      matches: (c.matches || []).map(m => ({ ...m })),
+      pits: (c.pits || []).map(p => ({ ...p })),
+      paths: (c.paths || []).map(p => ({ ...p })),
+      schedule: (c.schedule || []).map(s => ({ ...s })),
+      videos: (c.videos || []).map(v => ({ ...v })),
+      importLog: c.importLog || []
+    }));
+
+    localStorage.setItem('packout_competitions', JSON.stringify(competitionsData));
+    localStorage.setItem('packout_current_competition', state.currentCompetitionId || '');
+  },
+
+  loadCompetitions() {
+    const saved = localStorage.getItem('packout_competitions');
+    const currentId = localStorage.getItem('packout_current_competition');
+
+    if (saved) {
+      try {
+        const competitions = JSON.parse(saved);
+        state = { ...state, competitions };
+
+        if (currentId && competitions.find(c => c.id === currentId)) {
+          this.switchCompetition(currentId);
+        } else if (competitions.length > 0) {
+          this.switchCompetition(competitions[0].id);
+        }
+      } catch (e) {
+        console.error('Failed to load competitions:', e);
+      }
+    }
+  },
+
+  updateCurrentCompetition() {
+    if (!state.currentCompetitionId) return;
+
+    const competitions = state.competitions.map(c => {
+      if (c.id === state.currentCompetitionId) {
+        return {
+          ...c,
+          matches: state.matches,
+          pits: state.pits,
+          paths: state.paths,
+          schedule: state.schedule,
+          videos: state.videos,
+          importLog: state.importLog
+        };
+      }
+      return c;
+    });
+
+    state = { ...state, competitions };
+    this.saveCompetitions();
   },
   
   importData({ matches = [], pits = [], paths = [], videos = [] }) {
@@ -44,30 +162,31 @@ export const store = {
       if (idx >= 0) newMatches[idx] = new MatchRecord(m);
       else newMatches.push(new MatchRecord(m));
     });
-    
+
     const newPits = [...state.pits];
     pits.forEach(p => {
       const idx = newPits.findIndex(x => x.id === p.id);
       if (idx >= 0) newPits[idx] = new PitRecord(p);
       else newPits.push(new PitRecord(p));
     });
-    
+
     const newPaths = [...state.paths];
     paths.forEach(p => {
       const idx = newPaths.findIndex(x => x.id === p.id);
       if (idx >= 0) newPaths[idx] = new RobotPathFile(p);
       else newPaths.push(new RobotPathFile(p));
     });
-    
+
     const newVideos = [...state.videos];
     videos.forEach(v => {
       const idx = newVideos.findIndex(x => x.id === v.id);
       if (idx >= 0) newVideos[idx] = new VideoAsset(v);
       else newVideos.push(new VideoAsset(v));
     });
-    
+
     state = { ...state, matches: newMatches, pits: newPits, paths: newPaths, videos: newVideos };
     this.appendLog(`Imported ${matches.length} matches, ${pits.length} pits, ${paths.length} paths, ${videos.length} videos.`);
+    this.updateCurrentCompetition();
     notify();
   },
 
@@ -93,6 +212,7 @@ export const store = {
   replaceSchedule(schedule, source) {
     state = { ...state, schedule: schedule.map(s => new ScheduledMatch(s)) };
     this.appendLog(`Schedule replaced from ${source}`);
+    this.updateCurrentCompetition();
     notify();
   },
   

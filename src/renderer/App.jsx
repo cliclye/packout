@@ -269,6 +269,8 @@ const TeamDetailPanel = ({ teamNumber }) => {
 const DashboardView = () => {
   const { state, summaries, store } = useStore();
 
+  const currentComp = store.getCurrentCompetition();
+
   const totalMatches = state.matches.length;
   const totalPits = state.pits.length;
   const totalPaths = state.paths.length;
@@ -282,9 +284,9 @@ const DashboardView = () => {
 
   return (
     <>
-      <PageHeader 
-        title="Dashboard" 
-        subtitle="Overview and critical FRC scouting metrics"
+      <PageHeader
+        title="Dashboard"
+        subtitle={currentComp ? `Overview for ${currentComp.name}` : 'Overview and critical FRC scouting metrics'}
         rightContent={
           summaries.length === 0 && (
             <button onClick={() => store.loadSampleData()}>Load Demo Dataset</button>
@@ -292,6 +294,13 @@ const DashboardView = () => {
         }
       />
       <div className="page-body">
+        {!currentComp && (
+          <div className="panel" style={{ background: '#fef3c7', borderColor: '#f59e0b', marginBottom: '20px' }}>
+            <p style={{ margin: 0, fontSize: '14px', color: '#92400e' }}>
+              <strong>No competition selected.</strong> Create a competition from the dropdown at the top to start organizing your scouting data.
+            </p>
+          </div>
+        )}
         <div className="grid-4 mb-20">
           <MetricCard title="Ranked Teams" value={summaries.length} color="var(--pack-blue)" />
           <MetricCard title="Avg Efficiency" value={fmtPct(avgEff)} color="var(--pack-green)" />
@@ -300,7 +309,7 @@ const DashboardView = () => {
         </div>
 
         {summaries.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             message="No scouting data loaded yet. You can import documents or load sample demo data to test the interface."
             actionText="Load Sample Data"
             onAction={() => store.loadSampleData()}
@@ -1109,24 +1118,23 @@ const SyncView = () => {
 
 // --- Page 9: Settings View ---
 const SettingsView = () => {
-  const { store } = useStore();
+  const { state, store } = useStore();
   const [roboKey, setRoboKey] = useState('');
-  const [tbaEvent, setTbaEvent] = useState('2026pncmp');
   const [tbaKey, setTbaKey] = useState('');
   const [saveStatus, setSaveStatus] = useState('');
 
+  const currentComp = store.getCurrentCompetition();
+
   useEffect(() => {
     setRoboKey(localStorage.getItem('roboflowApiKey') || '');
-    setTbaEvent(localStorage.getItem('tbaEventKey') || '2026pncmp');
     setTbaKey(localStorage.getItem('tbaApiKey') || '');
   }, []);
 
   const handleSave = () => {
     localStorage.setItem('roboflowApiKey', roboKey);
-    localStorage.setItem('tbaEventKey', tbaEvent);
     localStorage.setItem('tbaApiKey', tbaKey);
     if (window.electronAPI?.saveSettings) {
-      window.electronAPI.saveSettings({ roboflowApiKey: roboKey, tbaEventKey: tbaEvent, tbaApiKey: tbaKey });
+      window.electronAPI.saveSettings({ roboflowApiKey: roboKey, tbaApiKey: tbaKey });
     }
     setSaveStatus('Settings successfully saved.');
     setTimeout(() => setSaveStatus(''), 2500);
@@ -1137,10 +1145,14 @@ const SettingsView = () => {
       setSaveStatus('Please enter a Blue Alliance API Key first.');
       return;
     }
+    if (!currentComp || !currentComp.eventKey) {
+      setSaveStatus('Please create a competition with an event key first.');
+      return;
+    }
     setSaveStatus('Fetching match schedule from Blue Alliance...');
     if (window.electronAPI?.fetchBlueAlliance) {
       try {
-        const res = await window.electronAPI.fetchBlueAlliance(`/event/${tbaEvent}/matches/simple`, tbaKey);
+        const res = await window.electronAPI.fetchBlueAlliance(`/event/${currentComp.eventKey}/matches/simple`, tbaKey);
         if (res.data && Array.isArray(res.data)) {
           const scheduled = res.data.map(m => new models.ScheduledMatch({
             matchNumber: m.match_number,
@@ -1149,7 +1161,7 @@ const SettingsView = () => {
             blueTeams: (m.alliances?.blue?.team_keys || []).map(t => t.replace('frc', '')),
             timeLabel: ''
           }));
-          store.replaceSchedule(scheduled, `TBA ${tbaEvent}`);
+          store.replaceSchedule(scheduled, `TBA ${currentComp.eventKey}`);
           setSaveStatus(`Imported ${scheduled.length} matches from TBA.`);
         } else {
           setSaveStatus('Invalid response from The Blue Alliance.');
@@ -1165,14 +1177,29 @@ const SettingsView = () => {
       <PageHeader title="Settings" subtitle="External API configurations and event credentials" />
       <div className="page-body">
         <div className="panel mb-20">
+          <h4>Current Competition</h4>
+          {currentComp ? (
+            <div style={{ fontSize: '13px', lineHeight: '1.8' }}>
+              <div><strong>Name:</strong> {currentComp.name}</div>
+              <div><strong>Event Key:</strong> {currentComp.eventKey || 'Not set'}</div>
+              <div><strong>Created:</strong> {new Date(currentComp.createdAt).toLocaleDateString()}</div>
+              <div><strong>Matches:</strong> {currentComp.matches?.length || 0}</div>
+              <div><strong>Pit Records:</strong> {currentComp.pits?.length || 0}</div>
+            </div>
+          ) : (
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>No competition selected. Create one from the dropdown at the top of the app.</p>
+          )}
+        </div>
+
+        <div className="panel mb-20">
           <h4>Roboflow Computer Vision</h4>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Required for running automated robot detection in match footage.</p>
           <div style={{ maxWidth: '400px' }}>
             <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Roboflow API Key:</label>
-            <input 
-              type="password" 
-              value={roboKey} 
-              onChange={e => setRoboKey(e.target.value)} 
+            <input
+              type="password"
+              value={roboKey}
+              onChange={e => setRoboKey(e.target.value)}
               style={{ width: '100%', padding: '8px' }}
             />
           </div>
@@ -1183,20 +1210,21 @@ const SettingsView = () => {
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Synchronize official event match schedules and alliance team lists.</p>
           <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Event Key (e.g. 2026pncmp):</label>
-              <input 
-                type="text" 
-                value={tbaEvent} 
-                onChange={e => setTbaEvent(e.target.value)} 
-                style={{ width: '100%', padding: '8px' }}
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>Current Event Key:</label>
+              <input
+                type="text"
+                value={currentComp?.eventKey || ''}
+                disabled
+                style={{ width: '100%', padding: '8px', background: '#f3f4f6', color: '#666' }}
               />
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Event key is set in the competition dropdown at the top of the app.</p>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>TBA Auth Key:</label>
-              <input 
-                type="password" 
-                value={tbaKey} 
-                onChange={e => setTbaKey(e.target.value)} 
+              <input
+                type="password"
+                value={tbaKey}
+                onChange={e => setTbaKey(e.target.value)}
                 style={{ width: '100%', padding: '8px' }}
               />
             </div>
@@ -1281,6 +1309,97 @@ const OnboardingView = ({ onComplete }) => {
   );
 };
 
+// --- Competition Header ---
+const CompetitionHeader = () => {
+  const { state, store } = useStore();
+  const [showNewComp, setShowNewComp] = useState(false);
+  const [newCompName, setNewCompName] = useState('');
+  const [newCompEventKey, setNewCompEventKey] = useState('');
+
+  const currentComp = store.getCurrentCompetition();
+
+  const handleCreateCompetition = () => {
+    if (newCompName.trim()) {
+      store.createCompetition(newCompName.trim(), newCompEventKey.trim());
+      setNewCompName('');
+      setNewCompEventKey('');
+      setShowNewComp(false);
+    }
+  };
+
+  const handleDeleteCompetition = (id) => {
+    if (confirm('Are you sure you want to delete this competition? All data will be lost.')) {
+      store.deleteCompetition(id);
+    }
+  };
+
+  return (
+    <div style={{
+      borderBottom: '1px solid var(--pack-border)',
+      padding: '12px 24px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      background: '#fafafa'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Competition:</span>
+        <select
+          value={state.currentCompetitionId || ''}
+          onChange={e => store.switchCompetition(e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid var(--pack-border)',
+            fontSize: '14px',
+            minWidth: '200px',
+            background: 'white'
+          }}
+        >
+          {state.competitions.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+          {state.competitions.length === 0 && <option value="">No competitions</option>}
+        </select>
+        {currentComp && currentComp.eventKey && (
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: '#f3f4f6', padding: '4px 8px', borderRadius: '4px' }}>
+            {currentComp.eventKey}
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {showNewComp ? (
+          <>
+            <input
+              type="text"
+              placeholder="Competition name"
+              value={newCompName}
+              onChange={e => setNewCompName(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--pack-border)', fontSize: '13px' }}
+            />
+            <input
+              type="text"
+              placeholder="Event key (e.g. 2026pncmp)"
+              value={newCompEventKey}
+              onChange={e => setNewCompEventKey(e.target.value)}
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--pack-border)', fontSize: '13px', width: '140px' }}
+            />
+            <button onClick={handleCreateCompetition}>Create</button>
+            <button className="secondary" onClick={() => { setShowNewComp(false); setNewCompName(''); setNewCompEventKey(''); }}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <button className="secondary" onClick={() => setShowNewComp(true)}>+ New Competition</button>
+            {state.competitions.length > 1 && (
+              <button className="secondary" style={{ color: '#dc2626', borderColor: '#dc2626' }} onClick={() => handleDeleteCompetition(state.currentCompetitionId)}>Delete</button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- App Entry Point ---
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -1290,6 +1409,9 @@ export default function App() {
   useEffect(() => {
     const done = localStorage.getItem('packout_onboarding_done');
     if (done) setOnboardingDone(true);
+
+    // Load competitions from localStorage
+    store.loadCompetitions();
 
     // Initial load: bundled schedule & default scan if available
     if (window.electronAPI?.readScheduleFile) {
@@ -1353,8 +1475,8 @@ export default function App() {
         </div>
         <div className="nav-menu">
           {navItems.map(item => (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
               onClick={() => setActiveTab(item.id)}
             >
@@ -1365,6 +1487,7 @@ export default function App() {
         </div>
       </div>
       <div className="main-content">
+        <CompetitionHeader />
         {renderContent()}
       </div>
     </div>
