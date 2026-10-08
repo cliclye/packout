@@ -944,7 +944,6 @@ const FilmReviewView = () => {
             borderRadius: '6px',
             color: downloadMsg.includes('Error') ? '#dc2626' : '#16a34a'
           }} className={downloadMsg.includes('Error') ? 'bg-error' : 'bg-success'}>
-          }}>
             {downloadMsg}
           </div>
         )}
