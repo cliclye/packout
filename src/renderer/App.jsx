@@ -491,7 +491,7 @@ const PicklistView = () => {
             'Authorization': `Bearer ${aiApiKey}`
           },
           body: JSON.stringify({
-            model: 'gpt-4',
+            model: 'gpt-6-luna',
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 1000
           })
@@ -505,7 +505,7 @@ const PicklistView = () => {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: 'claude-3-sonnet-20240229',
+            model: 'claude-haiku-5-5',
             max_tokens: 1000,
             messages: [{ role: 'user', content: prompt }]
           })
@@ -543,7 +543,7 @@ const PicklistView = () => {
             'Authorization': `Bearer ${aiApiKey}`
           },
           body: JSON.stringify({
-            model: 'gpt-4',
+            model: 'gpt-6-luna',
             messages: [...aiChat, { role: 'user', content: prompt }],
             max_tokens: 1000
           })
@@ -557,7 +557,7 @@ const PicklistView = () => {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: 'claude-3-sonnet-20240229',
+            model: 'claude-haiku-5-5',
             max_tokens: 1000,
             messages: [...aiChat, { role: 'user', content: prompt }]
           })
@@ -731,8 +731,8 @@ const PicklistView = () => {
                   onChange={e => setAiProvider(e.target.value)}
                   style={{ width: '100%', padding: '6px', marginBottom: '8px' }}
                 >
-                  <option value="openai">OpenAI (GPT-4)</option>
-                  <option value="claude">Anthropic (Claude)</option>
+                  <option value="openai">OpenAI (GPT-6-Luna)</option>
+                  <option value="claude">Anthropic (Claude-Haiku-5-5)</option>
                 </select>
                 <input
                   type="password"
