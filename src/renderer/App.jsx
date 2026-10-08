@@ -1313,7 +1313,8 @@ const OnboardingView = ({ onComplete }) => {
 const CompetitionHeader = () => {
   const { state, store } = useStore();
   const [showNewComp, setShowNewComp] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingEvent, setPendingEvent] = useState(null);
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState('');
@@ -1361,117 +1362,154 @@ const CompetitionHeader = () => {
     }
   }, [showNewComp]);
 
-  const handleCreateCompetition = () => {
-    if (selectedEvent) {
-      store.createCompetition(selectedEvent.name, selectedEvent.key);
-      setSelectedEvent(null);
-      setShowNewComp(false);
-      setEvents([]);
-    }
-  };
-
   const handleSelectEvent = (eventKey) => {
     const event = events.find(ev => ev.key === eventKey);
     if (event) {
-      setSelectedEvent(event);
-      // Immediately create the competition when selected
-      store.createCompetition(event.name, event.key);
-      setShowNewComp(false);
-      setEvents([]);
-      setSelectedEvent(null);
+      setPendingEvent(event);
+      setShowDeleteConfirm(true);
     }
   };
 
-  const handleDeleteCompetition = (id) => {
-    if (confirm('Are you sure you want to delete this competition? All data will be lost.')) {
-      store.deleteCompetition(id);
+  const handleConfirmCreate = () => {
+    if (pendingEvent) {
+      store.createCompetition(pendingEvent.name, pendingEvent.key);
+      setPendingEvent(null);
+      setShowDeleteConfirm(false);
+      setShowNewComp(false);
+      setEvents([]);
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setPendingEvent(null);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleDeleteCompetition = () => {
+    if (confirm(`Are you sure you want to delete "${currentComp?.name}"? All data will be permanently lost.`)) {
+      store.deleteCompetition(state.currentCompetitionId);
     }
   };
 
   return (
-    <div style={{
-      borderBottom: '1px solid var(--pack-border)',
-      padding: '12px 24px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      background: '#fafafa'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Competition:</span>
-        <select
-          value={state.currentCompetitionId || ''}
-          onChange={e => store.switchCompetition(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--pack-border)',
-            fontSize: '14px',
-            minWidth: '200px',
-            background: 'white'
-          }}
-        >
-          {state.competitions.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-          {state.competitions.length === 0 && <option value="">No competitions</option>}
-        </select>
-        {currentComp && currentComp.eventKey && (
-          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: '#f3f4f6', padding: '4px 8px', borderRadius: '4px' }}>
-            {currentComp.eventKey}
-          </span>
-        )}
+    <>
+      <div style={{
+        borderBottom: '1px solid var(--pack-border)',
+        padding: '12px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        background: '#fafafa'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Competition:</span>
+          <select
+            value={state.currentCompetitionId || ''}
+            onChange={e => store.switchCompetition(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--pack-border)',
+              fontSize: '14px',
+              minWidth: '200px',
+              background: 'white'
+            }}
+          >
+            {state.competitions.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+            {state.competitions.length === 0 && <option value="">No competitions</option>}
+          </select>
+          {currentComp && currentComp.eventKey && (
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: '#f3f4f6', padding: '4px 8px', borderRadius: '4px' }}>
+              {currentComp.eventKey}
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {showNewComp ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {loadingEvents ? (
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Loading events...</span>
+              ) : eventsError ? (
+                <>
+                  <span style={{ fontSize: '13px', color: '#dc2626' }}>{eventsError}</span>
+                  <button className="secondary" onClick={() => { setShowNewComp(false); setEventsError(''); }}>Cancel</button>
+                </>
+              ) : events.length === 0 ? (
+                <>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>No upcoming events found</span>
+                  <button className="secondary" onClick={() => { setShowNewComp(false); setEvents([]); }}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  <select
+                    value=""
+                    onChange={e => handleSelectEvent(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--pack-border)',
+                      fontSize: '14px',
+                      minWidth: '280px',
+                      background: 'white'
+                    }}
+                  >
+                    <option value="">Select an event to add...</option>
+                    {events.map(e => (
+                      <option key={e.key} value={e.key}>
+                        {e.name} ({e.key})
+                      </option>
+                    ))}
+                  </select>
+                  <button className="secondary" onClick={() => { setShowNewComp(false); setEvents([]); }}>Cancel</button>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <button className="secondary" onClick={() => setShowNewComp(true)}>+ New Competition</button>
+              {currentComp && (
+                <button className="secondary" style={{ color: '#dc2626', borderColor: '#dc2626' }} onClick={handleDeleteCompetition}>Delete</button>
+              )}
+            </>
+          )}
+        </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        {showNewComp ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {loadingEvents ? (
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Loading events...</span>
-            ) : eventsError ? (
-              <>
-                <span style={{ fontSize: '13px', color: '#dc2626' }}>{eventsError}</span>
-                <button className="secondary" onClick={() => { setShowNewComp(false); setEventsError(''); }}>Cancel</button>
-              </>
-            ) : events.length === 0 ? (
-              <>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>No upcoming events found</span>
-                <button className="secondary" onClick={() => { setShowNewComp(false); setEvents([]); }}>Cancel</button>
-              </>
-            ) : (
-              <>
-                <select
-                  value=""
-                  onChange={e => handleSelectEvent(e.target.value)}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--pack-border)',
-                    fontSize: '14px',
-                    minWidth: '280px',
-                    background: 'white'
-                  }}
-                >
-                  <option value="">Select an event to add...</option>
-                  {events.map(e => (
-                    <option key={e.key} value={e.key}>
-                      {e.name} ({e.key})
-                    </option>
-                  ))}
-                </select>
-                <button className="secondary" onClick={() => { setShowNewComp(false); setEvents([]); }}>Cancel</button>
-              </>
-            )}
+
+      {/* Confirmation Dialog */}
+      {showDeleteConfirm && pendingEvent && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '24px',
+            borderRadius: '12px',
+            maxWidth: '400px',
+            border: '1px solid var(--pack-border)'
+          }}>
+            <h3 style={{ margin: '0 0 12px 0' }}>Add Competition</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '20px' }}>
+              Are you sure you want to add <strong>{pendingEvent.name}</strong> ({pendingEvent.key}) to your competitions?
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button className="secondary" onClick={handleCancelCreate}>Cancel</button>
+              <button onClick={handleConfirmCreate}>Add Competition</button>
+            </div>
           </div>
-        ) : (
-          <>
-            <button className="secondary" onClick={() => setShowNewComp(true)}>+ New Competition</button>
-            {state.competitions.length > 1 && (
-              <button className="secondary" style={{ color: '#dc2626', borderColor: '#dc2626' }} onClick={() => handleDeleteCompetition(state.currentCompetitionId)}>Delete</button>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 
