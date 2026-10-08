@@ -189,7 +189,7 @@ const FieldPathView = ({ teamNumber, paths }) => {
   return (
     <div className="field-path-container" style={{ margin: '10px 0', border: '1px solid var(--pack-border)', borderRadius: '8px', overflow: 'hidden' }}>
       <canvas ref={canvasRef} width={340} height={180} style={{ display: 'block', width: '100%', height: 'auto' }} />
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '6px', fontSize: '11px', background: '#fafafa' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', padding: '6px', fontSize: '11px' }} className="bg-subtle">
         <span style={{ color: 'var(--pack-green)', fontWeight: '600' }}>● Auto Path</span>
         <span style={{ color: 'var(--pack-blue)', fontWeight: '600' }}>● Teleop Path</span>
       </div>
@@ -228,7 +228,7 @@ const TeamDetailPanel = ({ teamNumber }) => {
         <MetricCard title="Defense Index" value={fmtNum(summary.defenseIndex)} color="var(--pack-pink)" />
       </div>
 
-      <div className="panel" style={{ background: '#fafafa', border: '1px solid var(--pack-border)' }}>
+      <div className="panel" style={{ border: '1px solid var(--pack-border)' }} className="bg-subtle">
         <h4 style={{ margin: '0 0 10px 0' }}>Advanced Metrics</h4>
         <div className="grid-2" style={{ fontSize: '13px', lineHeight: '2' }}>
           <div>Avg Match Score: <strong>{fmtNum(summary.averageScore)} pts</strong></div>
@@ -245,7 +245,7 @@ const TeamDetailPanel = ({ teamNumber }) => {
 
       <h4 style={{ margin: '20px 0 8px 0' }}>Pit Specifications</h4>
       {pit ? (
-        <div className="panel" style={{ fontSize: '13px', lineHeight: '1.8', background: '#fafafa' }}>
+        <div className="panel" style={{ fontSize: '13px', lineHeight: '1.8' }} className="bg-subtle">
           <div><strong>Drivetrain:</strong> {pit.driveTrainLabel}</div>
           <div><strong>Intake:</strong> {pit.intakeLabel}</div>
           <div><strong>Launcher:</strong> {pit.launcherLabel}</div>
@@ -263,14 +263,14 @@ const TeamDetailPanel = ({ teamNumber }) => {
           <div style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>No matches recorded</div>
         ) : (
           teamMatches.map((m) => (
-            <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: '#fafafa', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--pack-border)' }}>
+            <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', borderRadius: '6px', fontSize: '13px', border: '1px solid var(--pack-border)' }} className="bg-subtle">
               <div>
                 <strong>Qual {m.matchNumber}</strong>
                 <span style={{ marginLeft: '10px', color: 'var(--text-secondary)' }}>Auto: {m.autoHub} | Teleop: {m.teleOpHub}</span>
               </div>
               <div>
                 <span style={{ marginRight: '10px', color: 'var(--pack-blue)', fontWeight: '600' }}>{fmtNum(m.estimatedScore)} pts</span>
-                <span style={{ fontSize: '11px', background: '#e0e7ff', color: '#3730a3', padding: '2px 6px', borderRadius: '4px' }}>Climb: {m.climbLabel}</span>
+                <span style={{ fontSize: '11px', color: '#3730a3', padding: '2px 6px', borderRadius: '4px' }} className="bg-accent-blue-dark">Climb: {m.climbLabel}</span>
               </div>
             </div>
           ))
@@ -310,7 +310,7 @@ const DashboardView = () => {
       />
       <div className="page-body">
         {!currentComp && (
-          <div className="panel" style={{ background: '#fef3c7', borderColor: '#f59e0b', marginBottom: '20px' }}>
+          <div className="panel" style={{ marginBottom: '20px' }} className="bg-warning">
             <p style={{ margin: 0, fontSize: '14px', color: '#92400e' }}>
               <strong>No competition selected.</strong> Create a competition from the dropdown at the top to start organizing your scouting data.
             </p>
@@ -335,7 +335,7 @@ const DashboardView = () => {
               <h3 style={{ margin: '0 0 16px 0' }}>Top 10 Teams (Pick Score)</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {top10.map((t, idx) => (
-                  <div key={t.teamNumber} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#fafafa', borderRadius: '8px', border: '1px solid var(--pack-border)' }}>
+                  <div key={t.teamNumber} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--pack-border)' }} className="bg-subtle">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <RankBadge rank={idx + 1} />
                       <div>
@@ -356,19 +356,19 @@ const DashboardView = () => {
               <div className="panel mb-20">
                 <h3 style={{ margin: '0 0 12px 0' }}>Data Health & Risk</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#fafafa', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderRadius: '6px' }} className="bg-subtle">
                     <span>Low Sample Teams (&lt;3 matches):</span>
                     <strong style={{ color: lowSample > 0 ? 'var(--pack-pink)' : 'var(--pack-green)' }}>{lowSample}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#fafafa', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderRadius: '6px' }} className="bg-subtle">
                     <span>High Risk Teams:</span>
                     <strong style={{ color: highRisk > 0 ? 'var(--pack-pink)' : 'var(--pack-green)' }}>{highRisk}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#fafafa', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderRadius: '6px' }} className="bg-subtle">
                     <span>Missing Robot AI Paths:</span>
                     <strong style={{ color: 'var(--pack-teal)' }}>{missingPaths}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#fafafa', borderRadius: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderRadius: '6px' }} className="bg-subtle">
                     <span>Total Pit Profiles:</span>
                     <strong>{totalPits}</strong>
                   </div>
@@ -379,7 +379,7 @@ const DashboardView = () => {
                 <h3 style={{ margin: '0 0 12px 0' }}>Upcoming Matches ({state.schedule.slice(0, 5).length})</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
                   {state.schedule.slice(0, 5).map(m => (
-                    <div key={m.matchNumber} style={{ padding: '8px', background: '#fafafa', borderRadius: '6px', border: '1px solid var(--pack-border)' }}>
+                    <div key={m.matchNumber} style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--pack-border)' }} className="bg-subtle">
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', marginBottom: '4px' }}>
                         <span>{m.name}</span>
                         <span style={{ color: 'var(--text-secondary)' }}>{m.timeLabel}</span>
@@ -622,7 +622,7 @@ const PicklistView = () => {
                   <option value="endgameBot">Endgame / Climb</option>
                 </select>
               </div>
-              <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', fontSize: '12px' }}>
+              <div style={{ padding: '8px 12px', borderRadius: '6px', fontSize: '12px' }} className="bg-subtle">
                 <div style={{ color: 'var(--text-secondary)' }}>Next Best Picks</div>
                 <div>Pick 1: <strong style={{ color: 'var(--pack-blue)' }}>Team {availableTeams[0]?.teamNumber || 'N/A'}</strong></div>
                 <div>Pick 2: <strong style={{ color: 'var(--pack-pink)' }}>Team {availableTeams[1]?.teamNumber || 'N/A'}</strong></div>
@@ -684,7 +684,8 @@ const PicklistView = () => {
                 onClick={() => setSelectedTeam(t.teamNumber)}
                 style={{
                   cursor: 'pointer',
-                  backgroundColor: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? '#eef2ff' : 'transparent',
+                  backgroundColor: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? 'var(--pack-blue)' : 'transparent',
+                  opacity: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? 0.1 : 1,
                   padding: '12px',
                   borderRadius: '6px',
                   display: 'flex',
@@ -708,8 +709,8 @@ const PicklistView = () => {
                 </div>
                 <RoleTag role={t.role} />
                 <div style={{ flex: 1, display: 'flex', gap: '8px' }}>
-                  {t.p1Score > 55 && <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>Pick 1 Fit</span>}
-                  {t.p2Score > 55 && <span style={{ background: '#fdf2f8', color: '#be185d', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }}>Pick 2 Fit</span>}
+                  {t.p1Score > 55 && <span style={{ color: '#0369a1', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }} className="bg-accent-blue-dark">Pick 1 Fit</span>}
+                  {t.p2Score > 55 && <span style={{ color: '#be185d', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600' }} className="bg-accent-pink-dark">Pick 2 Fit</span>}
                 </div>
                 <div style={{ textAlign: 'right', minWidth: '100px' }}>
                   <div style={{ fontWeight: '700', color: 'var(--pack-blue)', fontSize: '15px' }}>{fmtNum(t.blended)}</div>
@@ -746,16 +747,16 @@ const PicklistView = () => {
               </div>
 
               {aiRecommendations && (
-                <div style={{ marginBottom: '12px', padding: '12px', background: '#f8fafc', borderRadius: '6px', fontSize: '13px', whiteSpace: 'pre-wrap' }}>
+                <div style={{ marginBottom: '12px', padding: '12px', borderRadius: '6px', fontSize: '13px', whiteSpace: 'pre-wrap' }} className="bg-subtle">
                   {aiRecommendations}
                 </div>
               )}
 
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px', padding: '12px', background: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px', padding: '12px', borderRadius: '6px', fontSize: '13px' }} className="bg-subtle">
                   {aiChat.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>Ask AI about strategy, team synergy, or alliance recommendations...</div>}
                   {aiChat.map((msg, idx) => (
-                    <div key={idx} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px', background: msg.role === 'user' ? '#e0f2fe' : '#f1f5f9' }}>
+                    <div key={idx} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px' }} className={msg.role === 'user' ? 'bg-chat-user' : 'bg-chat-ai'}>
                       <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong> {msg.content}
                     </div>
                   ))}
@@ -816,7 +817,8 @@ const TeamDirectoryView = () => {
                   cursor: 'pointer',
                   padding: '10px 12px',
                   borderRadius: '6px',
-                  backgroundColor: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? '#eef2ff' : 'transparent',
+                  backgroundColor: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? 'var(--pack-blue)' : 'transparent',
+                  opacity: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? 0.1 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
@@ -940,14 +942,14 @@ const FilmReviewView = () => {
             marginBottom: '10px',
             padding: '8px 12px',
             borderRadius: '6px',
-            background: downloadMsg.includes('Error') ? '#fee2e2' : '#dcfce7',
             color: downloadMsg.includes('Error') ? '#dc2626' : '#16a34a'
+          }} className={downloadMsg.includes('Error') ? 'bg-error' : 'bg-success'}>
           }}>
             {downloadMsg}
           </div>
         )}
 
-        <div className="panel" style={{ textAlign: 'center', padding: '16px', background: '#0a0a0a', borderRadius: '10px' }}>
+        <div className="panel" style={{ textAlign: 'center', padding: '16px', borderRadius: '10px' }} className="bg-video">
           <video
             ref={videoRef}
             controls
@@ -983,7 +985,7 @@ const FilmReviewView = () => {
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
               {matchRecords.map(m => (
-                <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#fafafa', borderRadius: '6px' }}>
+                <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderRadius: '6px' }} className="bg-subtle">
                   <span>Team {m.teamNumber}: {fmtNum(m.estimatedScore)} pts</span>
                   <span>Eff: {fmtPct(m.shootingEfficiency)} | Climb: {m.climbLabel}</span>
                 </div>
@@ -1061,7 +1063,7 @@ const GraphsView = () => {
         <div className="grid-2">
           <div className="panel">
             <h4 style={{ margin: '0 0 12px 0' }}>Reliability vs Output (Scatter Plot)</h4>
-            <div style={{ position: 'relative', height: '220px', background: '#fafafa', borderRadius: '8px', border: '1px solid var(--pack-border)' }}>
+            <div style={{ position: 'relative', height: '220px', borderRadius: '8px', border: '1px solid var(--pack-border)' }} className="bg-subtle">
               {summaries.map(t => {
                 const x = Math.min(94, Math.max(6, (t.reliability || 0)));
                 const y = Math.min(94, Math.max(6, (t.averageScore ? (t.averageScore / 60) * 100 : 10)));
@@ -1100,7 +1102,7 @@ const GraphsView = () => {
                       <span>{roleName}</span>
                       <strong>{count} teams ({pct.toFixed(0)}%)</strong>
                     </div>
-                    <div style={{ height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '6px', borderRadius: '3px', overflow: 'hidden' }} className="bg-bar">
                       <div style={{ width: `${pct}%`, height: '100%', backgroundColor: 'var(--pack-blue)' }} />
                     </div>
                   </div>
@@ -1882,7 +1884,23 @@ const CompetitionHeader = () => {
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [onboardingDone, setOnboardingDone] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const { store } = useStore();
+
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('packout_dark_mode') === 'true';
+    setDarkMode(savedDarkMode);
+    if (savedDarkMode) {
+      document.body.classList.add('dark-mode');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    document.body.classList.toggle('dark-mode', newMode);
+    localStorage.setItem('packout_dark_mode', newMode.toString());
+  };
 
   useEffect(() => {
     const done = localStorage.getItem('packout_onboarding_done');
@@ -1950,6 +1968,21 @@ export default function App() {
         <div className="sidebar-header">
           <div style={{ width: 14, height: 14, backgroundColor: 'var(--pack-blue)', borderRadius: 3 }} />
           <span>Packout</span>
+          <button
+            onClick={toggleDarkMode}
+            style={{
+              marginLeft: 'auto',
+              padding: '6px 10px',
+              fontSize: '16px',
+              background: 'transparent',
+              border: '1px solid var(--pack-border)',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+            title="Toggle Dark Mode"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
         </div>
         <div className="nav-menu">
           {navItems.map(item => (
