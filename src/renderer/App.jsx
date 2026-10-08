@@ -1313,17 +1313,60 @@ const OnboardingView = ({ onComplete }) => {
 const CompetitionHeader = () => {
   const { state, store } = useStore();
   const [showNewComp, setShowNewComp] = useState(false);
-  const [newCompName, setNewCompName] = useState('');
-  const [newCompEventKey, setNewCompEventKey] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [eventsError, setEventsError] = useState('');
 
   const currentComp = store.getCurrentCompetition();
+  const tbaKey = localStorage.getItem('tbaApiKey') || '';
+
+  const fetchEvents = async () => {
+    if (!tbaKey) {
+      setEventsError('Please add a Blue Alliance API key in Settings first.');
+      return;
+    }
+
+    setLoadingEvents(true);
+    setEventsError('');
+
+    try {
+      if (window.electronAPI?.fetchBlueAlliance) {
+        const currentYear = new Date().getFullYear();
+        const res = await window.electronAPI.fetchBlueAlliance(`/events/${currentYear}/simple`, tbaKey);
+
+        if (res.data && Array.isArray(res.data)) {
+          const upcomingOrInProgress = res.data.filter(e => {
+            const now = new Date();
+            const start = new Date(e.start_date);
+            const end = new Date(e.end_date);
+            return start <= now || end >= now;
+          });
+
+          setEvents(upcomingOrInProgress);
+        } else {
+          setEventsError('No events found for this year.');
+        }
+      }
+    } catch (err) {
+      setEventsError(`Failed to fetch events: ${err.message || err}`);
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showNewComp && events.length === 0 && !eventsError) {
+      fetchEvents();
+    }
+  }, [showNewComp]);
 
   const handleCreateCompetition = () => {
-    if (newCompName.trim()) {
-      store.createCompetition(newCompName.trim(), newCompEventKey.trim());
-      setNewCompName('');
-      setNewCompEventKey('');
+    if (selectedEvent) {
+      store.createCompetition(selectedEvent.name, selectedEvent.key);
+      setSelectedEvent(null);
       setShowNewComp(false);
+      setEvents([]);
     }
   };
 
@@ -1369,24 +1412,48 @@ const CompetitionHeader = () => {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         {showNewComp ? (
-          <>
-            <input
-              type="text"
-              placeholder="Competition name"
-              value={newCompName}
-              onChange={e => setNewCompName(e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--pack-border)', fontSize: '13px' }}
-            />
-            <input
-              type="text"
-              placeholder="Event key (e.g. 2026pncmp)"
-              value={newCompEventKey}
-              onChange={e => setNewCompEventKey(e.target.value)}
-              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--pack-border)', fontSize: '13px', width: '140px' }}
-            />
-            <button onClick={handleCreateCompetition}>Create</button>
-            <button className="secondary" onClick={() => { setShowNewComp(false); setNewCompName(''); setNewCompEventKey(''); }}>Cancel</button>
-          </>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {loadingEvents ? (
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Loading events...</span>
+            ) : eventsError ? (
+              <>
+                <span style={{ fontSize: '13px', color: '#dc2626' }}>{eventsError}</span>
+                <button className="secondary" onClick={() => { setShowNewComp(false); setEventsError(''); }}>Cancel</button>
+              </>
+            ) : events.length === 0 ? (
+              <>
+                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>No upcoming events found</span>
+                <button className="secondary" onClick={() => { setShowNewComp(false); setEvents([]); }}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <select
+                  value={selectedEvent?.key || ''}
+                  onChange={e => {
+                    const event = events.find(ev => ev.key === e.target.value);
+                    setSelectedEvent(event);
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--pack-border)',
+                    fontSize: '14px',
+                    minWidth: '280px',
+                    background: 'white'
+                  }}
+                >
+                  <option value="">Select an event...</option>
+                  {events.map(e => (
+                    <option key={e.key} value={e.key}>
+                      {e.name} ({e.key})
+                    </option>
+                  ))}
+                </select>
+                <button onClick={handleCreateCompetition} disabled={!selectedEvent}>Create</button>
+                <button className="secondary" onClick={() => { setShowNewComp(false); setSelectedEvent(null); setEvents([]); }}>Cancel</button>
+              </>
+            )}
+          </div>
         ) : (
           <>
             <button className="secondary" onClick={() => setShowNewComp(true)}>+ New Competition</button>
