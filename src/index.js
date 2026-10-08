@@ -259,13 +259,41 @@ ipcMain.handle('download-video', async (event, url, destination, usingYtDlp = tr
 
   return new Promise((resolve, reject) => {
     if (usingYtDlp) {
-      // Use yt-dlp with better options for reliability
-      const cmd = `yt-dlp -f "best[ext=mp4]/best" -o "${finalDest}" --no-playlist "${url}"`;
+      // Use yt-dlp with options to handle YouTube restrictions
+      const cmd = `yt-dlp \
+        -f "best[ext=mp4][height<=720]/best[ext=mp4]/best" \
+        -o "${finalDest}" \
+        --no-playlist \
+        --no-update \
+        --no-warnings \
+        --extractor-args "youtube:player_client=android" \
+        "${url}"`;
+
       child_process.exec(cmd, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
         if (error) {
           console.error('yt-dlp error:', error);
           console.error('stderr:', stderr);
-          reject(new Error(`Video download failed: ${error.message || stderr || 'Unknown error'}`));
+
+          // Try fallback with different format
+          const fallbackCmd = `yt-dlp \
+            -f "best[height<=480]/worst" \
+            -o "${finalDest}" \
+            --no-playlist \
+            --no-update \
+            --no-warnings \
+            "${url}"`;
+
+          child_process.exec(fallbackCmd, { maxBuffer: 1024 * 1024 * 10 }, (fallbackError, fallbackStdout, fallbackStderr) => {
+            if (fallbackError) {
+              reject(new Error(`Video download failed: ${error.message || stderr || fallbackStderr || 'Unknown error'}`));
+            } else {
+              if (fs.existsSync(finalDest)) {
+                resolve({ path: finalDest, stdout: fallbackStdout });
+              } else {
+                reject(new Error('Video download completed but file not found'));
+              }
+            }
+          });
         } else {
           if (fs.existsSync(finalDest)) {
             resolve({ path: finalDest, stdout });
