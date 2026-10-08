@@ -15,6 +15,15 @@ let state = {
 };
 
 const listeners = new Set();
+let saveTimeout = null;
+
+// Debounced auto-save
+function debouncedSave() {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    store.updateCurrentCompetition();
+  }, 1000); // Save 1 second after last change
+}
 
 function notify() {
   for (const listener of listeners) {
@@ -61,6 +70,11 @@ export const store = {
   },
 
   switchCompetition(id) {
+    // Save current competition data before switching
+    if (state.currentCompetitionId) {
+      this.updateCurrentCompetition();
+    }
+
     const competition = state.competitions.find(c => c.id === id);
     if (!competition) return;
 
@@ -99,18 +113,40 @@ export const store = {
   },
 
   saveCompetitions() {
-    const competitionsData = state.competitions.map(c => ({
-      ...c,
-      matches: (c.matches || []).map(m => ({ ...m })),
-      pits: (c.pits || []).map(p => ({ ...p })),
-      paths: (c.paths || []).map(p => ({ ...p })),
-      schedule: (c.schedule || []).map(s => ({ ...s })),
-      videos: (c.videos || []).map(v => ({ ...v })),
-      importLog: c.importLog || []
-    }));
+    try {
+      const competitionsData = state.competitions.map(c => ({
+        ...c,
+        matches: (c.matches || []).map(m => ({ ...m })),
+        pits: (c.pits || []).map(p => ({ ...p })),
+        paths: (c.paths || []).map(p => ({ ...p })),
+        schedule: (c.schedule || []).map(s => ({ ...s })),
+        videos: (c.videos || []).map(v => ({ ...v })),
+        importLog: c.importLog || []
+      }));
 
-    localStorage.setItem('packout_competitions', JSON.stringify(competitionsData));
-    localStorage.setItem('packout_current_competition', state.currentCompetitionId || '');
+      localStorage.setItem('packout_competitions', JSON.stringify(competitionsData));
+      localStorage.setItem('packout_current_competition', state.currentCompetitionId || '');
+    } catch (e) {
+      console.error('Failed to save competitions to localStorage:', e);
+      // Try to save without import logs to reduce size
+      try {
+        const compactData = state.competitions.map(c => ({
+          ...c,
+          matches: (c.matches || []).map(m => ({ ...m })),
+          pits: (c.pits || []).map(p => ({ ...p })),
+          paths: (c.paths || []).map(p => ({ ...p })),
+          schedule: (c.schedule || []).map(s => ({ ...s })),
+          videos: (c.videos || []).map(v => ({ ...v })),
+          importLog: []
+        }));
+        localStorage.setItem('packout_competitions', JSON.stringify(compactData));
+        localStorage.setItem('packout_current_competition', state.currentCompetitionId || '');
+        console.warn('Saved without import logs due to storage limits');
+      } catch (e2) {
+        console.error('Failed to save even with compact data:', e2);
+        alert('Warning: Unable to save data to browser storage. Data may be lost on refresh.');
+      }
+    }
   },
 
   loadCompetitions() {
@@ -186,7 +222,7 @@ export const store = {
 
     state = { ...state, matches: newMatches, pits: newPits, paths: newPaths, videos: newVideos };
     this.appendLog(`Imported ${matches.length} matches, ${pits.length} pits, ${paths.length} paths, ${videos.length} videos.`);
-    this.updateCurrentCompetition();
+    debouncedSave();
     notify();
   },
 
@@ -212,7 +248,7 @@ export const store = {
   replaceSchedule(schedule, source) {
     state = { ...state, schedule: schedule.map(s => new ScheduledMatch(s)) };
     this.appendLog(`Schedule replaced from ${source}`);
-    this.updateCurrentCompetition();
+    debouncedSave();
     notify();
   },
   
@@ -285,6 +321,58 @@ export const store = {
       csv += `${s.rank},${s.teamNumber},${s.role},${s.riskLabel},${s.pickScore.toFixed(2)},${s.averageScore.toFixed(2)},${s.reliability.toFixed(2)},${s.defenseIndex.toFixed(2)},${(s.climbRate*100).toFixed(0)}%\n`;
     }
     return csv;
+  },
+
+  exportCurrentCompetition() {
+    const currentComp = this.getCurrentCompetition();
+    if (!currentComp) return null;
+
+    return JSON.stringify({
+      competition: {
+        id: currentComp.id,
+        name: currentComp.name,
+        eventKey: currentComp.eventKey,
+        createdAt: currentComp.createdAt
+      },
+      data: {
+        matches: state.matches,
+        pits: state.pits,
+        paths: state.paths,
+        schedule: state.schedule,
+        videos: state.videos
+      }
+    }, null, 2);
+  },
+
+  importCompetition(jsonString) {
+    try {
+      const data = JSON.parse(jsonString);
+      if (!data.competition || !data.data) {
+        throw new Error('Invalid competition data format');
+      }
+
+      const id = Date.now().toString();
+      const newCompetition = {
+        id,
+        name: data.competition.name + ' (Imported)',
+        eventKey: data.competition.eventKey,
+        createdAt: data.competition.createdAt || new Date().toISOString(),
+        matches: data.data.matches || [],
+        pits: data.data.pits || [],
+        paths: data.data.paths || [],
+        schedule: data.data.schedule || [],
+        videos: data.data.videos || [],
+        importLog: []
+      };
+
+      state = { ...state, competitions: [...state.competitions, newCompetition] };
+      this.switchCompetition(id);
+      this.appendLog(`Imported competition: ${newCompetition.name}`);
+      return true;
+    } catch (e) {
+      console.error('Failed to import competition:', e);
+      return false;
+    }
   }
 };
 

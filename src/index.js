@@ -259,19 +259,37 @@ ipcMain.handle('download-video', async (event, url, destination, usingYtDlp = tr
 
   return new Promise((resolve, reject) => {
     if (usingYtDlp) {
-      child_process.exec(`yt-dlp -o "${finalDest}" "${url}"`, (error, stdout) => {
-        if (error) reject(error);
-        else resolve({ path: finalDest, stdout });
+      // Use yt-dlp with better options for reliability
+      const cmd = `yt-dlp -f "best[ext=mp4]/best" -o "${finalDest}" --no-playlist "${url}"`;
+      child_process.exec(cmd, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+        if (error) {
+          console.error('yt-dlp error:', error);
+          console.error('stderr:', stderr);
+          reject(new Error(`Video download failed: ${error.message || stderr || 'Unknown error'}`));
+        } else {
+          if (fs.existsSync(finalDest)) {
+            resolve({ path: finalDest, stdout });
+          } else {
+            reject(new Error('Video download completed but file not found'));
+          }
+        }
       });
     } else {
       const file = fs.createWriteStream(finalDest);
       https.get(url, (response) => {
+        if (response.statusCode !== 200) {
+          file.close();
+          fs.unlink(finalDest, () => {});
+          reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+          return;
+        }
         response.pipe(file);
         file.on('finish', () => {
           file.close();
           resolve({ path: finalDest, stdout: 'Downloaded via HTTP' });
         });
       }).on('error', (err) => {
+        file.close();
         fs.unlink(finalDest, () => {});
         reject(err);
       });

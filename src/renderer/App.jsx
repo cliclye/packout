@@ -4,6 +4,21 @@ import store from '../store';
 import { useStore, useSettings } from '../hooks';
 import * as models from '../models';
 
+// Save status indicator
+const SaveStatus = ({ status }) => {
+  if (!status) return null;
+  return (
+    <span style={{
+      fontSize: '11px',
+      color: '#16a34a',
+      marginLeft: '8px',
+      opacity: status === 'Saving...' ? 0.7 : 1
+    }}>
+      {status}
+    </span>
+  );
+};
+
 // --- Helper Formatting ---
 const fmtNum = (val) => (typeof val === 'number' && !isNaN(val) ? val.toFixed(1) : '0.0');
 const fmtPct = (val) => (typeof val === 'number' && !isNaN(val) ? `${(val * 100).toFixed(0)}%` : '0%');
@@ -576,6 +591,7 @@ const FilmReviewView = () => {
   const [url, setUrl] = useState('');
   const [selectedMatch, setSelectedMatch] = useState('12');
   const [downloadMsg, setDownloadMsg] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
   const videoRef = useRef(null);
 
   const uniqueMatches = store.getUniqueMatchNumbers();
@@ -584,7 +600,11 @@ const FilmReviewView = () => {
   const scheduled = store.getScheduledMatch(parseInt(selectedMatch, 10));
 
   const handleDownload = async () => {
-    if (!url.trim()) return;
+    if (!url.trim()) {
+      setDownloadMsg('Please enter a video URL');
+      return;
+    }
+    setIsDownloading(true);
     setDownloadMsg('Starting video download...');
     if (window.electronAPI?.downloadVideo) {
       try {
@@ -593,22 +613,30 @@ const FilmReviewView = () => {
         store.importData({
           videos: [new models.VideoAsset({ url: res.path, inferredMatchNumber: selectedMatch })]
         });
+        setUrl('');
       } catch (err) {
         setDownloadMsg(`Error downloading: ${err.message || err}`);
+      } finally {
+        setIsDownloading(false);
       }
     } else {
       setDownloadMsg('Video download requires desktop Electron environment.');
+      setIsDownloading(false);
     }
   };
 
   const handleImportVideo = async () => {
     if (window.electronAPI?.selectVideo) {
-      const filePath = await window.electronAPI.selectVideo();
-      if (filePath) {
-        store.importData({
-          videos: [new models.VideoAsset({ url: filePath, inferredMatchNumber: selectedMatch })]
-        });
-        setDownloadMsg(`Attached ${filePath} to Match ${selectedMatch}`);
+      try {
+        const filePath = await window.electronAPI.selectVideo();
+        if (filePath) {
+          store.importData({
+            videos: [new models.VideoAsset({ url: filePath, inferredMatchNumber: selectedMatch })]
+          });
+          setDownloadMsg(`Attached ${filePath} to Match ${selectedMatch}`);
+        }
+      } catch (err) {
+        setDownloadMsg(`Error importing video: ${err.message || err}`);
       }
     }
   };
@@ -633,27 +661,39 @@ const FilmReviewView = () => {
               ))}
               {uniqueMatches.length === 0 && <option value="12">Match 12</option>}
             </select>
-            <input 
-              type="text" 
-              placeholder="Paste YouTube or video URL..." 
-              value={url} 
-              onChange={e => setUrl(e.target.value)} 
+            <input
+              type="text"
+              placeholder="Paste YouTube or video URL..."
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              disabled={isDownloading}
               style={{ width: '280px', padding: '6px' }}
             />
-            <button onClick={handleDownload}>Download</button>
+            <button onClick={handleDownload} disabled={isDownloading}>
+              {isDownloading ? 'Downloading...' : 'Download'}
+            </button>
           </div>
           <button className="secondary" onClick={handleImportVideo}>Import Local File</button>
         </div>
 
         {downloadMsg && (
-          <div style={{ fontSize: '12px', color: 'var(--pack-blue)', marginBottom: '10px' }}>{downloadMsg}</div>
+          <div style={{
+            fontSize: '12px',
+            marginBottom: '10px',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            background: downloadMsg.includes('Error') ? '#fee2e2' : '#dcfce7',
+            color: downloadMsg.includes('Error') ? '#dc2626' : '#16a34a'
+          }}>
+            {downloadMsg}
+          </div>
         )}
 
         <div className="panel" style={{ textAlign: 'center', padding: '16px', background: '#0a0a0a', borderRadius: '10px' }}>
-          <video 
-            ref={videoRef} 
-            controls 
-            src={currentVideo ? `file://${currentVideo.url}` : ''} 
+          <video
+            ref={videoRef}
+            controls
+            src={currentVideo ? `file://${currentVideo.url}` : ''}
             style={{ width: '100%', maxHeight: '420px', backgroundColor: '#000' }}
           >
             Video playback not supported
@@ -1172,6 +1212,53 @@ const SettingsView = () => {
     }
   };
 
+  const handleExportCompetition = () => {
+    if (!currentComp) {
+      setSaveStatus('No competition selected to export.');
+      return;
+    }
+
+    const json = store.exportCurrentCompetition();
+    if (!json) {
+      setSaveStatus('Failed to export competition data.');
+      return;
+    }
+
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentComp.name.replace(/\s+/g, '_')}_backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setSaveStatus(`Exported ${currentComp.name} to backup file.`);
+    setTimeout(() => setSaveStatus(''), 3000);
+  };
+
+  const handleImportCompetition = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const success = store.importCompetition(text);
+        if (success) {
+          setSaveStatus('Competition imported successfully.');
+        } else {
+          setSaveStatus('Failed to import competition. Invalid file format.');
+        }
+      } catch (err) {
+        setSaveStatus(`Failed to import: ${err.message}`);
+      }
+      setTimeout(() => setSaveStatus(''), 3000);
+    };
+    input.click();
+  };
+
   return (
     <>
       <PageHeader title="Settings" subtitle="External API configurations and event credentials" />
@@ -1189,6 +1276,15 @@ const SettingsView = () => {
           ) : (
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>No competition selected. Create one from the dropdown at the top of the app.</p>
           )}
+        </div>
+
+        <div className="panel mb-20">
+          <h4>Data Backup & Restore</h4>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Export your competition data as a backup file or import a previous backup.</p>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="secondary" onClick={handleExportCompetition} disabled={!currentComp}>Export Current Competition</button>
+            <button className="secondary" onClick={handleImportCompetition}>Import Competition Backup</button>
+          </div>
         </div>
 
         <div className="panel mb-20">
@@ -1318,9 +1414,19 @@ const CompetitionHeader = () => {
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState('');
+  const [saveStatus, setSaveStatus] = useState('');
 
   const currentComp = store.getCurrentCompetition();
   const tbaKey = localStorage.getItem('tbaApiKey') || '';
+
+  // Show save status when state changes
+  useEffect(() => {
+    const unsubscribe = store.subscribe(() => {
+      setSaveStatus('Saving...');
+      setTimeout(() => setSaveStatus(''), 500);
+    });
+    return unsubscribe;
+  }, []);
 
   const fetchEvents = async () => {
     if (!tbaKey) {
@@ -1425,6 +1531,7 @@ const CompetitionHeader = () => {
               {currentComp.eventKey}
             </span>
           )}
+          <SaveStatus status={saveStatus} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {showNewComp ? (
