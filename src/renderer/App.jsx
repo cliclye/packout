@@ -1370,6 +1370,18 @@ const CompetitionHeader = () => {
     }
   };
 
+  const handleSelectEvent = (eventKey) => {
+    const event = events.find(ev => ev.key === eventKey);
+    if (event) {
+      setSelectedEvent(event);
+      // Immediately create the competition when selected
+      store.createCompetition(event.name, event.key);
+      setShowNewComp(false);
+      setEvents([]);
+      setSelectedEvent(null);
+    }
+  };
+
   const handleDeleteCompetition = (id) => {
     if (confirm('Are you sure you want to delete this competition? All data will be lost.')) {
       store.deleteCompetition(id);
@@ -1428,11 +1440,8 @@ const CompetitionHeader = () => {
             ) : (
               <>
                 <select
-                  value={selectedEvent?.key || ''}
-                  onChange={e => {
-                    const event = events.find(ev => ev.key === e.target.value);
-                    setSelectedEvent(event);
-                  }}
+                  value=""
+                  onChange={e => handleSelectEvent(e.target.value)}
                   style={{
                     padding: '8px 12px',
                     borderRadius: '6px',
@@ -1442,15 +1451,14 @@ const CompetitionHeader = () => {
                     background: 'white'
                   }}
                 >
-                  <option value="">Select an event...</option>
+                  <option value="">Select an event to add...</option>
                   {events.map(e => (
                     <option key={e.key} value={e.key}>
                       {e.name} ({e.key})
                     </option>
                   ))}
                 </select>
-                <button onClick={handleCreateCompetition} disabled={!selectedEvent}>Create</button>
-                <button className="secondary" onClick={() => { setShowNewComp(false); setSelectedEvent(null); setEvents([]); }}>Cancel</button>
+                <button className="secondary" onClick={() => { setShowNewComp(false); setEvents([]); }}>Cancel</button>
               </>
             )}
           </div>
