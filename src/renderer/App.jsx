@@ -408,6 +408,15 @@ const PicklistView = () => {
   const [pick1, setPick1] = useState('balanced');
   const [pick2, setPick2] = useState('defenseBot');
   const [selectedTeam, setSelectedTeam] = useState(summaries[0]?.teamNumber || null);
+  const [pickedTeams, setPickedTeams] = useState(new Set());
+  const [alliance, setAlliance] = useState({ captain: null, pick1: null, pick2: null });
+  const [showAI, setShowAI] = useState(false);
+  const [aiProvider, setAiProvider] = useState('openai');
+  const [aiApiKey, setAiApiKey] = useState('');
+  const [aiChat, setAiChat] = useState([]);
+  const [aiMessage, setAiMessage] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState([]);
 
   const scoredTeams = useMemo(() => {
     return summaries.map(t => {
@@ -418,7 +427,8 @@ const PicklistView = () => {
     }).sort((a, b) => b.blended - a.blended);
   }, [summaries, pick1, pick2]);
 
-  const filteredTeams = scoredTeams.filter(t => t.teamNumber.toString().includes(search));
+  const availableTeams = scoredTeams.filter(t => !pickedTeams.has(t.teamNumber));
+  const filteredTeams = availableTeams.filter(t => t.teamNumber.toString().includes(search));
 
   const exportCsv = async () => {
     const csvContent = store.exportPicklistCSV();
@@ -434,24 +444,161 @@ const PicklistView = () => {
     }
   };
 
+  const togglePicked = (teamNumber) => {
+    const newPicked = new Set(pickedTeams);
+    if (newPicked.has(teamNumber)) {
+      newPicked.delete(teamNumber);
+    } else {
+      newPicked.add(teamNumber);
+    }
+    setPickedTeams(newPicked);
+  };
+
+  const setAllianceMember = (role, teamNumber) => {
+    setAlliance(prev => ({ ...prev, [role]: teamNumber }));
+  };
+
+  const resetAlliance = () => {
+    setAlliance({ captain: null, pick1: null, pick2: null });
+  };
+
+  const generateAIRecommendations = async () => {
+    if (!aiApiKey) {
+      alert('Please enter an API key first');
+      return;
+    }
+
+    setAiLoading(true);
+    const teamData = availableTeams.slice(0, 20).map(t => ({
+      team: t.teamNumber,
+      pickScore: t.pickScore,
+      avgScore: t.averageScore,
+      efficiency: t.shootingEfficiency,
+      reliability: t.reliability,
+      role: t.role,
+      matchCount: t.matchCount
+    }));
+
+    const prompt = `Based on this FRC team data, recommend the top 5 teams for alliance selection using the strategy: Pick 1 = ${pick1}, Pick 2 = ${pick2}. Consider team synergy, reliability, and match performance. Return results as a numbered list with brief explanations for each pick.\n\nTeam Data:\n${JSON.stringify(teamData, null, 2)}`;
+
+    try {
+      let response;
+      if (aiProvider === 'openai') {
+        response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${aiApiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 1000
+          })
+        });
+      } else {
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiApiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-sonnet-20240229',
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+      }
+
+      const data = await response.json();
+      const content = aiProvider === 'openai' ? data.choices[0].message.content : data.content[0].text;
+      setAiRecommendations(content);
+      setAiChat(prev => [...prev, { role: 'assistant', content }]);
+    } catch (error) {
+      alert(`AI Error: ${error.message}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const sendAIMessage = async () => {
+    if (!aiMessage.trim() || !aiApiKey) return;
+
+    setAiLoading(true);
+    const userMessage = aiMessage;
+    setAiChat(prev => [...prev, { role: 'user', content: userMessage }]);
+    setAiMessage('');
+
+    const prompt = `Based on the current FRC team data and alliance selection strategy (${pick1} for Pick 1, ${pick2} for Pick 2), answer this question: ${userMessage}\n\nCurrent alliance: Captain ${alliance.captain || 'none'}, Pick 1 ${alliance.pick1 || 'none'}, Pick 2 ${alliance.pick2 || 'none'}\n\nAvailable teams (top 20): ${JSON.stringify(availableTeams.slice(0, 20).map(t => t.teamNumber), null, 2)}`;
+
+    try {
+      let response;
+      if (aiProvider === 'openai') {
+        response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${aiApiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4',
+            messages: [...aiChat, { role: 'user', content: prompt }],
+            max_tokens: 1000
+          })
+        });
+      } else {
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': aiApiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-sonnet-20240229',
+            max_tokens: 1000,
+            messages: [...aiChat, { role: 'user', content: prompt }]
+          })
+        });
+      }
+
+      const data = await response.json();
+      const content = aiProvider === 'openai' ? data.choices[0].message.content : data.content[0].text;
+      setAiChat(prev => [...prev, { role: 'assistant', content }]);
+    } catch (error) {
+      setAiChat(prev => [...prev, { role: 'assistant', content: `Error: ${error.message}` }]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <>
-      <PageHeader 
-        title="Picklist" 
-        subtitle="Alliance selection ranking and customizable strategy models"
-        rightContent={<button onClick={exportCsv}>Export Picklist CSV</button>}
+      <PageHeader
+        title="Picklist"
+        subtitle="AI-powered alliance selection strategy and team tracking"
+        rightContent={
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button className="secondary" onClick={() => setShowAI(!showAI)}>
+              {showAI ? 'Hide AI' : 'AI Assistant'}
+            </button>
+            <button onClick={exportCsv}>Export CSV</button>
+          </div>
+        }
       />
       <div className="page-body picklist-layout">
         <div className="picklist-main">
           <div className="panel mb-20" style={{ padding: '16px' }}>
             <div className="search-bar" style={{ margin: '0 0 16px 0' }}>
-              <input 
-                type="text" 
-                placeholder="Search team number..." 
-                value={search} 
-                onChange={e => setSearch(e.target.value)} 
+              <input
+                type="text"
+                placeholder="Search team number..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
               />
-              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{filteredTeams.length} teams listed</span>
+              <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{filteredTeams.length} available teams</span>
             </div>
 
             <div className="strategy-panel" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
@@ -476,30 +623,84 @@ const PicklistView = () => {
                 </select>
               </div>
               <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', fontSize: '12px' }}>
-                <div style={{ color: 'var(--text-secondary)' }}>Best Recommendations</div>
-                <div>Pick 1: <strong style={{ color: 'var(--pack-blue)' }}>Team {[...scoredTeams].sort((a,b)=>b.p1Score-a.p1Score)[0]?.teamNumber || 'N/A'}</strong></div>
-                <div>Pick 2: <strong style={{ color: 'var(--pack-pink)' }}>Team {[...scoredTeams].sort((a,b)=>b.p2Score-a.p2Score)[0]?.teamNumber || 'N/A'}</strong></div>
+                <div style={{ color: 'var(--text-secondary)' }}>Next Best Picks</div>
+                <div>Pick 1: <strong style={{ color: 'var(--pack-blue)' }}>Team {availableTeams[0]?.teamNumber || 'N/A'}</strong></div>
+                <div>Pick 2: <strong style={{ color: 'var(--pack-pink)' }}>Team {availableTeams[1]?.teamNumber || 'N/A'}</strong></div>
               </div>
+            </div>
+          </div>
+
+          <div className="panel mb-20" style={{ padding: '16px' }}>
+            <h4 style={{ margin: '0 0 12px 0' }}>Your Alliance</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '12px', alignItems: 'center' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px', display: 'block' }}>Captain</label>
+                <select
+                  value={alliance.captain || ''}
+                  onChange={e => setAllianceMember('captain', e.target.value ? parseInt(e.target.value) : null)}
+                  style={{ width: '100%', padding: '6px' }}
+                >
+                  <option value="">Select...</option>
+                  {availableTeams.map(t => (
+                    <option key={t.teamNumber} value={t.teamNumber}>Team {t.teamNumber}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px', display: 'block' }}>Pick 1</label>
+                <select
+                  value={alliance.pick1 || ''}
+                  onChange={e => setAllianceMember('pick1', e.target.value ? parseInt(e.target.value) : null)}
+                  style={{ width: '100%', padding: '6px' }}
+                >
+                  <option value="">Select...</option>
+                  {availableTeams.filter(t => t.teamNumber !== alliance.captain).map(t => (
+                    <option key={t.teamNumber} value={t.teamNumber}>Team {t.teamNumber}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px', display: 'block' }}>Pick 2</label>
+                <select
+                  value={alliance.pick2 || ''}
+                  onChange={e => setAllianceMember('pick2', e.target.value ? parseInt(e.target.value) : null)}
+                  style={{ width: '100%', padding: '6px' }}
+                >
+                  <option value="">Select...</option>
+                  {availableTeams.filter(t => t.teamNumber !== alliance.captain && t.teamNumber !== alliance.pick1).map(t => (
+                    <option key={t.teamNumber} value={t.teamNumber}>Team {t.teamNumber}</option>
+                  ))}
+                </select>
+              </div>
+              <button className="secondary" onClick={resetAlliance} style={{ marginTop: '18px' }}>Reset</button>
             </div>
           </div>
 
           <div className="panel" style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
             {filteredTeams.map((t, idx) => (
-              <div 
-                key={t.teamNumber} 
-                className="list-row" 
+              <div
+                key={t.teamNumber}
+                className="list-row"
                 onClick={() => setSelectedTeam(t.teamNumber)}
-                style={{ 
-                  cursor: 'pointer', 
+                style={{
+                  cursor: 'pointer',
                   backgroundColor: (selectedTeam || summaries[0]?.teamNumber) === t.teamNumber ? '#eef2ff' : 'transparent',
                   padding: '12px',
                   borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  borderBottom: '1px solid var(--pack-border)'
+                  borderBottom: '1px solid var(--pack-border)',
+                  opacity: pickedTeams.has(t.teamNumber) ? 0.5 : 1
                 }}
               >
+                <input
+                  type="checkbox"
+                  checked={pickedTeams.has(t.teamNumber)}
+                  onChange={() => togglePicked(t.teamNumber)}
+                  onClick={e => e.stopPropagation()}
+                  style={{ cursor: 'pointer' }}
+                />
                 <RankBadge rank={idx + 1} />
                 <div style={{ minWidth: '80px' }}>
                   <div style={{ fontWeight: '700', fontSize: '15px' }}>Team {t.teamNumber}</div>
@@ -519,7 +720,64 @@ const PicklistView = () => {
           </div>
         </div>
 
-        <div className="picklist-side" style={{ width: '420px', flexShrink: 0 }}>
+        <div className="picklist-side" style={{ width: '420px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {showAI && (
+            <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <h4 style={{ margin: '0 0 12px 0' }}>AI Strategy Assistant</h4>
+              <div style={{ marginBottom: '12px' }}>
+                <select
+                  value={aiProvider}
+                  onChange={e => setAiProvider(e.target.value)}
+                  style={{ width: '100%', padding: '6px', marginBottom: '8px' }}
+                >
+                  <option value="openai">OpenAI (GPT-4)</option>
+                  <option value="claude">Anthropic (Claude)</option>
+                </select>
+                <input
+                  type="password"
+                  placeholder="API Key"
+                  value={aiApiKey}
+                  onChange={e => setAiApiKey(e.target.value)}
+                  style={{ width: '100%', padding: '6px', marginBottom: '8px' }}
+                />
+                <button className="secondary" onClick={generateAIRecommendations} disabled={aiLoading} style={{ width: '100%' }}>
+                  {aiLoading ? 'Analyzing...' : 'Generate AI Recommendations'}
+                </button>
+              </div>
+
+              {aiRecommendations && (
+                <div style={{ marginBottom: '12px', padding: '12px', background: '#f8fafc', borderRadius: '6px', fontSize: '13px', whiteSpace: 'pre-wrap' }}>
+                  {aiRecommendations}
+                </div>
+              )}
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '12px', padding: '12px', background: '#f8fafc', borderRadius: '6px', fontSize: '13px' }}>
+                  {aiChat.length === 0 && <div style={{ color: 'var(--text-secondary)' }}>Ask AI about strategy, team synergy, or alliance recommendations...</div>}
+                  {aiChat.map((msg, idx) => (
+                    <div key={idx} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px', background: msg.role === 'user' ? '#e0f2fe' : '#f1f5f9' }}>
+                      <strong>{msg.role === 'user' ? 'You' : 'AI'}:</strong> {msg.content}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    type="text"
+                    placeholder="Ask AI..."
+                    value={aiMessage}
+                    onChange={e => setAiMessage(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && sendAIMessage()}
+                    style={{ flex: 1, padding: '6px' }}
+                    disabled={aiLoading}
+                  />
+                  <button onClick={sendAIMessage} disabled={aiLoading || !aiMessage.trim()}>
+                    {aiLoading ? '...' : 'Send'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <TeamDetailPanel teamNumber={selectedTeam || summaries[0]?.teamNumber} />
         </div>
       </div>
