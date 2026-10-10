@@ -14,7 +14,7 @@ const REFRESH_MS = 30000;
 const pc = (p) => `${Math.round(p * 100)}%`;
 
 /** Statbotics-style split bar: red win % vs blue win %, with projected scores. */
-function WinBar({ pred, big = false }) {
+export function WinBar({ pred, big = false }) {
   const r = Math.round(pred.pRed * 100);
   return (
     <div className={`winbar ${big ? 'big' : ''}`} title={`Projected score ${Math.round(pred.muR)} – ${Math.round(pred.muB)}`}>
@@ -27,7 +27,7 @@ function WinBar({ pred, big = false }) {
   );
 }
 
-function TeamChip({ team, color, mine, scouted, onOpen }) {
+export function TeamChip({ team, color, mine, scouted, onOpen }) {
   return (
     <button type="button" className={`tchip ${color} ${mine ? 'mine' : ''} ${scouted ? 'scouted' : ''}`} onClick={() => onOpen(team)} title={scouted ? `Scouted · pick score ${fmt(scouted.pickScore)} · rank ${scouted.rank}` : 'Open on The Blue Alliance'}>
       {team}

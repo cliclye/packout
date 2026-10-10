@@ -32,6 +32,7 @@ const newCompetition = (name, eventKey = '') => ({
   videos: [],
   log: [],
   picklist: emptyPicklist(),
+  strategyNotes: {},
 });
 
 let state = {
@@ -312,6 +313,10 @@ export const store = {
   },
   appendLog(message) {
     mutateCurrent((c) => c, message);
+  },
+
+  setStrategyNote(key, text) {
+    mutateCurrent((c) => ({ ...c, strategyNotes: { ...(c.strategyNotes || {}), [key]: text } }));
   },
 
   // -- picklist

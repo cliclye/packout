@@ -189,6 +189,14 @@ competition's event key; refreshes every 30s with ETag caching):
   roughly 70–83% of matches called correctly on 2025 events using TBA data only.
 - **Rankings, OPR/DPR/CCWM, alliances & playoff bracket, awards** – cross-referenced with your own scouting (pick score, average points)
 
+### Game Plan
+
+Pick your team (say 1294) and a match — by default its next one — and get a plan built from
+the opponents' and partners' data: win probability, who to defend and who should defend,
+auto / teleop / endgame outlook with numbers, risks (breakdown-prone partners, shaky climbs),
+opponent start-lane tendencies and heatmaps from AI paths, and a notes box saved with the competition.
+Teams nobody has scouted fall back to TBA rank, record and OPR, and are flagged so you can scout them live.
+
 ### Analysis
 
 - **Overview** – league leaderboards, scatter plots and role mix, filterable by team or match.
