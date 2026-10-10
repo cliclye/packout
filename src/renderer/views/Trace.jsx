@@ -95,6 +95,14 @@ export default function Trace() {
   // results
   const [result, setResult] = useState(null);
   const [filter, setFilter] = useState('both');
+  const [viewMode, setViewMode] = useState('paths');
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    if (!full) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setFull(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [full]);
   const [hidden, setHidden] = useState(() => new Set());
   const [imported, setImported] = useState(false);
 
@@ -528,11 +536,18 @@ export default function Trace() {
   );
 
   const reviewPanel = run && result && (
-    <div className="grid-main">
-      <Card title="Tracked paths" subtitle={`Started from frame ${result.firstFrameIndex} (${result.startPercent}% into the video)${result.autoStartFound ? '' : ' · manual starting positions'}`}
-        actions={<Segmented size="sm" value={filter} onChange={setFilter} options={[{ value: 'both', label: 'All' }, { value: 'auto', label: 'Auto' }, { value: 'tele', label: 'Teleop' }]} />}>
-        <FieldView runs={resampled.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} />
-        <FieldLegend />
+    <div className={full ? 'review-full' : 'grid-main'}>
+      <Card className={full ? 'review-field' : ''} title={viewMode === 'heat' ? 'Where the robots spend time' : 'Tracked paths'} subtitle={`Started from frame ${result.firstFrameIndex} (${result.startPercent}% into the video)${result.autoStartFound ? '' : ' · manual starting positions'}`}
+        actions={
+          <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <Segmented size="sm" value={viewMode} onChange={setViewMode} options={[{ value: 'paths', label: 'Paths' }, { value: 'heat', label: 'Heatmap' }]} />
+            <Segmented size="sm" value={filter} onChange={setFilter} options={[{ value: 'both', label: 'All' }, { value: 'auto', label: 'Auto' }, { value: 'tele', label: 'Teleop' }]} />
+            <Button size="sm" icon={full ? 'x' : 'eye'} onClick={() => setFull(!full)}>{full ? 'Exit full screen' : 'Full screen'}</Button>
+          </div>
+        }>
+        <FieldView runs={resampled.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} mode={viewMode} />
+        <FieldLegend mode={viewMode} />
+        {viewMode === 'heat' && hidden.size < resampled.length && <p className="muted" style={{ marginTop: 6 }}>Combined time spent by {resampled.length - hidden.size} selected robot{resampled.length - hidden.size === 1 ? '' : 's'}. Toggle robots on the right to compare.</p>}
       </Card>
       <div className="col">
         <Card title="Robots">

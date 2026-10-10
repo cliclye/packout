@@ -399,3 +399,7 @@ textarea.input { height: auto; padding: 9px 11px; resize: vertical; }
 .spec-list dt { color: var(--text-3); }
 .spec-list dd { margin: 0; font-weight: 600; text-align: right; }
 .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 3px; }
+.review-full { position: fixed; inset: 0; z-index: 90; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; padding: 16px; overflow: hidden; }
+html.mac .review-full { padding-top: 40px; }
+.review-full > .col { overflow-y: auto; min-height: 0; padding-right: 2px; }
+.review-full .review-field { align-self: start; max-height: 100%; overflow: auto; }
