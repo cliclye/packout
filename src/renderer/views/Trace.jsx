@@ -62,7 +62,7 @@ function ToolRow({ ok, title, detail, action }) {
 
 export default function Trace() {
   const comp = useCurrent();
-  const { settings } = useApp();
+  const { settings, traceSeed } = useApp();
   const [runs, setRuns] = useState([]);
   const [run, setRun] = useState(null);
   const [step, setStep] = useState('source');
@@ -105,6 +105,19 @@ export default function Trace() {
   }, [full]);
   const [hidden, setHidden] = useState(() => new Set());
   const [imported, setImported] = useState(false);
+
+  // Arriving from Event Live with a match video: prefill the source form.
+  const seedRef = useRef(null);
+  useEffect(() => {
+    if (!traceSeed) return;
+    seedRef.current = traceSeed;
+    setRun(null);
+    setStep('source');
+    setSrcType('url');
+    setUrl(traceSeed.url);
+    setMatchLabel(traceSeed.matchNumber || '');
+    store.setTraceSeed(null);
+  }, [traceSeed]);
 
   const matchNumbers = useMemo(() => {
     const set = new Set([...comp.matches.map((m) => m.matchNumber), ...comp.schedule.map((s) => String(s.matchNumber))]);
@@ -203,6 +216,12 @@ export default function Trace() {
         r = await api.ai.importDetections({ jsonPath: detJson, coverPath: detCover || undefined, videoPath: filePath || undefined, label: `Match ${matchLabel || 'detections'}`, matchNumber: matchLabel });
       }
       await refreshRuns();
+      const seed = seedRef.current;
+      if (seed && !r.teams) {
+        const teams = redOnLeft ? [...seed.red, ...seed.blue] : [...seed.blue, ...seed.red];
+        r = await api.ai.update(r.id, { teams });
+      }
+      seedRef.current = null;
       openRun(r);
     } catch (e) {
       setSourceError(e.message);

@@ -56,7 +56,10 @@ export default function Settings() {
           </Card>
 
           <Card title="Blue Alliance" subtitle="Event lists and match schedules">
-            <SettingInput name="tbaApiKey" type="secret" label="Read API key" hint="Create one at thebluealliance.com/account → Read API keys." placeholder="TBA auth key" />
+            <div className="stack">
+              <SettingInput name="tbaApiKey" type="secret" label="Read API key" hint="Create one at thebluealliance.com/account → Read API keys." placeholder="TBA auth key" />
+              <SettingInput name="myTeam" label="Your team number" hint="Highlighted on the Event Live page, with your next match and rank." placeholder="e.g. 1294" />
+            </div>
             <p style={{ marginTop: 8 }}><button type="button" className="link-btn" onClick={() => api.shell.openExternal('https://www.thebluealliance.com/account')}>Open thebluealliance.com/account →</button></p>
           </Card>
 

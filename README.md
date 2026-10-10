@@ -174,6 +174,15 @@ There are several ways to import scouting data:
 - Jump to key timestamps (Auto, Teleop, Endgame)
 - View synchronized scouting data
 
+### Event Live
+
+Everything you'd check on The Blue Alliance, inside the app (uses your TBA API key and the
+competition's event key; refreshes every 30s with ETag caching):
+
+- **Matches** – schedule, next-up with countdown, scores and winners, filter by round / team / "only my team"
+- **Videos** – watch a match, send it to Film Review, or start an AI Trace from it in one click
+- **Rankings, OPR/DPR/CCWM, alliances & playoff bracket, awards** – cross-referenced with your own scouting (pick score, average points)
+
 ### Analysis
 
 - **Overview** – league leaderboards, scatter plots and role mix, filterable by team or match.

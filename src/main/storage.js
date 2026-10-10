@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS = {
   onboardingDone: false,
   fieldCalibration: null,
   redOnLeft: true,
+  myTeam: '',
 };
 
 const settingsFile = () => path.join(app.getPath('userData'), 'settings.json');

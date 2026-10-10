@@ -4,6 +4,7 @@ import { store, useApp, useCurrent } from './store';
 import { Button, DialogHost, Empty, Field, Icon, Logo, Modal, Toasts, confirmDialog } from './components/ui';
 import CompetitionModal from './components/CompetitionModal';
 import Dashboard from './views/Dashboard';
+import Event from './views/Event';
 import Picklist from './views/Picklist';
 import Teams from './views/Teams';
 import Analysis from './views/Analysis';
@@ -18,6 +19,7 @@ import { importPaths } from './lib/importing';
 const NAV = [
   { group: 'Scout', items: [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { id: 'event', label: 'Event Live', icon: 'pulse' },
     { id: 'picklist', label: 'Picklist', icon: 'picklist' },
     { id: 'teams', label: 'Teams', icon: 'users' },
     { id: 'analysis', label: 'Analysis', icon: 'chart' },
@@ -33,7 +35,7 @@ const NAV = [
   ] },
 ];
 
-const VIEWS = { dashboard: Dashboard, picklist: Picklist, teams: Teams, analysis: Analysis, film: Film, trace: Trace, pit: Pit, sync: Sync, settings: Settings };
+const VIEWS = { dashboard: Dashboard, event: Event, picklist: Picklist, teams: Teams, analysis: Analysis, film: Film, trace: Trace, pit: Pit, sync: Sync, settings: Settings };
 
 function CompSwitcher({ onNew }) {
   const { competitions, currentId } = useApp();

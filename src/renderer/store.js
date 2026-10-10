@@ -41,6 +41,7 @@ let state = {
   currentId: null,
   settings: {},
   selectedTeam: null,
+  traceSeed: null,
   saveState: 'saved', // saved | saving | error
   toasts: [],
 };
@@ -185,6 +186,9 @@ export const store = {
   // -- navigation / selection
   go(page) {
     setState({ page });
+  },
+  setTraceSeed(seed) {
+    setState({ traceSeed: seed });
   },
   setSelectedTeam(team) {
     setState({ selectedTeam: team });

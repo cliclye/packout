@@ -1,11 +1,18 @@
 const { net } = require('electron');
 
+// url -> { etag, data }. TBA answers 304 for unchanged data, which is free for rate limits.
+const tbaCache = new Map();
+
 /** Blue Alliance v3 GET. Runs in the main process so the API key never hits CORS rules. */
 async function fetchBlueAlliance(endpoint, apiKey) {
   if (!apiKey) return { status: 401, error: 'Add your Blue Alliance API key in Settings.' };
   const url = `https://www.thebluealliance.com/api/v3${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+  const cached = tbaCache.get(url);
   try {
-    const res = await net.fetch(url, { headers: { 'X-TBA-Auth-Key': apiKey, 'User-Agent': 'Packout-Desktop' } });
+    const headers = { 'X-TBA-Auth-Key': apiKey, 'User-Agent': 'Packout-Desktop' };
+    if (cached && cached.etag) headers['If-None-Match'] = cached.etag;
+    const res = await net.fetch(url, { headers });
+    if (res.status === 304 && cached) return { status: 200, data: cached.data, cached: true };
     const text = await res.text();
     let data = text;
     try {
@@ -14,11 +21,15 @@ async function fetchBlueAlliance(endpoint, apiKey) {
       /* leave as text */
     }
     if (!res.ok) {
-      const msg = res.status === 401 ? 'Blue Alliance rejected the API key.' : `Blue Alliance returned HTTP ${res.status}.`;
+      const msg = res.status === 401 ? 'Blue Alliance rejected the API key.' : res.status === 404 ? 'Blue Alliance has no data for that yet.' : `Blue Alliance returned HTTP ${res.status}.`;
       return { status: res.status, error: msg, data };
     }
+    const etag = res.headers.get('etag');
+    if (etag) tbaCache.set(url, { etag, data });
     return { status: res.status, data };
   } catch (e) {
+    // Offline: fall back to whatever we last saw.
+    if (cached) return { status: 200, data: cached.data, cached: true, stale: true };
     return { status: 0, error: `Could not reach Blue Alliance: ${e.message}` };
   }
 }

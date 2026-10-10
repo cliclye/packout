@@ -44,6 +44,7 @@ const I = {
   flag: <path d="M4 22V4M4 4h13l-2 4 2 4H4" />,
   eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></>,
   pin: <path d="M12 17v5M9 3h6l-1 7 3 3v2H7v-2l3-3z" />,
+  pulse: <path d="M3 12h4l3-8 4 16 3-8h4" />,
   rotate: <path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" />,
 };
 

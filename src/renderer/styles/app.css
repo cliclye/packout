@@ -492,3 +492,28 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* ================= event live ================= */
+.match-list { gap: 8px; }
+.mrow { display: grid; grid-template-columns: 170px minmax(0, 1fr) minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 10px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.mrow.is-mine { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mrow-meta { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+.mrow-meta small { color: var(--text-3); }
+.mside { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 9px; border: 1px solid transparent; }
+.mside.red { background: rgba(229, 72, 77, .09); }
+.mside.blue { background: rgba(59, 123, 246, .09); }
+.mside.win.red { border-color: var(--red-alliance); }
+.mside.win.blue { border-color: var(--blue-alliance); }
+.mteams { display: flex; gap: 6px; flex-wrap: wrap; }
+.mscore { font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; display: inline-flex; gap: 6px; align-items: center; }
+.mside.win .mscore { color: var(--text); }
+.mside:not(.win) .mscore { color: var(--text-2); font-weight: 600; }
+.mrow.pending .mscore { color: var(--text-3); }
+.mrow-actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.tchip { padding: 2px 9px; border-radius: 7px; font-weight: 650; font-variant-numeric: tabular-nums; border: 1px solid transparent; cursor: pointer; background: var(--surface); color: var(--text); }
+.tchip.red { background: rgba(229, 72, 77, .16); color: var(--red-alliance); }
+.tchip.blue { background: rgba(59, 123, 246, .16); color: var(--blue-alliance); }
+.tchip.scouted { border-color: currentColor; }
+.tchip.mine { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.tchip:hover { transform: translateY(-1px); }
+@media (max-width: 1280px) { .mrow { grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1fr); } .mrow-actions { grid-column: 1 / -1; justify-content: flex-start; } }
