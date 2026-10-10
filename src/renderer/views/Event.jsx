@@ -5,10 +5,27 @@ import { Badge, Button, Card, Empty, Icon, PageHeader, SearchInput, Segmented, S
 import { BarList } from '../components/charts';
 import { LEVEL_NAMES, clock, lastPlayed, loadEvent, matchLabel, matchTime, nextUp, played, relTime, sortMatches, tbaMatchUrl, tbaTeamUrl, teamNum, videoLinks } from '../lib/tbaLive';
 import { naturalNumber } from '../../shared/models';
+import { fitModel, predictMatch, simulateQuals } from '../../shared/predict';
 
 // Survives page switches so the view opens instantly with the last data.
 let memo = { key: null, data: null };
 const REFRESH_MS = 30000;
+
+const pc = (p) => `${Math.round(p * 100)}%`;
+
+/** Statbotics-style split bar: red win % vs blue win %, with projected scores. */
+function WinBar({ pred, big = false }) {
+  const r = Math.round(pred.pRed * 100);
+  return (
+    <div className={`winbar ${big ? 'big' : ''}`} title={`Projected score ${Math.round(pred.muR)} – ${Math.round(pred.muB)}`}>
+      <div className="winbar-track">
+        <span className="wb-red" style={{ width: `${Math.max(8, Math.min(92, pred.pRed * 100))}%` }}>{r}%</span>
+        <span className="wb-blue">{100 - r}%</span>
+      </div>
+      <div className="winbar-sub"><span>Red {Math.round(pred.muR)}</span><span>Blue {Math.round(pred.muB)}</span></div>
+    </div>
+  );
+}
 
 function TeamChip({ team, color, mine, scouted, onOpen }) {
   return (
@@ -18,7 +35,7 @@ function TeamChip({ team, color, mine, scouted, onOpen }) {
   );
 }
 
-function MatchRow({ m, info, now, myTeam, scoutedBy, onTeam, onVideo, onTrace, downloading }) {
+function MatchRow({ m, info, now, myTeam, scoutedBy, onTeam, onVideo, onTrace, downloading, pred, hit }) {
   const red = m.alliances.red;
   const blue = m.alliances.blue;
   const done = played(m);
@@ -45,6 +62,17 @@ function MatchRow({ m, info, now, myTeam, scoutedBy, onTeam, onVideo, onTrace, d
           <span className="mscore">{done ? al.score : '–'}{winner === color && <Icon name="check" size={14} />}</span>
         </div>
       ))}
+      {(pred || hit) && (
+        <div className="mpred">
+          {pred && <WinBar pred={pred} />}
+          {hit && (
+            <div className={`pre-call ${hit.ok ? 'ok' : 'miss'}`}>
+              <Icon name={hit.ok ? 'check' : 'x'} size={13} />
+              <span>Model had {hit.pRed >= 0.5 ? 'Red' : 'Blue'} at {pc(Math.max(hit.pRed, hit.pBlue))}{hit.ok ? '' : ' — upset'}</span>
+            </div>
+          )}
+        </div>
+      )}
       <div className="mrow-actions">
         {videos.map((v, i) => <Button key={i} size="sm" icon="play" onClick={() => api.shell.openExternal(v.url)}>{v.type === 'YouTube' ? 'Watch' : 'TBA video'}</Button>)}
         {yt && m.comp_level === 'qm' && <Button size="sm" variant="ghost" icon={downloading === m.key ? undefined : 'film'} loading={downloading === m.key} onClick={() => onVideo(m, yt)} title="Download into Film Review for this match">Film Review</Button>}
@@ -109,6 +137,9 @@ export default function Event() {
   }, []);
 
   const scoutedBy = useMemo(() => Object.fromEntries(summaries.map((s) => [s.teamNumber, s])), [summaries]);
+  // Rating model: TBA results + our scouting (leave-one-out σ, so confidence is honest).
+  const fit = useMemo(() => (data ? fitModel(data.matches, comp.matches, { tbaOprs: data.oprs }) : null), [data, comp.matches]);
+  const predFor = useCallback((m) => (fit ? predictMatch(fit.model, m.alliances.red.team_keys, m.alliances.blue.team_keys) : null), [fit]);
   const openTeam = (n) => {
     if (scoutedBy[n]) { store.setSelectedTeam(n); store.go('teams'); } else api.shell.openExternal(tbaTeamUrl(n, data?.info?.year || new Date().getFullYear()));
   };
@@ -210,6 +241,7 @@ export default function Event() {
                 <div className="stat-label">Next up</div>
                 <div className="stat-value" style={{ fontSize: 20 }}>{up ? matchLabel(up, info) : '—'}</div>
                 <div className="stat-hint">{up ? `${clock(matchTime(up))} · ${relTime(matchTime(up), now)}` : 'nothing scheduled'}</div>
+                {up && fit && <div style={{ marginTop: 8 }}><WinBar pred={predFor(up)} /></div>}
               </div>
               <div className="stat tone-ok">
                 <div className="stat-label">Latest result</div>
@@ -230,7 +262,7 @@ export default function Event() {
             </div>
 
             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-              <Segmented value={tab} onChange={setTab} options={[{ value: 'matches', label: 'Matches' }, { value: 'rankings', label: 'Rankings' }, { value: 'opr', label: 'OPR' }, { value: 'playoffs', label: 'Alliances' }, { value: 'awards', label: 'Awards' }]} />
+              <Segmented value={tab} onChange={setTab} options={[{ value: 'matches', label: 'Matches' }, { value: 'rankings', label: 'Rankings' }, { value: 'predict', label: 'Predictions' }, { value: 'opr', label: 'OPR' }, { value: 'playoffs', label: 'Alliances' }, { value: 'awards', label: 'Awards' }]} />
               {myTeam && <button type="button" className="link-btn" onClick={() => store.updateSettings({ myTeam: '' })}>Change team ({myTeam})</button>}
             </div>
 
@@ -249,7 +281,7 @@ export default function Event() {
                     {myTeam && <label className="check"><input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} /> Only {myTeam}</label>}
                   </div>
                   <div className="list match-list">
-                    {ordered.map((m) => <MatchRow key={m.key} m={m} info={info} now={now} myTeam={myTeam} scoutedBy={scoutedBy} onTeam={openTeam} onVideo={onVideo} onTrace={onTrace} downloading={dl} />)}
+                    {ordered.map((m) => <MatchRow key={m.key} m={m} info={info} now={now} myTeam={myTeam} scoutedBy={scoutedBy} onTeam={openTeam} onVideo={onVideo} onTrace={onTrace} downloading={dl} pred={played(m) ? null : predFor(m)} hit={fit?.backtest.hits.get(m.key)} />)}
                     {ordered.length === 0 && <Card><Empty icon="flag" title="No matches" body={matches.length ? 'Nothing matches those filters.' : 'The schedule has not been posted on The Blue Alliance yet.'} /></Card>}
                   </div>
                 </>
@@ -285,6 +317,8 @@ export default function Event() {
                 </Card>
               )}
 
+              {tab === 'predict' && <PredictTab data={data} fit={fit} comp={comp} scoutedBy={scoutedBy} myTeam={myTeam} info={info} now={now} onTeam={openTeam} predFor={predFor} />}
+
               {tab === 'opr' && <OprTab data={data} scoutedBy={scoutedBy} myTeam={myTeam} onTeam={openTeam} />}
 
               {tab === 'playoffs' && (
@@ -302,7 +336,7 @@ export default function Event() {
                     </div>
                   )}
                   <div className="list match-list">
-                    {matches.filter((m) => m.comp_level !== 'qm').map((m) => <MatchRow key={m.key} m={m} info={info} now={now} myTeam={myTeam} scoutedBy={scoutedBy} onTeam={openTeam} onVideo={onVideo} onTrace={onTrace} downloading={dl} />)}
+                    {matches.filter((m) => m.comp_level !== 'qm').map((m) => <MatchRow key={m.key} m={m} info={info} now={now} myTeam={myTeam} scoutedBy={scoutedBy} onTeam={openTeam} onVideo={onVideo} onTrace={onTrace} downloading={dl} pred={played(m) ? null : predFor(m)} hit={fit?.backtest.hits.get(m.key)} />)}
                   </div>
                 </div>
               )}
@@ -368,6 +402,140 @@ function OprTab({ data, scoutedBy, myTeam, onTeam }) {
           </table>
         </div>
       </Card>
+    </div>
+  );
+}
+
+function PredictTab({ data, fit, comp, scoutedBy, myTeam, info, now, onTeam, predFor }) {
+  const { model, backtest } = fit;
+  const rated = useMemo(() => [...model.rating.entries()].map(([team, r]) => ({ team, ...r })).sort((a, b) => b.value - a.value), [model]);
+  const upcoming = useMemo(() => sortMatches(data.matches).filter((m) => !played(m)), [data]);
+  const sim = useMemo(() => simulateQuals(model, data.matches), [model, data]);
+  const [view, setView] = useState('standings');
+  const [red, setRed] = useState(['', '', '']);
+  const [blue, setBlue] = useState(['', '', '']);
+  const teamOptions = rated.map((r) => r.team);
+  const custom = red.every(Boolean) && blue.every(Boolean) ? predictMatch(model, red, blue) : null;
+  const hasSignal = rated.some((r) => r.source !== 'prior');
+  const scoutedTeams = rated.filter((r) => r.scoutMatches > 0).length;
+  const sourceTone = { blend: 'accent', tba: 'neutral', scouting: 'ok', prior: 'neutral' };
+  const sourceLabel = { blend: 'Scouting + TBA', tba: 'TBA results', scouting: 'Scouting only', prior: 'No data' };
+  const topN = Math.min(8, Math.max(1, Math.floor(sim.length / 4)));
+
+  if (!hasSignal) return <Card><Empty icon="chart" title="Not enough data to predict yet" body="Predictions start once a few matches have been played on TBA or you've scouted some teams." /></Card>;
+
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <div className="stat-grid four" style={{ marginBottom: 0 }}>
+        <Stat label="Model accuracy" value={backtest.accuracy === null ? '–' : `${Math.round(backtest.accuracy * 100)}%`} hint={backtest.n ? `${backtest.correct}/${backtest.n} played matches called right (blind)` : 'needs 6+ played matches'} tone="ok" />
+        <Stat label="Typical score error" value={backtest.sigma ? `±${Math.round(backtest.sigma)}` : '–'} hint="per alliance, points" tone="accent" />
+        <Stat label="Teams rated" value={rated.length} hint={`${scoutedTeams} with your scouting`} tone="teal" />
+        <Stat label="Matches left" value={upcoming.length} hint={`${Math.round(model.trainedOn)} played used for ratings`} tone="pink" />
+      </div>
+
+      <div className="grid-main" style={{ gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1fr)' }}>
+        <div className="col">
+          <Card title="Coming up" subtitle="Win probability for the next matches">
+            {upcoming.length === 0 ? <p className="muted">No unplayed matches left.</p> : (
+              <div className="stack" style={{ gap: 14 }}>
+                {upcoming.slice(0, 8).map((m) => {
+                  const p = predFor(m);
+                  const mine = [...m.alliances.red.team_keys, ...m.alliances.blue.team_keys].some((k) => teamNum(k) === myTeam);
+                  return (
+                    <div key={m.key} className={`pred-row ${mine ? 'is-mine' : ''}`}>
+                      <div className="row" style={{ justifyContent: 'space-between' }}>
+                        <strong>{matchLabel(m, info)}</strong>
+                        <span className="muted">{clock(matchTime(m))} · {relTime(matchTime(m), now)}</span>
+                      </div>
+                      <WinBar pred={p} big />
+                      <div className="row pred-teams">
+                        <div className="mteams">{m.alliances.red.team_keys.map((k) => <TeamChip key={k} team={teamNum(k)} color="red" mine={teamNum(k) === myTeam} scouted={scoutedBy[teamNum(k)]} onOpen={onTeam} />)}</div>
+                        <div className="mteams">{m.alliances.blue.team_keys.map((k) => <TeamChip key={k} team={teamNum(k)} color="blue" mine={teamNum(k) === myTeam} scouted={scoutedBy[teamNum(k)]} onOpen={onTeam} />)}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          <Card title="Matchup simulator" subtitle="Pick any six teams to see who would win">
+            <div className="grid-2" style={{ gap: 12 }}>
+              {[['Red alliance', red, setRed, 'red'], ['Blue alliance', blue, setBlue, 'blue']].map(([label, val, set, color]) => (
+                <div key={label} className={`alliance-box ${color}`}>
+                  <h4>{label}</h4>
+                  <div className="stack" style={{ gap: 6 }}>
+                    {val.map((v, i) => (
+                      <select key={i} className="select" style={{ width: '100%' }} value={v} onChange={(e) => set(val.map((x, j) => (j === i ? e.target.value : x)))}>
+                        <option value="">Team {i + 1}…</option>
+                        {teamOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 14 }}>{custom ? <WinBar pred={custom} big /> : <p className="muted">Choose three teams per side.</p>}</div>
+          </Card>
+        </div>
+
+        <div className="col">
+          <Card title="Model accuracy" subtitle="How the model did on matches it hadn’t seen">
+            <p className="muted" style={{ lineHeight: 1.5 }}>
+              Every played match is predicted by a model trained on all <em>other</em> matches (and without that match’s scouting rows), so these numbers aren’t flattered.
+              {backtest.brier !== null && <> Brier score <strong>{backtest.brier.toFixed(3)}</strong> (0.25 = coin flip, lower is better).</>}
+            </p>
+            <div className="metric-rows" style={{ marginTop: 12 }}>
+              <div className="metric-row">
+                <div className="metric-row-top"><span>Called correctly</span><strong>{backtest.accuracy === null ? '–' : pc(backtest.accuracy)}</strong></div>
+                <div className="pct-track"><span className="pct-fill good" style={{ width: `${(backtest.accuracy || 0) * 100}%` }} /></div>
+              </div>
+              <div className="metric-row">
+                <div className="metric-row-top"><span>Scouting coverage</span><strong>{rated.length ? pc(scoutedTeams / rated.length) : '–'}</strong></div>
+                <div className="pct-track"><span className="pct-fill mid" style={{ width: `${rated.length ? (scoutedTeams / rated.length) * 100 : 0}%` }} /></div>
+              </div>
+            </div>
+            <p className="muted" style={{ marginTop: 12, fontSize: 12.5 }}>
+              Ratings blend {model.scale ? 'your scouted average points (mapped onto the match-score scale)' : 'scouting'} with a regularised OPR fitted to TBA scores. Early in an event scouting carries more weight; as results accumulate, TBA takes over.
+            </p>
+          </Card>
+
+          <Card title="Qualification outlook" subtitle="2,000 simulated finishes of the remaining quals — ranked by win count" flush
+            actions={<Segmented size="sm" value={view} onChange={setView} options={[{ value: 'standings', label: 'Projected' }, { value: 'ratings', label: 'Ratings' }]} />}>
+            <div style={{ overflow: 'auto', maxHeight: '60vh' }}>
+              {view === 'standings' ? (
+                <table className="table">
+                  <thead><tr><th>Team</th><th className="num">Wins</th><th className="num">Proj.</th><th className="num">Top {topN}</th><th className="num">Avg rank</th></tr></thead>
+                  <tbody>
+                    {sim.map((r) => (
+                      <tr key={r.team} className={`clickable ${r.team === myTeam ? 'selected' : ''}`} onClick={() => onTeam(r.team)}>
+                        <td><strong>{r.team}</strong></td>
+                        <td className="num">{r.wins}</td>
+                        <td className="num">{r.expectedWins.toFixed(1)}</td>
+                        <td className="num">{pc(r.topN)}</td>
+                        <td className="num">{r.avgRank.toFixed(1)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="table">
+                  <thead><tr><th>Team</th><th className="num">Rating</th><th>Source</th></tr></thead>
+                  <tbody>
+                    {rated.map((r) => (
+                      <tr key={r.team} className={`clickable ${r.team === myTeam ? 'selected' : ''}`} onClick={() => onTeam(r.team)}>
+                        <td><strong>{r.team}</strong></td>
+                        <td className="num">{fmt(r.value)}</td>
+                        <td><Badge tone={sourceTone[r.source]}>{sourceLabel[r.source]}</Badge></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

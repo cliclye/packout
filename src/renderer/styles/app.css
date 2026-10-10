@@ -517,3 +517,19 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 .tchip.mine { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .tchip:hover { transform: translateY(-1px); }
 @media (max-width: 1280px) { .mrow { grid-template-columns: 140px minmax(0, 1fr) minmax(0, 1fr); } .mrow-actions { grid-column: 1 / -1; justify-content: flex-start; } }
+
+/* ================= predictions ================= */
+.mpred { grid-column: 2 / 4; display: flex; align-items: center; gap: 14px; }
+.mpred .winbar { flex: 1; min-width: 0; }
+.winbar-track { display: flex; height: 22px; border-radius: 99px; overflow: hidden; background: rgba(59, 123, 246, .85); font-size: 12px; font-weight: 700; color: #fff; }
+.winbar.big .winbar-track { height: 32px; font-size: 14px; }
+.winbar-track span { display: flex; align-items: center; padding: 0 12px; white-space: nowrap; }
+.winbar-track .wb-red { background: rgba(229, 72, 77, .95); transform-origin: left; animation: grow .8s var(--ease) both; transition: width .5s var(--ease); }
+.winbar-track .wb-blue { margin-left: auto; }
+.winbar-sub { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); padding: 3px 6px 0; font-variant-numeric: tabular-nums; }
+.pre-call { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.pre-call.ok { color: var(--ok); } .pre-call.miss { color: var(--warn); }
+.pred-row { padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-2); display: flex; flex-direction: column; gap: 8px; }
+.pred-row.is-mine { border-color: var(--accent); }
+.pred-teams { justify-content: space-between; }
+@media (max-width: 1280px) { .mpred { grid-column: 1 / -1; } }

@@ -181,6 +181,12 @@ competition's event key; refreshes every 30s with ETag caching):
 
 - **Matches** – schedule, next-up with countdown, scores and winners, filter by round / team / "only my team"
 - **Videos** – watch a match, send it to Film Review, or start an AI Trace from it in one click
+- **Predictions** – our own Statbotics-style model: win probability on every upcoming match
+  (and on the Next-up card), projected scores, a matchup simulator, and projected qualification
+  finish (expected wins and top-8 odds from 2,000 simulated runs of the remaining schedule).
+  Ratings blend your **scouting** data (when you have it) with a regularised OPR fitted to **TBA** scores,
+  and work from TBA alone otherwise. Accuracy is measured blind (leave-one-out) and shown in the app —
+  roughly 70–83% of matches called correctly on 2025 events using TBA data only.
 - **Rankings, OPR/DPR/CCWM, alliances & playoff bracket, awards** – cross-referenced with your own scouting (pick score, average points)
 
 ### Analysis
