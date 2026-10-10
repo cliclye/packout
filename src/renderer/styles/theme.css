@@ -1,0 +1,104 @@
+/* Design tokens. Light by default, follows the OS in "system" mode, and can be forced with data-theme. */
+:root {
+  color-scheme: light;
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-3: #eceef3;
+  --sidebar: #eef0f5;
+  --border: #e2e5ec;
+  --border-strong: #cfd4de;
+  --text: #11141a;
+  --text-2: #465061;
+  --text-3: #7a8497;
+  --accent: #4560f2;
+  --accent-hover: #3550e0;
+  --accent-soft: rgba(69, 96, 242, 0.1);
+  --accent-ink: #ffffff;
+  --ok: #148a4a;
+  --ok-soft: rgba(20, 138, 74, 0.12);
+  --warn: #b86a06;
+  --warn-soft: rgba(217, 119, 6, 0.14);
+  --danger: #d12b3a;
+  --danger-soft: rgba(209, 43, 58, 0.1);
+  --violet: #7a3fd1;
+  --violet-soft: rgba(122, 63, 209, 0.12);
+  --teal: #0b8fa6;
+  --pink: #d6246e;
+  --red-alliance: #e5484d;
+  --blue-alliance: #3b7bf6;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05);
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 4px 14px rgba(17, 24, 39, 0.05);
+  --shadow-lg: 0 24px 60px rgba(17, 24, 39, 0.22);
+  --scrim: rgba(12, 14, 20, 0.45);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Roboto, system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0c0e13;
+    --surface: #14171e;
+    --surface-2: #191d26;
+    --surface-3: #212633;
+    --sidebar: #10131a;
+    --border: #232835;
+    --border-strong: #323949;
+    --text: #e9ecf3;
+    --text-2: #aab2c3;
+    --text-3: #7d869a;
+    --accent: #6d83ff;
+    --accent-hover: #8294ff;
+    --accent-soft: rgba(109, 131, 255, 0.16);
+    --accent-ink: #0b0e18;
+    --ok: #3ccf7d;
+    --ok-soft: rgba(60, 207, 125, 0.14);
+    --warn: #f3a23a;
+    --warn-soft: rgba(243, 162, 58, 0.15);
+    --danger: #ff6674;
+    --danger-soft: rgba(255, 102, 116, 0.14);
+    --violet: #b48aff;
+    --violet-soft: rgba(180, 138, 255, 0.16);
+    --teal: #4fd3e8;
+    --pink: #ff6fa8;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+    --scrim: rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0c0e13;
+  --surface: #14171e;
+  --surface-2: #191d26;
+  --surface-3: #212633;
+  --sidebar: #10131a;
+  --border: #232835;
+  --border-strong: #323949;
+  --text: #e9ecf3;
+  --text-2: #aab2c3;
+  --text-3: #7d869a;
+  --accent: #6d83ff;
+  --accent-hover: #8294ff;
+  --accent-soft: rgba(109, 131, 255, 0.16);
+  --accent-ink: #0b0e18;
+  --ok: #3ccf7d;
+  --ok-soft: rgba(60, 207, 125, 0.14);
+  --warn: #f3a23a;
+  --warn-soft: rgba(243, 162, 58, 0.15);
+  --danger: #ff6674;
+  --danger-soft: rgba(255, 102, 116, 0.14);
+  --violet: #b48aff;
+  --violet-soft: rgba(180, 138, 255, 0.16);
+  --teal: #4fd3e8;
+  --pink: #ff6fa8;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --scrim: rgba(0, 0, 0, 0.6);
+}

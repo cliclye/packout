@@ -5,6 +5,20 @@ A complete FIRST Robotics Competition scouting workstation for data analysis, al
 ![Packout](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+## Download
+
+Grab the latest installer from the **[Releases page](https://github.com/cliclye/packout/releases/latest)**:
+
+| Platform | File |
+| --- | --- |
+| macOS (Apple Silicon) | `Packout-<version>-arm64.dmg` — open it and drag Packout to Applications |
+| Windows | `Packout-<version> Setup.exe` — run the installer |
+
+The app is unsigned, so macOS may say it can't verify the developer: right-click the app → **Open** the first time
+(or allow it in System Settings → Privacy & Security). Windows SmartScreen: **More info → Run anyway**.
+
+Installers are built by GitHub Actions whenever a `v*` tag is pushed (`git tag v1.0.1 && git push --tags`).
+
 ## Features
 
 - **Dashboard**: Overview of team rankings, efficiency, reliability, and data health
@@ -21,7 +35,7 @@ A complete FIRST Robotics Competition scouting workstation for data analysis, al
 
 ### Required Software
 
-- **Node.js** (v18 or higher): [Download here](https://nodejs.org/)
+- **Node.js** (v22 or higher): [Download here](https://nodejs.org/)
 - **npm** (comes with Node.js)
 - **Git**: [Download here](https://git-scm.com/)
 
@@ -30,12 +44,9 @@ A complete FIRST Robotics Competition scouting workstation for data analysis, al
 - **ADB** (Android Debug Bridge) - For phone data transfer
   - Windows: Download from [Android Studio](https://developer.android.com/studio)
   - macOS: `brew install android-platform-tools`
-- **Python 3** - For AI analysis
+- **Python 3.9–3.12** - For AI path tracing (the detector packages install from inside the app)
   - Windows: Download from [python.org](https://www.python.org/downloads/)
   - macOS: `brew install python@3.12`
-- **Java** - For path analysis
-  - Windows: Download from [Adoptium](https://adoptium.net/)
-  - macOS: `brew install openjdk`
 - **yt-dlp** - For video downloading
   - Windows: Download from [yt-dlp GitHub](https://github.com/yt-dlp/yt-dlp)
   - macOS: `brew install yt-dlp`
@@ -96,7 +107,7 @@ A complete FIRST Robotics Competition scouting workstation for data analysis, al
 
 1. **Onboarding**: The app will guide you through initial setup
    - Welcome screen
-   - Dependency check (ADB, Python, Java, yt-dlp)
+   - Dependency check (ADB, Python, yt-dlp, ffmpeg)
    - Ready to start
 
 2. **Create a Competition**
@@ -163,14 +174,23 @@ There are several ways to import scouting data:
 - Jump to key timestamps (Auto, Teleop, Endgame)
 - View synchronized scouting data
 
-### AI Analysis
+### AI Trace
 
-- Enter match video URL
-- Configure alliance teams
-- Download video
-- Run Roboflow AI detection
-- Execute path analysis
-- Import generated path data
+Turns match video into robot paths using the same tracker as `scouting-ai`
+(`src/main/scout.js` is a line-for-line port of `AIScout`, verified to produce
+identical output to the Java version — see `test/scout.test.js`).
+
+1. **Source** – video link, local file, or an existing detector `output.json`.
+2. **Download & detect** – yt-dlp downloads 720p; the Roboflow detector runs in a
+   private Python environment (installed from the page, needs Python 3.9–3.12 and
+   your Roboflow key in Settings).
+3. **Calibrate & track** – drag the four field corners on the preview frame, enter
+   the teams (closest to camera first) and optionally the teleop start time.
+4. **Review & import** – preview all six paths, then import into the competition
+   (or export AIScout-format CSVs).
+
+Analyses are kept per match, so you can re-track with a better calibration
+without repeating the slow stages.
 
 ### Sync
 
@@ -184,9 +204,8 @@ There are several ways to import scouting data:
 
 ### Data Storage
 
-- Competition data is stored in localStorage
-- Each competition's data is saved separately
-- Data persists between app launches
+- Everything is stored in the app's user-data folder (`workspace.json`), not localStorage
+- Each competition is its own workspace; use Sync → Backup to export one
 
 ### API Keys
 
@@ -198,7 +217,7 @@ There are several ways to import scouting data:
 
 ### App won't start
 
-- Ensure Node.js v18+ is installed: `node --version`
+- Ensure Node.js v22+ is installed: `node --version`
 - Delete `node_modules` and reinstall: `rm -rf node_modules && npm install`
 - Check for port conflicts (default: 3000)
 
@@ -218,7 +237,7 @@ There are several ways to import scouting data:
 ### AI analysis fails
 
 - Ensure Python 3 is installed: `python3 --version`
-- Ensure Java is installed: `java -version`
+- Install the detector packages from the AI Trace page (Python 3.9–3.12 required)
 - Check Roboflow API key is valid
 - Verify scouting-ai directory exists
 
@@ -235,19 +254,15 @@ There are several ways to import scouting data:
 ```
 packout-desktop/
 ├── src/
-│   ├── index.js           # Electron main process
-│   ├── preload.js         # Preload script for IPC
-│   ├── store.js           # State management
-│   ├── models.js          # Data models
-│   ├── analytics.js       # Analytics calculations
-│   └── renderer/
-│       ├── App.jsx        # Main React component
-│       ├── App.css        # Styles
-│       └── index.jsx      # React entry point
-├── package.json
-├── forge.config.js        # Electron Forge config
-├── webpack.main.config.js # Main process webpack config
-└── webpack.renderer.config.js # Renderer webpack config
+│   ├── index.js            # Electron main process (IPC, media protocol)
+│   ├── preload.js          # Safe bridge exposed to the UI as window.packout
+│   ├── main/               # scout.js (AIScout port), ai.js pipeline, importer, adb, storage…
+│   ├── shared/             # models, analytics, path math (used by main + UI)
+│   ├── resources/          # detector.py, bundled schedule
+│   └── renderer/           # React UI: views/, components/, styles/, store.js
+├── test/scout.test.js      # verifies the tracker against scouting-ai's Java output
+├── forge.config.js
+└── .github/workflows/      # builds .dmg / Setup.exe and publishes releases on v* tags
 ```
 
 ### Available Scripts

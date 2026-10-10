@@ -1,344 +1,236 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, nativeTheme, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const https = require('https');
-const child_process = require('child_process');
-const os = require('os');
+const { pathToFileURL } = require('url');
 
-let mainWindow;
-let adbInterval;
+const storage = require('./main/storage');
+const importer = require('./main/importer');
+const adb = require('./main/adb');
+const netApi = require('./main/net');
+const ai = require('./main/ai');
+const scout = require('./main/scout');
+const { findCommand } = require('./main/util');
 
-// Default folders
-const getDefaultPaths = () => {
-  const home = os.homedir();
-  return [
-    path.join(home, 'Documents', 'ScoutingData'),
-    path.join(home, 'Documents', 'PitData'),
-    path.join(home, 'Documents', 'MatchVideos'),
-    path.join(home, 'Documents', 'PACKVideos'),
-    path.join(home, 'Documents', 'ScoutingAIData')
-  ];
+try {
+  // Windows installer launches the app with squirrel flags; exit early for those.
+  if (require('electron-squirrel-startup')) app.quit();
+} catch {
+  /* not on Windows / not installed */
+}
+
+// Local files (match videos, pit photos, calibration frames) are served through a
+// custom scheme so the renderer never needs file:// access.
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'packout-media', privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, bypassCSP: false } },
+]);
+
+const MEDIA_EXTS = new Set(['.mp4', '.mov', '.m4v', '.webm', '.mkv', '.avi', '.png', '.jpg', '.jpeg']);
+
+// Dev-only: PACKOUT_DEBUG_PORT=9333 npm start lets test scripts drive the window over CDP.
+if (!app.isPackaged && process.env.PACKOUT_DEBUG_PORT) app.commandLine.appendSwitch('remote-debugging-port', process.env.PACKOUT_DEBUG_PORT);
+
+let mainWindow = null;
+
+const send = (channel, payload) => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
 };
 
 function createWindow() {
+  const settings = storage.getSettings();
+  nativeTheme.themeSource = ['light', 'dark'].includes(settings.theme) ? settings.theme : 'system';
+
   mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 960,
-    minHeight: 640,
+    width: 1360,
+    height: 880,
+    minWidth: 1040,
+    minHeight: 680,
+    show: false,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0c0e13' : '#f5f6f8',
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    trafficLightPosition: { x: 18, y: 18 },
     webPreferences: {
       contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
   });
 
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    let same = false;
+    try {
+      same = new URL(url).origin === new URL(MAIN_WINDOW_WEBPACK_ENTRY).origin;
+    } catch {
+      /* malformed -> block */
+    }
+    if (!same) e.preventDefault();
+  });
+  mainWindow.on('closed', () => (mainWindow = null));
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 }
 
 app.whenReady().then(() => {
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+  protocol.handle('packout-media', async (request) => {
+    try {
+      const url = new URL(request.url);
+      const file = decodeURIComponent(url.pathname.replace(/^\//, ''));
+      if (!MEDIA_EXTS.has(path.extname(file).toLowerCase()) || !fs.existsSync(file)) return new Response('Not found', { status: 404 });
+      // net.fetch on a file:// URL honours Range headers, so <video> seeking works.
+      return net.fetch(pathToFileURL(file).toString(), { headers: request.headers });
+    } catch {
+      return new Response('Bad request', { status: 400 });
     }
+  });
+
+  if (app.isPackaged) {
+    session.defaultSession.webRequest.onHeadersReceived((details, cb) => {
+      cb({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: packout-media:; media-src 'self' blob: packout-media:; connect-src 'self'; font-src 'self' data:",
+          ],
+        },
+      });
+    });
+  }
+
+  ai.setEmitter((payload) => send('ai:event', payload));
+  createWindow();
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  adb.stop();
+  if (process.platform !== 'darwin') app.quit();
 });
 
-ipcMain.handle('select-folder', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openDirectory']
-  });
-  return result.canceled ? null : result.filePaths;
-});
+// ------------------------------------------------------------------- IPC ----
 
-ipcMain.handle('select-video', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    properties: ['openFile'],
-    filters: [
-      { name: 'Video files', extensions: ['mp4', 'mov', 'm4v', 'avi', 'mkv'] }
-    ]
-  });
-  return result.canceled ? null : result.filePaths[0];
-});
-
-ipcMain.handle('import-folder', async (event, folderPath) => {
-  const results = { matchRecords: [], pitRecords: [], robotPaths: [], videoFiles: [] };
-  
-  const scanDir = (dir) => {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-      const fullPath = path.join(dir, file);
-      const stat = fs.statSync(fullPath);
-      if (stat.isDirectory()) {
-        scanDir(fullPath);
-      } else {
-        const ext = path.extname(file).toLowerCase();
-        if (ext === '.json') {
-          try {
-            const content = fs.readFileSync(fullPath, 'utf8');
-            const data = JSON.parse(content);
-            if (data.matchNumber !== undefined) {
-              results.matchRecords.push(data);
-            } else if (data.teamNumber !== undefined) {
-              results.pitRecords.push(data);
-            }
-          } catch (e) {
-            console.error("Error parsing JSON:", fullPath, e);
-          }
-        } else if (ext === '.csv') {
-          try {
-            const content = fs.readFileSync(fullPath, 'utf8');
-            const lines = content.split('\n');
-            const pathPoints = [];
-            for (const line of lines) {
-              if (!line.trim()) continue;
-              const [isAuto, x, y, time] = line.split(',');
-              if (isAuto !== undefined && x !== undefined && y !== undefined && time !== undefined) {
-                pathPoints.push({
-                  isAuto: isAuto.trim() === 'true' || isAuto.trim() === '1',
-                  x: parseFloat(x),
-                  y: parseFloat(y),
-                  time: parseFloat(time)
-                });
-              }
-            }
-            const digitsMatch = file.match(/\d+/);
-            const team = digitsMatch ? parseInt(digitsMatch[0]) : null;
-            if (team) {
-              results.robotPaths.push({ team, pathPoints, file: fullPath });
-            }
-          } catch (e) {
-            console.error("Error parsing CSV:", fullPath, e);
-          }
-        } else if (['.mp4', '.mov', '.mkv', '.avi', '.m4v'].includes(ext)) {
-          results.videoFiles.push(fullPath);
-        }
-      }
-    }
-  };
-  
-  if (fs.existsSync(folderPath)) {
-    scanDir(folderPath);
-  }
-  return results;
-});
-
-ipcMain.handle('export-csv', async (event, content, defaultPath) => {
-  const result = await dialog.showSaveDialog(mainWindow, {
-    defaultPath: defaultPath || 'export.csv',
-    filters: [{ name: 'CSV', extensions: ['csv'] }]
-  });
-  if (!result.canceled && result.filePath) {
-    fs.writeFileSync(result.filePath, content, 'utf8');
-    return result.filePath;
-  }
-  return null;
-});
-
-ipcMain.handle('get-default-folders', async () => {
-  const folders = getDefaultPaths();
-  return folders.map(f => ({
-    path: f,
-    exists: fs.existsSync(f)
-  }));
-});
-
-ipcMain.handle('scan-default-folders', async () => {
-  const folders = getDefaultPaths();
-  for (const f of folders) {
-    if (!fs.existsSync(f)) {
-      fs.mkdirSync(f, { recursive: true });
-    }
-  }
-  return true;
-});
-
-ipcMain.handle('read-schedule-file', async () => {
-  try {
-    let schedPath = path.join(app.getAppPath(), 'src', 'resources', 'schedule.txt');
-    if (!fs.existsSync(schedPath) && process.resourcesPath) {
-      schedPath = path.join(process.resourcesPath, 'schedule.txt');
-    }
-    
-    if (fs.existsSync(schedPath)) {
-      const content = fs.readFileSync(schedPath, 'utf8');
-      const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      const matches = [];
-      for (let i = 0; i < lines.length; i += 2) {
-        if (i + 1 < lines.length) {
-          const name = lines[i];
-          const parts = lines[i+1].split('\t');
-          if (parts.length >= 6) {
-             const matchNumber = parseInt(name.replace(/\D/g, '') || "0", 10);
-             matches.push({
-               matchNumber: matchNumber,
-               name: name,
-               redTeams: [parts[0].trim(), parts[1].trim(), parts[2].trim()],
-               blueTeams: [parts[3].trim(), parts[4].trim(), parts[5].trim()],
-               timeLabel: parts.slice(6).join(' ').trim()
-             });
-          }
-        }
-      }
-      return matches;
-    }
-    return [];
-  } catch (e) {
-    console.error("Error reading schedule:", e);
-    return [];
-  }
-});
-
-ipcMain.handle('fetch-blue-alliance', (event, endpoint, apiKey) => {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'www.thebluealliance.com',
-      path: `/api/v3${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`,
-      method: 'GET',
-      headers: {
-        'X-TBA-Auth-Key': apiKey,
-        'User-Agent': 'Packout-Desktop'
-      }
-    };
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve({ status: res.statusCode, data: JSON.parse(data) });
-        } catch (e) {
-          resolve({ status: res.statusCode, data: data });
-        }
-      });
-    });
-    req.on('error', (e) => reject(e));
-    req.end();
-  });
-});
-
-ipcMain.handle('check-command', (event, command) => {
-  return new Promise((resolve) => {
-    child_process.exec(`which ${command}`, (error) => {
-      resolve(!error);
-    });
-  });
-});
-
-ipcMain.handle('start-adb-transfer', (event, destination) => {
-  if (adbInterval) return false;
-  adbInterval = setInterval(() => {
-    child_process.exec(`adb pull /sdcard/Documents/ScoutingData/ "${destination}"`, (error, stdout) => {
-      if (!error && stdout.toLowerCase().includes('pulled')) {
-         console.log("ADB Transfer Success:", stdout);
-      }
-    });
-  }, 5000);
-  return true;
-});
-
-ipcMain.handle('stop-adb-transfer', () => {
-  if (adbInterval) {
-    clearInterval(adbInterval);
-    adbInterval = null;
-    return true;
-  }
-  return false;
-});
-
-ipcMain.handle('download-video', async (event, url, destination, usingYtDlp = true) => {
-  const downloadDir = path.join(app.getPath('userData'), 'DownloadedVideos');
-  if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir, { recursive: true });
-  const finalDest = destination || path.join(downloadDir, `match-${Date.now()}.mp4`);
-
-  return new Promise((resolve, reject) => {
-    if (usingYtDlp) {
-      // Use yt-dlp with options to handle YouTube restrictions
-      const cmd = `yt-dlp \
-        -f "best[ext=mp4][height<=720]/best[ext=mp4]/best" \
-        -o "${finalDest}" \
-        --no-playlist \
-        --no-update \
-        --no-warnings \
-        --extractor-args "youtube:player_client=android" \
-        "${url}"`;
-
-      child_process.exec(cmd, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
-        if (error) {
-          console.error('yt-dlp error:', error);
-          console.error('stderr:', stderr);
-
-          // Try fallback with different format
-          const fallbackCmd = `yt-dlp \
-            -f "best[height<=480]/worst" \
-            -o "${finalDest}" \
-            --no-playlist \
-            --no-update \
-            --no-warnings \
-            "${url}"`;
-
-          child_process.exec(fallbackCmd, { maxBuffer: 1024 * 1024 * 10 }, (fallbackError, fallbackStdout, fallbackStderr) => {
-            if (fallbackError) {
-              reject(new Error(`Video download failed: ${error.message || stderr || fallbackStderr || 'Unknown error'}`));
-            } else {
-              if (fs.existsSync(finalDest)) {
-                resolve({ path: finalDest, stdout: fallbackStdout });
-              } else {
-                reject(new Error('Video download completed but file not found'));
-              }
-            }
-          });
-        } else {
-          if (fs.existsSync(finalDest)) {
-            resolve({ path: finalDest, stdout });
-          } else {
-            reject(new Error('Video download completed but file not found'));
-          }
-        }
-      });
-    } else {
-      const file = fs.createWriteStream(finalDest);
-      https.get(url, (response) => {
-        if (response.statusCode !== 200) {
-          file.close();
-          fs.unlink(finalDest, () => {});
-          reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
-          return;
-        }
-        response.pipe(file);
-        file.on('finish', () => {
-          file.close();
-          resolve({ path: finalDest, stdout: 'Downloaded via HTTP' });
-        });
-      }).on('error', (err) => {
-        file.close();
-        fs.unlink(finalDest, () => {});
-        reject(err);
-      });
-    }
-  });
-});
-
-ipcMain.handle('save-settings', async (event, settings) => {
-  const settingsPath = path.join(app.getPath('userData'), 'settings.json');
-  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
-  return true;
-});
-
-ipcMain.handle('load-settings', async () => {
-  const settingsPath = path.join(app.getPath('userData'), 'settings.json');
-  if (fs.existsSync(settingsPath)) {
+/** Every handler resolves to {ok,data} / {ok:false,error} so errors reach the UI with clean messages. */
+function handle(channel, fn) {
+  ipcMain.handle(channel, async (event, ...args) => {
     try {
-      return JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+      return { ok: true, data: await fn(...args) };
     } catch (e) {
-      console.error("Error loading settings:", e);
+      console.error(`[${channel}]`, e);
+      return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+  });
+}
+
+handle('settings:get', () => storage.getSettings());
+handle('settings:set', (patch) => {
+  const next = storage.setSettings(patch || {});
+  if (patch && patch.theme) nativeTheme.themeSource = ['light', 'dark'].includes(patch.theme) ? patch.theme : 'system';
+  return next;
+});
+handle('workspace:load', () => storage.loadWorkspace());
+handle('workspace:save', (data) => storage.saveWorkspace(data));
+
+handle('dialog:folder', async () => {
+  const r = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory', 'multiSelections'] });
+  return r.canceled ? [] : r.filePaths;
+});
+handle('dialog:video', async () => {
+  const r = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile'],
+    filters: [{ name: 'Video', extensions: ['mp4', 'mov', 'm4v', 'webm', 'mkv', 'avi'] }],
+  });
+  return r.canceled ? null : r.filePaths[0];
+});
+handle('dialog:open', async (filters, title) => {
+  const r = await dialog.showOpenDialog(mainWindow, { title, properties: ['openFile'], filters });
+  return r.canceled ? null : r.filePaths[0];
+});
+handle('dialog:save', async ({ content, defaultPath, filters }) => {
+  const r = await dialog.showSaveDialog(mainWindow, { defaultPath, filters });
+  if (r.canceled || !r.filePath) return null;
+  fs.writeFileSync(r.filePath, content, 'utf8');
+  return r.filePath;
+});
+handle('fs:read-text', (file) => {
+  const st = fs.statSync(file);
+  if (st.size > 256 * 1024 * 1024) throw new Error('File is too large.');
+  return fs.readFileSync(file, 'utf8');
+});
+handle('shell:reveal', (file) => shell.showItemInFolder(file));
+handle('shell:open-external', (url) => {
+  if (!/^https?:\/\//i.test(url)) throw new Error('Only web links can be opened.');
+  return shell.openExternal(url);
+});
+
+handle('sync:default-folders', () => importer.defaultFolders());
+handle('sync:import-path', (target) => importer.importPath(target));
+
+handle('adb:status', () => adb.status());
+handle('adb:start', () => adb.start((ev) => send('adb:event', ev)));
+handle('adb:stop', () => adb.stop());
+
+handle('tba:fetch', (endpoint, key) => netApi.fetchBlueAlliance(endpoint, key || storage.getSettings().tbaApiKey));
+handle('llm:chat', (req) => {
+  const s = storage.getSettings();
+  const provider = s.llmProvider === 'anthropic' ? 'anthropic' : 'openai';
+  return netApi.chat({
+    provider,
+    apiKey: s.llmApiKey,
+    model: provider === 'anthropic' ? s.anthropicModel : s.openaiModel,
+    system: req.system,
+    messages: req.messages,
+  });
+});
+
+handle('tools:status', async () => {
+  const status = await ai.toolStatus();
+  return { ...status, adb: findCommand(['adb']) };
+});
+
+handle('video:download', ({ url, matchNumber, jobId }) => ai.downloadMatchVideo({ url, matchNumber, jobId }));
+
+handle('ai:setup', () => ai.setupEnvironment());
+handle('ai:cancel', () => ai.cancel());
+handle('ai:runs', () => ai.listRuns());
+handle('ai:run', (id) => ai.getRun(id));
+handle('ai:create', (p) => ai.createRun(p));
+handle('ai:update', (id, patch) => ai.updateRun(id, patch));
+handle('ai:delete', (id) => ai.deleteRun(id));
+handle('ai:import-detections', (p) => ai.importDetections(p));
+handle('ai:set-cover', (id, dataUrl) => ai.setCover(id, dataUrl));
+handle('ai:download', (id) => ai.downloadForRun(id));
+handle('ai:detect', (id) => ai.detect(id));
+handle('ai:track', (id, params) => ai.trackRun(id, params));
+handle('ai:save-csv', (p) => ai.saveCsv(p));
+handle('ai:default-calibration', () => scout.DEFAULT_CALIBRATION);
+
+handle('schedule:bundled', () => {
+  const candidates = [
+    path.join(app.getAppPath(), 'src', 'resources', 'schedule.txt'),
+    path.join(process.resourcesPath || '', 'resources', 'schedule.txt'),
+    path.join(process.resourcesPath || '', 'schedule.txt'),
+  ];
+  const file = candidates.find((p) => fs.existsSync(p));
+  if (!file) return [];
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const matches = [];
+  for (let i = 0; i + 1 < lines.length; i += 2) {
+    const name = lines[i];
+    const parts = lines[i + 1].split('\t').map((p) => p.trim());
+    if (parts.length >= 6) {
+      matches.push({
+        matchNumber: parseInt(name.replace(/\D/g, '') || '0', 10),
+        name,
+        redTeams: parts.slice(0, 3),
+        blueTeams: parts.slice(3, 6),
+        timeLabel: parts.slice(6).join(' '),
+      });
     }
   }
-  return {};
+  return matches;
 });

@@ -12,6 +12,10 @@ module.exports = {
         },
       },
       {
+        test: /\.(png|jpe?g|svg)$/i,
+        type: 'asset/inline',
+      },
+      {
         test: /\.css$/,
         use: ['style-loader', 'css-loader'],
       },

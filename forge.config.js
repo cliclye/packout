@@ -13,8 +13,8 @@ module.exports = {
       config: {},
     },
     {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
+      name: '@electron-forge/maker-dmg',
+      config: {},
     },
     {
       name: '@electron-forge/maker-deb',
@@ -24,12 +24,18 @@ module.exports = {
       name: '@electron-forge/maker-rpm',
       config: {},
     },
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['darwin'],
+    },
   ],
   plugins: [
     {
       name: '@electron-forge/plugin-webpack',
       config: {
         mainConfig: './webpack.main.config.js',
+        devContentSecurityPolicy:
+          "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: packout-media:; media-src 'self' blob: packout-media:; connect-src 'self' ws:",
         renderer: {
           config: './webpack.renderer.config.js',
           entryPoints: [
