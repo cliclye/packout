@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import { getSummaries, store, useApp, useCurrent } from '../store';
-import { Badge, Button, Card, Empty, Icon, PageHeader, SearchInput, Segmented, Spinner, Stat, fmt } from '../components/ui';
+import { AnimatedValue, Badge, Button, Card, Empty, Icon, PageHeader, SearchInput, Segmented, Spinner, Stat, fmt } from '../components/ui';
 import { BarList } from '../components/charts';
 import { LEVEL_NAMES, clock, lastPlayed, loadEvent, matchLabel, matchTime, nextUp, played, relTime, sortMatches, tbaMatchUrl, tbaTeamUrl, teamNum, videoLinks } from '../lib/tbaLive';
 import { naturalNumber } from '../../shared/models';
@@ -31,6 +31,36 @@ function TeamChip({ team, color, mine, scouted, onOpen }) {
   return (
     <button type="button" className={`tchip ${color} ${mine ? 'mine' : ''} ${scouted ? 'scouted' : ''}`} onClick={() => onOpen(team)} title={scouted ? `Scouted · pick score ${fmt(scouted.pickScore)} · rank ${scouted.rank}` : 'Open on The Blue Alliance'}>
       {team}
+    </button>
+  );
+}
+
+/** Always-visible scoreboard for the prediction model: how often it called the winner. */
+function AccuracyBanner({ fit, matches, info, onOpen }) {
+  const bt = fit.backtest;
+  const dots = useMemo(
+    () => sortMatches(matches).filter(played).sort((a, b) => matchTime(a) - matchTime(b)).map((m) => ({ m, h: bt.hits.get(m.key) })).filter((d) => d.h && d.h.actual !== 'tie').slice(-30),
+    [matches, bt]
+  );
+  const pctTxt = bt.accuracy === null ? '–' : `${Math.round(bt.accuracy * 100)}%`;
+  const small = bt.n < 20;
+  return (
+    <button type="button" className="acc-banner" onClick={onOpen} title="Open predictions">
+      <div className="acc-main">
+        <span className="acc-label"><Icon name="sparkles" size={15} /> Prediction model</span>
+        <span className="acc-value"><AnimatedValue value={pctTxt} /></span>
+        <span className="acc-sub">{bt.n ? `${bt.correct} of ${bt.n} matches called correctly` : 'Needs 6+ played matches to score itself'}</span>
+      </div>
+      <div className="acc-dots" aria-label="Recent predictions">
+        {dots.length === 0 && <span className="muted">No results to grade yet</span>}
+        {dots.map(({ m, h }) => (
+          <i key={m.key} className={h.ok ? 'hit' : 'miss'} title={`${matchLabel(m, info)}: model said ${h.pRed >= 0.5 ? 'Red' : 'Blue'} ${Math.round(Math.max(h.pRed, h.pBlue) * 100)}% — ${h.ok ? 'correct' : 'upset'}`} />
+        ))}
+      </div>
+      <div className="acc-meta">
+        <span>{small && bt.n ? 'Small sample — still learning' : 'Graded blind on matches it hadn’t seen'}</span>
+        {bt.brier !== null && <span>Brier {bt.brier.toFixed(3)}</span>}
+      </div>
     </button>
   );
 }
@@ -235,6 +265,7 @@ export default function Event() {
 
         {data && (
           <>
+            {fit && <AccuracyBanner fit={fit} matches={data.matches} info={info} onOpen={() => setTab('predict')} />}
             <div className="stat-grid four">
               <Stat label="Qualification progress" value={`${qualsDone}/${quals.length}`} hint={quals.length ? `${Math.round((qualsDone / quals.length) * 100)}% played` : 'no schedule posted'} tone="accent" />
               <div className="stat tone-teal">

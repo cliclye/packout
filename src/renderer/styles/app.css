@@ -533,3 +533,16 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 .pred-row.is-mine { border-color: var(--accent); }
 .pred-teams { justify-content: space-between; }
 @media (max-width: 1280px) { .mpred { grid-column: 1 / -1; } }
+
+/* accuracy banner */
+.acc-banner { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 24px; padding: 12px 18px; margin-bottom: 14px; text-align: left; cursor: pointer; border-radius: var(--radius); border: 1px solid var(--border); background: linear-gradient(100deg, var(--accent-soft), var(--surface) 55%); box-shadow: var(--shadow-sm); }
+.acc-banner:hover { border-color: var(--accent); transform: translateY(-1px); }
+.acc-main { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.acc-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); }
+.acc-value { font-size: 30px; font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.acc-sub { color: var(--text-2); }
+.acc-dots { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; min-width: 0; }
+.acc-dots i { width: 10px; height: 10px; border-radius: 3px; background: var(--ok); animation: dotPop .4s var(--ease) both; }
+.acc-dots i.miss { background: var(--danger); }
+.acc-meta { display: flex; flex-direction: column; align-items: flex-end; font-size: 12px; color: var(--text-3); }
+@media (max-width: 1200px) { .acc-banner { grid-template-columns: 1fr; gap: 8px; } .acc-dots, .acc-meta { justify-content: flex-start; align-items: flex-start; } }
