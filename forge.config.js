@@ -4,17 +4,19 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    name: 'Packout',
+    icon: './assets/icon.icns',
     extraResource: ['./src/resources']
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: { setupIcon: './assets/icon.ico', iconUrl: 'https://raw.githubusercontent.com/cliclye/packout/main/packout-desktop/assets/icon.ico' },
     },
     {
       name: '@electron-forge/maker-dmg',
-      config: {},
+      config: { icon: './assets/icon.icns' },
     },
     {
       name: '@electron-forge/maker-deb',

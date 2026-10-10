@@ -100,6 +100,15 @@ app.whenReady().then(() => {
     });
   }
 
+  // Dev runs (npm start) would otherwise show Electron's atom in the Dock.
+  if (process.platform === 'darwin' && !app.isPackaged && app.dock) {
+    try {
+      app.dock.setIcon(path.join(app.getAppPath(), 'assets', 'icon.png'));
+    } catch {
+      /* cosmetic */
+    }
+  }
+
   ai.setEmitter((payload) => send('ai:event', payload));
   createWindow();
   app.on('activate', () => {
