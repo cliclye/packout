@@ -48,7 +48,7 @@ contextBridge.exposeInMainWorld('packout', {
   },
   tba: { fetch: (endpoint, key) => call('tba:fetch', endpoint, key) },
   llm: { chat: (req) => call('llm:chat', req) },
-  tools: { status: () => call('tools:status') },
+  tools: { status: () => call('tools:status'), updateYtDlp: () => call('tools:update-ytdlp') },
   video: { download: (req) => call('video:download', req) },
   ai: {
     setup: () => call('ai:setup'),

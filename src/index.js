@@ -192,6 +192,7 @@ handle('tools:status', async () => {
   return { ...status, adb: findCommand(['adb']) };
 });
 
+handle('tools:update-ytdlp', async () => { await ai.ensureYtDlp({ force: true, onLog: (m) => send('ai:event', { job: 'setup', type: 'log', message: m }) }); return true; });
 handle('video:download', ({ url, matchNumber, jobId }) => ai.downloadMatchVideo({ url, matchNumber, jobId }));
 
 handle('ai:setup', () => ai.setupEnvironment());

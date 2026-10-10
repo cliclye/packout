@@ -96,7 +96,8 @@ export default function Settings() {
               <>
                 <ToolRow title="Python 3.9–3.12" ok={tools.python?.ok} detail={tools.python?.ok ? `${tools.python.version} · ${tools.python.path}` : tools.python?.message} />
                 <ToolRow title="AI detector packages" ok={tools.env?.ready} detail={tools.env?.ready ? 'Installed' : 'Install from the AI Trace page'} />
-                <ToolRow title="yt-dlp" ok={Boolean(tools.ytdlp)} detail={tools.ytdlp || 'brew install yt-dlp'} />
+                <ToolRow title="yt-dlp" ok={Boolean(tools.ytdlp)} detail={(tools.ytdlp || 'Installed automatically on first download') + ' — kept up to date by Packout'} />
+                <div style={{ padding: '8px 0' }}><Button size="sm" icon="download" onClick={async () => { try { await api.tools.updateYtDlp(); store.toast('yt-dlp is up to date', 'success'); check(); } catch (e) { store.toast(e.message, 'error'); } }}>Update yt-dlp now</Button></div>
                 <ToolRow title="ffmpeg" ok={Boolean(tools.ffmpeg)} detail={tools.ffmpeg || 'Optional — merges separate audio/video streams (brew install ffmpeg)'} />
                 <ToolRow title="adb (Android platform-tools)" ok={Boolean(tools.adb)} detail={tools.adb || 'brew install android-platform-tools'} />
                 <p className="muted" style={{ marginTop: 10 }}>AI workspace: <code>{tools.workDir}</code></p>

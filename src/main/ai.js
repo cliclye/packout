@@ -106,7 +106,7 @@ async function toolStatus() {
   return {
     python,
     env: { ready: missing.length === 0, missing },
-    ytdlp: findCommand(['yt-dlp', 'yt-dlp_macos']),
+    ytdlp: (fs.existsSync(ytBin()) ? ytBin() : null) || findCommand(['yt-dlp', 'yt-dlp_macos']),
     ffmpeg: findCommand(['ffmpeg']),
     roboflowKey: Boolean(settings.roboflowApiKey),
     workDir: aiRoot(),
@@ -248,13 +248,52 @@ function setCover(id, dataUrl) {
   return getRun(id);
 }
 
+// ------------------------------------------------------------ yt-dlp tool ---
+
+// YouTube changes constantly; distro-packaged yt-dlp goes stale within weeks and
+// then downloads fail (403 / 360p only). Keep a private, auto-updated copy.
+const ytVenv = () => path.join(aiRoot(), 'ytdlp-venv');
+const ytBin = () => path.join(ytVenv(), isWin ? 'Scripts' : 'bin', isWin ? 'yt-dlp.exe' : 'yt-dlp');
+const ytStamp = () => path.join(aiRoot(), 'ytdlp.stamp');
+const YT_MAX_AGE_MS = 3 * 24 * 3600 * 1000;
+
+async function ensureYtDlp({ force = false, onLog } = {}) {
+  const system = findCommand(['yt-dlp', 'yt-dlp_macos']);
+  const have = fs.existsSync(ytBin());
+  let age = Infinity;
+  try {
+    age = Date.now() - fs.statSync(ytStamp()).mtimeMs;
+  } catch {
+    /* never updated */
+  }
+  if (have && !force && age < YT_MAX_AGE_MS) return ytBin();
+  const py = await findPython();
+  if (!py.path) return have ? ytBin() : system;
+  try {
+    if (!fs.existsSync(ytVenv())) {
+      if (onLog) onLog('Setting up a private yt-dlp…');
+      const r = await runProcess(py.path, [...(py.pre || []), '-m', 'venv', ytVenv()], { onStart: track });
+      if (r.code !== 0) throw new Error(r.tail);
+    }
+    if (onLog) onLog('Updating yt-dlp so YouTube downloads keep working…');
+    const pip = path.join(ytVenv(), isWin ? 'Scripts' : 'bin', isWin ? 'python.exe' : 'python');
+    const r = await runProcess(pip, ['-m', 'pip', 'install', '--disable-pip-version-check', '-q', '-U', 'yt-dlp[default]'], { onStart: track });
+    if (r.code !== 0) throw new Error(r.tail);
+    fs.writeFileSync(ytStamp(), String(Date.now()));
+    return ytBin();
+  } catch (e) {
+    if (onLog) onLog('Could not update yt-dlp (' + String(e.message).split('\n').pop() + '); using the installed one.');
+    return have ? ytBin() : system;
+  }
+}
+
 // --------------------------------------------------------------- download ---
 
 const YT_HINTS = [
   [/sign in to confirm|not a bot|cookies/i, 'YouTube wants a signed-in session. In Settings choose "Use cookies from browser" (e.g. Chrome) and try again.'],
   [/n challenge|javascript runtime|js runtime|deno/i, 'This yt-dlp needs a JavaScript runtime for YouTube. Install Deno (brew install deno) or Node, and keep yt-dlp up to date (yt-dlp -U).'],
   [/unsupported url/i, 'yt-dlp does not recognise that URL.'],
-  [/http error 403/i, 'The site refused the download (HTTP 403). Update yt-dlp (yt-dlp -U) or add browser cookies in Settings.'],
+  [/http error 403/i, 'The site refused the download (HTTP 403). Packout keeps its own yt-dlp up to date; try “Update yt-dlp” in Settings, or add browser cookies there.'],
 ];
 
 function describeYtError(tail) {
@@ -264,7 +303,7 @@ function describeYtError(tail) {
 
 /** Downloads `url` into `dir` as `<base>.<ext>`; resolves to the file path. */
 async function downloadWithYtDlp({ url, dir, base, format, mergeMp4 = true, onProgress, onLog }) {
-  const ytdlp = findCommand(['yt-dlp', 'yt-dlp_macos']);
+  const ytdlp = await ensureYtDlp({ onLog });
   if (!ytdlp) throw new Error('yt-dlp is not installed. macOS: brew install yt-dlp · Windows: winget install yt-dlp');
   const settings = getSettings();
   ensureDir(dir);
@@ -274,6 +313,11 @@ async function downloadWithYtDlp({ url, dir, base, format, mergeMp4 = true, onPr
   if (mergeMp4 && findCommand(['ffmpeg'])) args.push('--merge-output-format', 'mp4');
   if (settings.ytdlpCookiesFile && fs.existsSync(settings.ytdlpCookiesFile)) args.push('--cookies', settings.ytdlpCookiesFile);
   else if (settings.ytdlpCookiesBrowser) args.push('--cookies-from-browser', settings.ytdlpCookiesBrowser);
+  // Current YouTube needs a JS runtime for signature solving; yt-dlp only auto-uses deno.
+  if (!findCommand(['deno'])) {
+    const node = findCommand(['node']);
+    if (node) args.push('--js-runtimes', `node:${node}`);
+  }
   args.push(url);
 
   const res = await runProcess(ytdlp, args, {
@@ -322,7 +366,7 @@ async function downloadForRun(id) {
   const progress = (value) => emit({ runId: id, job: 'download', type: 'progress', value });
   const log = (message) => emit({ runId: id, job: 'download', type: 'log', message });
   let file;
-  if (findCommand(['yt-dlp', 'yt-dlp_macos'])) {
+  if (!DIRECT_RE.test(run.source) || findCommand(['yt-dlp', 'yt-dlp_macos'])) {
     // 720p matches what the field calibration / detector model were tuned on.
     file = await downloadWithYtDlp({
       url: run.source,
@@ -345,7 +389,7 @@ async function downloadMatchVideo({ url, matchNumber, jobId }) {
   const dir = ensureDir(path.join(app.getPath('userData'), 'DownloadedVideos'));
   const base = `match-${String(matchNumber || 'x').replace(/[^\w-]/g, '')}-${Date.now().toString(36)}`;
   const progress = (value) => emit({ job: 'film', jobId, type: 'progress', value });
-  if (findCommand(['yt-dlp', 'yt-dlp_macos'])) {
+  if (!DIRECT_RE.test(url) || findCommand(['yt-dlp', 'yt-dlp_macos'])) {
     return downloadWithYtDlp({
       url,
       dir,
@@ -433,6 +477,6 @@ function saveCsv({ robots, dir }) {
 module.exports = {
   setEmitter, cancel, toolStatus, setupEnvironment,
   listRuns, getRun, createRun, updateRun, deleteRun, importDetections, setCover,
-  downloadForRun, downloadMatchVideo, detect, trackRun, saveCsv,
+  ensureYtDlp, downloadForRun, downloadMatchVideo, detect, trackRun, saveCsv,
   paths: { aiRoot, dataDir },
 };
