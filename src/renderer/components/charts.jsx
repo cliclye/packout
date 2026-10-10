@@ -5,7 +5,8 @@ const niceMax = (v) => {
   if (v <= 0) return 1;
   const pow = Math.pow(10, Math.floor(Math.log10(v)));
   const n = v / pow;
-  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
+  const step = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10].find((x) => n <= x);
+  return step * pow;
 };
 
 /** Horizontal ranked bars. items: [{key,label,value,sub?}] */
@@ -23,7 +24,7 @@ export function BarList({ items, format = (v) => fmt(v), onSelect, selected, max
           <span className="barrow-rank">{idx + 1}</span>
           <span className="barrow-label">{it.label}</span>
           <span className="bartrack">
-            <span className="barfill" style={{ width: `${Math.max(2, (Math.max(0, it.value) / top) * 100)}%` }} />
+            <span className="barfill" style={{ width: `${Math.max(2, (Math.max(0, it.value) / top) * 100)}%`, animationDelay: `${Math.min(idx, 14) * 35}ms` }} />
           </span>
           <span className="barrow-value">{format(it.value)}</span>
         </button>
@@ -112,7 +113,7 @@ export function LineChart({ points, yLabel, height = 220 }) {
           </g>
         ))}
         <path d={area} className="area" />
-        <path d={path} className="line" />
+        <path d={path} className="line" pathLength="1" />
         {points.map((p, i) => (
           <g key={i}>
             <circle cx={sx(i)} cy={sy(p.y)} r="4.5" className="dot selected" />
@@ -144,6 +145,97 @@ export function Distribution({ items }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Radar chart. axes: ['Scoring',…]; series: [{name,color,values:[0..100]}] */
+export function Radar({ axes, series, size = 340 }) {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = size / 2 - 52;
+  const n = axes.length;
+  const pt = (i, v) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
+    return [cx + Math.cos(a) * R * (v / 100), cy + Math.sin(a) * R * (v / 100)];
+  };
+  return (
+    <div className="chart-wrap">
+      <svg viewBox={`0 0 ${size} ${size}`} className="chart radar" role="img" aria-label="Percentile radar">
+        {[25, 50, 75, 100].map((r) => (
+          <polygon key={r} className="ring" points={axes.map((_, i) => pt(i, r).join(',')).join(' ')} />
+        ))}
+        {axes.map((a, i) => {
+          const [x, y] = pt(i, 100);
+          const [lx, ly] = pt(i, 122);
+          return (
+            <g key={a}>
+              <line x1={cx} y1={cy} x2={x} y2={y} className="spoke" />
+              <text x={lx} y={ly + 4} textAnchor={Math.abs(lx - cx) < 6 ? 'middle' : lx > cx ? 'start' : 'end'} className="axis strong">{a}</text>
+            </g>
+          );
+        })}
+        {series.map((s, si) => (
+          <g key={s.name} className="radar-series" style={{ transformOrigin: `${cx}px ${cy}px`, animationDelay: `${si * 90}ms` }}>
+            <polygon points={s.values.map((v, i) => pt(i, v).join(',')).join(' ')} fill={s.color} fillOpacity="0.2" stroke={s.color} strokeWidth="2.2" strokeLinejoin="round" />
+            {s.values.map((v, i) => {
+              const [x, y] = pt(i, v);
+              return <circle key={i} cx={x} cy={y} r="3.6" fill={s.color}><title>{`${s.name} · ${axes[i]}: ${Math.round(v)}th percentile`}</title></circle>;
+            })}
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+/** Stacked columns per match. items: [{label, parts:{key:value}}]; keys: [{key,label,color}] */
+export function StackedBars({ items, keys, height = 240, unit = 'pts' }) {
+  const [hover, setHover] = useState(null);
+  const W = 560;
+  const m = { l: 36, r: 10, t: 12, b: 28 };
+  const totals = items.map((it) => keys.reduce((a, k) => a + (it.parts[k.key] || 0), 0));
+  const max = niceMax(Math.max(...totals, 1));
+  const bw = Math.min(46, ((W - m.l - m.r) / Math.max(items.length, 1)) * 0.62);
+  const x = (i) => m.l + ((i + 0.5) / items.length) * (W - m.l - m.r);
+  const y = (v) => height - m.b - (v / max) * (height - m.t - m.b);
+  return (
+    <div className="chart-wrap">
+      <svg viewBox={`0 0 ${W} ${height}`} className="chart" role="img" aria-label="Points by match">
+        {[0, 0.5, 1].map((t) => (
+          <g key={t}>
+            <line x1={m.l} x2={W - m.r} y1={y(t * max)} y2={y(t * max)} className="grid" />
+            <text x={m.l - 8} y={y(t * max) + 4} textAnchor="end" className="axis">{fmt(t * max, 0)}</text>
+          </g>
+        ))}
+        {items.map((it, i) => {
+          let acc = 0;
+          return (
+            <g key={it.label} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} opacity={hover === null || hover === i ? 1 : 0.45} style={{ transition: 'opacity .15s' }}>
+              {keys.map((k, ki) => {
+                const v = it.parts[k.key] || 0;
+                const y1 = y(acc + v);
+                const h = y(acc) - y1;
+                acc += v;
+                return h > 0 ? <rect key={k.key} x={x(i) - bw / 2} y={y1} width={bw} height={h} rx={ki === keys.length - 1 ? 3 : 0} fill={k.color} className="stack-seg" style={{ animationDelay: `${i * 40 + ki * 30}ms` }} /> : null;
+              })}
+              <text x={x(i)} y={height - m.b + 17} textAnchor="middle" className="axis">{it.label}</text>
+            </g>
+          );
+        })}
+        {hover !== null && (
+          <g pointerEvents="none">
+            <rect x={Math.min(Math.max(x(hover) - 66, 2), W - 134)} y={4} width="132" height={18 + keys.length * 15} rx="7" className="tip-bg" />
+            <text x={Math.min(Math.max(x(hover) - 58, 10), W - 126)} y={20} className="tip-title">{items[hover].label} · {fmt(totals[hover], 1)} {unit}</text>
+            {keys.map((k, ki) => (
+              <text key={k.key} x={Math.min(Math.max(x(hover) - 58, 10), W - 126)} y={35 + ki * 15} className="tip-sub">{k.label}: {fmt(items[hover].parts[k.key] || 0, 1)}</text>
+            ))}
+          </g>
+        )}
+      </svg>
+      <div className="legend" style={{ paddingTop: 4 }}>
+        {keys.map((k) => <span key={k.key}><i style={{ background: k.color }} /> {k.label}</span>)}
+      </div>
     </div>
   );
 }

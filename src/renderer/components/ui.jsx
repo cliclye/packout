@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { store, useApp } from '../store';
 
 // ------------------------------------------------------------------ icons ---
@@ -134,11 +134,43 @@ export function Card({ title, subtitle, actions, children, className = '', flush
   );
 }
 
+const NUM_RE = /^(-?\d+(?:\.\d+)?)(.*)$/s;
+const reduceMotion = () => typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** Counts numbers up/down smoothly whenever the value changes ("81%", "56.5", "10/10"…). */
+export function AnimatedValue({ value, duration = 650 }) {
+  const str = String(value ?? '');
+  const m = NUM_RE.exec(str);
+  const target = m ? parseFloat(m[1]) : null;
+  const decimals = m && m[1].includes('.') ? m[1].split('.')[1].length : 0;
+  const [shown, setShown] = useState(target === null || reduceMotion() ? target : 0);
+  const from = useRef(shown ?? 0);
+  useEffect(() => {
+    if (target === null) return undefined;
+    if (reduceMotion()) { setShown(target); return undefined; }
+    const start = performance.now();
+    const a = from.current;
+    let raf;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const e = 1 - Math.pow(1 - t, 3);
+      const v = a + (target - a) * e;
+      from.current = v;
+      setShown(v);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  if (!m) return str;
+  return `${(shown ?? target).toFixed(decimals)}${m[2]}`;
+}
+
 export function Stat({ label, value, hint, tone }) {
   return (
     <div className={`stat ${tone ? 'tone-' + tone : ''}`}>
       <div className="stat-label">{label}</div>
-      <div className="stat-value">{value}</div>
+      <div className="stat-value"><AnimatedValue value={value} /></div>
       {hint && <div className="stat-hint">{hint}</div>}
     </div>
   );
@@ -190,8 +222,15 @@ export function SearchInput({ value, onChange, placeholder = 'Search…', classN
 }
 
 export function Segmented({ value, onChange, options, size }) {
+  const ref = useRef(null);
+  const [thumb, setThumb] = useState(null);
+  useLayoutEffect(() => {
+    const el = ref.current && ref.current.querySelector('button.active');
+    if (el) setThumb({ left: el.offsetLeft, width: el.offsetWidth });
+  }, [value, options.length, options.map((o) => o.label).join('|')]);
   return (
-    <div className={`segmented ${size === 'sm' ? 'sm' : ''}`} role="tablist">
+    <div className={`segmented ${size === 'sm' ? 'sm' : ''}`} role="tablist" ref={ref}>
+      {thumb && <span className="seg-thumb" style={{ width: thumb.width, transform: `translateX(${thumb.left}px)` }} />}
       {options.map((o) => (
         <button
           key={o.value}

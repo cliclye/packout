@@ -174,6 +174,16 @@ There are several ways to import scouting data:
 - Jump to key timestamps (Auto, Teleop, Endgame)
 - View synchronized scouting data
 
+### Analysis
+
+- **Overview** – league leaderboards, scatter plots and role mix, filterable by team or match.
+- **Team deep dive** – everything derivable from the scouting data already collected:
+  points by phase per match, accuracy trends, climb success by level, uptime and
+  defense impact, consistency/floor/ceiling, form trend, percentile radar vs the
+  field, auto-generated strengths and watch-outs, and (with AI paths) distance,
+  speed and field-position stats.
+- **Compare** – overlay up to four teams on one radar and see every metric side by side.
+
 ### AI Trace
 
 Turns match video into robot paths using the same tracker as `scouting-ai`

@@ -3,6 +3,7 @@ import { getSummaries, store, useApp, useCurrent } from '../store';
 import { Button, Card, Empty, PageHeader, Segmented, SearchInput, Stat, fmt, pct } from '../components/ui';
 import { BarList, Distribution, LineChart, Scatter } from '../components/charts';
 import { median, percentile, stddev } from '../../shared/analytics';
+import DeepDive, { Compare } from './DeepDive';
 import { estimatedScore, byNatural, naturalNumber } from '../../shared/models';
 
 const METRICS = [
@@ -27,7 +28,7 @@ const COLUMNS = [
   ['down', 'Down', (s) => s.averageBrokeSeconds, (v) => `${fmt(v, 0)}s`],
 ];
 
-export default function Analysis() {
+function Overview() {
   const comp = useCurrent();
   const { selectedTeam } = useApp();
   const summaries = getSummaries(comp);
@@ -78,21 +79,14 @@ export default function Analysis() {
   }, [visible, sort]);
 
   if (summaries.length === 0) {
-    return (
-      <div className="page"><div className="page-inner">
-        <PageHeader title="Analysis" subtitle="Compare teams across every metric" />
-        <Card><Empty icon="chart" title="No data to chart" body="Import scouting data or load the demo dataset." action={<Button variant="primary" onClick={() => store.loadSampleData()}>Load demo data</Button>} /></Card>
-      </div></div>
-    );
+    return <Card><Empty icon="chart" title="No data to chart" body="Import scouting data or load the demo dataset." action={<Button variant="primary" onClick={() => store.loadSampleData()}>Load demo data</Button>} /></Card>;
   }
 
   const sortedTeams = [...summaries].sort((a, b) => naturalNumber(a.teamNumber) - naturalNumber(b.teamNumber));
   const togglePick = (t) => setPicked((p) => { const n = new Set(p); n.has(t) ? n.delete(t) : n.add(t); return n; });
 
   return (
-    <div className="page">
-      <div className="page-inner">
-        <PageHeader title="Analysis" subtitle={`${visible.length} of ${summaries.length} teams shown`} />
+    <>
 
         <Card>
           <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -180,6 +174,25 @@ export default function Analysis() {
             </table>
           </div>
         </Card>
+    </>
+  );
+}
+
+export default function Analysis() {
+  const [tab, setTab] = useState('overview');
+  return (
+    <div className="page">
+      <div className="page-inner">
+        <PageHeader
+          title="Analysis"
+          subtitle="League overview, single-team deep dives and head-to-head comparison"
+          actions={<Segmented value={tab} onChange={setTab} options={[{ value: 'overview', label: 'Overview' }, { value: 'deep', label: 'Team deep dive' }, { value: 'compare', label: 'Compare' }]} />}
+        />
+        <div key={tab} className="tab-body">
+          {tab === 'overview' && <Overview />}
+          {tab === 'deep' && <DeepDive />}
+          {tab === 'compare' && <Compare />}
+        </div>
       </div>
     </div>
   );
