@@ -570,23 +570,4 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 .brief-notes .good .icon { color: var(--ok); } .brief-notes .bad .icon { color: var(--warn); }
 @media (max-width: 1180px) { .plan-hero { grid-template-columns: 1fr; } }
 
-/* ================= phone ================= */
-.phone-option { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.phone-option:last-child { border-bottom: 0; }
-.phone-option p { margin: 3px 0 0; font-size: 12.5px; max-width: 360px; }
-.phone-share { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 18px; align-items: start; }
-.qr { width: 190px; height: 190px; border-radius: 12px; background: #fff; display: block; }
 
-/* qr stream */
-.qrstream { position: fixed; inset: 0; z-index: 150; background: #fff; color: #11141a; display: flex; flex-direction: column; align-items: center; padding: 18px 24px 16px; gap: 12px; animation: pop .22s var(--ease) both; }
-html.mac .qrstream { padding-top: 38px; }
-.qrstream-head { width: 100%; max-width: 900px; display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
-.qrstream-head h2 { font-size: 20px; margin: 0 0 4px; }
-.qrstream-head p { margin: 0; color: #4b5363; max-width: 640px; }
-.qrstream-canvas { max-width: 100%; image-rendering: pixelated; flex: none; }
-.qrstream-dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.qrstream-dots i { width: 10px; height: 10px; border-radius: 3px; background: #d6dae3; }
-.qrstream-dots i.on { background: #4560f2; }
-.qrstream-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; }
-.qrstream .btn-secondary { background: #f3f4f7; color: #11141a; border-color: #cfd4de; }
-.phone-option.highlight { background: var(--accent-soft); border-radius: 12px; padding: 14px; margin: 0 -2px 6px; border-bottom: 0; }

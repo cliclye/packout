@@ -1,4 +1,4 @@
-/** TBA match helpers with no UI/Electron dependencies (shared by the app, the phone pack and tests). */
+/** TBA match helpers with no UI/Electron dependencies (shared by the app and tests). */
 const teamNum = (key) => String(key).replace(/^frc/, '');
 const LEVELS = { qm: 0, ef: 1, qf: 2, sf: 3, f: 4 };
 

@@ -55,35 +55,9 @@ jobs:
             out/make/zip/**/*.zip
           retention-days: 30
 
-  ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # Unsigned on purpose: Apple only lets signed apps run on a phone, so users re-sign it with their
-      # own free Apple ID (Sideloadly / AltStore) or build it in Xcode. See mobile/README.md.
-      - name: Build Packout Coach (iPhone)
-        shell: bash
-        run: |
-          VERSION="0.0.0"
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then VERSION="${GITHUB_REF_NAME#v}"; fi
-          cd mobile/ios-coach
-          xcodebuild -project PackoutCoach.xcodeproj -scheme PackoutCoach -sdk iphoneos -configuration Release \
-            -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            MARKETING_VERSION="$VERSION" build
-          mkdir -p ipa/Payload
-          cp -R build/Build/Products/Release-iphoneos/PackoutCoach.app ipa/Payload/
-          (cd ipa && zip -qry "PackoutCoach-$VERSION-unsigned.ipa" Payload)
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Packout-Coach-iPhone
-          path: mobile/ios-coach/ipa/*.ipa
-          retention-days: 30
-
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build, ios]
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -96,4 +70,3 @@ jobs:
             dist/**/*.dmg
             dist/**/*.exe
             dist/**/*.zip
-            dist/**/*.ipa
