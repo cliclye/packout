@@ -10,6 +10,14 @@ struct ConnectView: View {
     @State private var scanning = false
     @State private var importing = false
 
+    private var canScan: Bool {
+        #if canImport(VisionKit)
+        return DataScannerViewController.isSupported
+        #else
+        return false
+        #endif
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
@@ -24,29 +32,33 @@ struct ConnectView: View {
                         Text("Team \(p.myTeam.isEmpty ? "–" : p.myTeam) · \(p.matches.count) matches · \(p.teams.count) teams").font(.subheadline).foregroundStyle(Theme.text2)
                         if let d = store.lastSync { Text("Last update \(d.formatted(date: .abbreviated, time: .shortened))").font(.footnote).foregroundStyle(Theme.text3) }
                     } else { Text("No data yet").foregroundStyle(Theme.text2) }
-                    if store.hasConnection {
-                        Button { Task { await store.sync() } } label: { Label(store.syncing ? "Updating…" : "Update now", systemImage: "arrow.clockwise").frame(maxWidth: .infinity) }
-                            .buttonStyle(.borderedProminent).disabled(store.syncing)
-                    }
                 }
-                Card(title: "Connect to Packout") {
-                    Text("On your computer open Packout → Phone → Start sharing, then scan the code or paste the link. Phone and computer need to be on the same Wi-Fi — or plug the phone in and turn on Personal Hotspot.")
+                Card(title: "Get data from your computer — no Wi-Fi needed") {
+                    Text("In Packout open Phone → Show QR code. Point this camera at the moving QR code until every frame is collected (about 10 seconds). Nothing is sent over a network.")
                         .font(.footnote).foregroundStyle(Theme.text2)
-                    #if canImport(VisionKit)
-                    if DataScannerViewController.isSupported {
-                        Button { scanning = true } label: { Label("Scan QR code", systemImage: "qrcode.viewfinder").frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent)
-                    }
-                    #endif
-                    TextField("http://192.168.1.20:8731/?k=…", text: $link).textFieldStyle(.roundedBorder).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
-                    HStack {
-                        Button("Paste") { link = UIPasteboard.general.string ?? link }.buttonStyle(.bordered)
-                        Button("Connect") { connect() }.buttonStyle(.bordered).disabled(link.isEmpty)
-                        if store.hasConnection { Button("Forget", role: .destructive) { store.forget() }.buttonStyle(.bordered) }
+                    if canScan {
+                        Button { scanning = true } label: { Label("Scan from computer screen", systemImage: "qrcode.viewfinder").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6) }
+                            .buttonStyle(.borderedProminent)
+                    } else {
+                        Text("Camera scanning isn’t available on this device.").font(.footnote).foregroundStyle(Theme.warn)
                     }
                 }
-                Card(title: "Or use a file") {
-                    Text("In Packout choose Phone → Save coach file, send it to this phone (AirDrop, Files, email) and open it here. Works with no connection at all.").font(.footnote).foregroundStyle(Theme.text2)
-                    Button { importing = true } label: { Label("Import coach file", systemImage: "square.and.arrow.down").frame(maxWidth: .infinity) }.buttonStyle(.bordered)
+                Card(title: "Other ways") {
+                    Button { importing = true } label: { Label("Import a coach file (AirDrop / Files)", systemImage: "square.and.arrow.down").frame(maxWidth: .infinity) }.buttonStyle(.bordered)
+                    DisclosureGroup("Connect over Wi-Fi (practice / home)") {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Only where Wi-Fi is allowed. In Packout press Start sharing, then paste the link here.").font(.footnote).foregroundStyle(Theme.text2)
+                            TextField("http://192.168.1.20:8731/?k=…", text: $link).textFieldStyle(.roundedBorder).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
+                            HStack {
+                                Button("Paste") { link = UIPasteboard.general.string ?? link }.buttonStyle(.bordered)
+                                Button("Connect") { connect() }.buttonStyle(.bordered).disabled(link.isEmpty)
+                                if store.hasConnection {
+                                    Button("Update") { Task { await store.sync() } }.buttonStyle(.bordered).disabled(store.syncing)
+                                    Button("Forget", role: .destructive) { store.forget() }.buttonStyle(.bordered)
+                                }
+                            }
+                        }.padding(.top, 6)
+                    }.tint(Theme.accent)
                     Button { store.loadDemo() } label: { Label("Load demo data", systemImage: "sparkles").frame(maxWidth: .infinity) }.buttonStyle(.bordered)
                 }
             }.padding(16)
@@ -55,7 +67,12 @@ struct ConnectView: View {
             if case .success(let url) = result { store.importFile(url) }
         }
         #if canImport(VisionKit)
-        .sheet(isPresented: $scanning) { QRScanner { code in scanning = false; link = code; connect() }.ignoresSafeArea() }
+        .fullScreenCover(isPresented: $scanning) {
+            FrameScannerScreen(
+                onPack: { data in scanning = false; store.importPack(data, source: "the computer screen") },
+                onLink: { code in scanning = false; link = code; connect() },
+                onCancel: { scanning = false })
+        }
         #endif
     }
 
@@ -65,23 +82,79 @@ struct ConnectView: View {
 }
 
 #if canImport(VisionKit)
-struct QRScanner: UIViewControllerRepresentable {
-    var onCode: (String) -> Void
-    func makeCoordinator() -> Coordinator { Coordinator(onCode) }
+/// Camera screen that collects every frame of the looping QR sequence (or a single link QR).
+@MainActor
+final class ScanModel: ObservableObject {
+    @Published var received = 0
+    @Published var total = 0
+    @Published var indexes: Set<Int> = []
+    @Published var error: String?
+    private let assembler = FrameAssembler()
+    var onPack: (Data) -> Void = { _ in }
+    var onLink: (String) -> Void = { _ in }
+    private var finished = false
+
+    func handle(_ payload: String) {
+        guard !finished else { return }
+        if payload.lowercased().hasPrefix("http") { finished = true; onLink(payload); return }
+        switch assembler.add(payload) {
+        case .progress(let r, let t): received = r; total = t; indexes = assembler.receivedIndexes; error = nil
+        case .complete(let data): finished = true; UINotificationFeedbackGenerator().notificationOccurred(.success); onPack(data)
+        case .failed(let m): error = m; received = 0; total = 0; indexes = []
+        case .ignored: break
+        }
+    }
+}
+
+struct FrameScannerScreen: View {
+    var onPack: (Data) -> Void
+    var onLink: (String) -> Void
+    var onCancel: () -> Void
+    @StateObject private var model = ScanModel()
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            ScannerRepresentable(model: model).ignoresSafeArea()
+            VStack(spacing: 10) {
+                if model.total > 0 {
+                    Text("Collecting frames — \(model.received) of \(model.total)").font(.headline)
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(minimum: 10, maximum: 28), spacing: 5), count: min(model.total, 14)), spacing: 5) {
+                        ForEach(0..<model.total, id: \.self) { i in
+                            RoundedRectangle(cornerRadius: 4).fill(model.indexes.contains(i) ? Theme.ok : Theme.border).frame(height: 14)
+                        }
+                    }
+                    Text("Keep the code in view until every box is green.").font(.footnote).foregroundStyle(Theme.text2)
+                } else {
+                    Text("Point at the moving QR code in Packout").font(.headline)
+                    Text("Hold about 20–30 cm from the screen. It loops, so you can start anywhere.").font(.footnote).foregroundStyle(Theme.text2).multilineTextAlignment(.center)
+                }
+                if let e = model.error { Text(e).font(.footnote).foregroundStyle(Theme.danger) }
+                Button("Cancel", role: .cancel) { onCancel() }.buttonStyle(.bordered)
+            }
+            .padding(16).frame(maxWidth: .infinity)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22)).padding(12)
+        }
+        .onAppear { model.onPack = onPack; model.onLink = onLink }
+    }
+}
+
+struct ScannerRepresentable: UIViewControllerRepresentable {
+    let model: ScanModel
+    func makeCoordinator() -> Coordinator { Coordinator(model) }
     func makeUIViewController(context: Context) -> DataScannerViewController {
-        let vc = DataScannerViewController(recognizedDataTypes: [.barcode(symbologies: [.qr])], qualityLevel: .balanced, isHighlightingEnabled: true)
+        let vc = DataScannerViewController(recognizedDataTypes: [.barcode(symbologies: [.qr])], qualityLevel: .accurate, recognizesMultipleItems: false, isHighFrameRateTrackingEnabled: false, isHighlightingEnabled: true)
         vc.delegate = context.coordinator
         try? vc.startScanning()
         return vc
     }
     func updateUIViewController(_ vc: DataScannerViewController, context: Context) {}
     final class Coordinator: NSObject, DataScannerViewControllerDelegate {
-        let onCode: (String) -> Void
-        var done = false
-        init(_ f: @escaping (String) -> Void) { onCode = f }
-        func dataScanner(_ scanner: DataScannerViewController, didAdd items: [RecognizedItem], allItems: [RecognizedItem]) {
-            guard !done else { return }
-            for case .barcode(let b) in items { if let s = b.payloadStringValue { done = true; onCode(s); return } }
+        let model: ScanModel
+        init(_ m: ScanModel) { model = m }
+        func dataScanner(_ s: DataScannerViewController, didAdd items: [RecognizedItem], allItems: [RecognizedItem]) { forward(items) }
+        func dataScanner(_ s: DataScannerViewController, didUpdate items: [RecognizedItem], allItems: [RecognizedItem]) { forward(items) }
+        private func forward(_ items: [RecognizedItem]) {
+            for case .barcode(let b) in items { if let p = b.payloadStringValue { Task { @MainActor in model.handle(p) } } }
         }
     }
 }

@@ -1,31 +1,41 @@
 # Packout on the phone (drive coach)
 
 Packout builds a **coach pack** — one small JSON file with the schedule, scores, win probabilities,
-your team's game plans for its next matches, and a card for every team — and puts it on a phone.
-Two phone apps read it:
+your team's game plans for its next matches, and a card for every team — and gets it onto a phone.
 
-| | Android (or any browser) | iPhone / iPad |
+**FRC events don't allow Wi-Fi or hotspots, so the main way is a QR code that carries the data itself.**
+Packout compresses the pack (~8 KB) and shows it as a short looping series of QR codes (about 25 frames,
+8 seconds per loop). The iPhone app's camera collects every frame, checks them, and rebuilds the pack.
+No network, cable or server involved — and it works for repeat updates between matches.
+
+| | iPhone / iPad (native app) | Android (or any browser) |
 | --- | --- | --- |
-| App | Web app served by Packout (`src/resources/coach`) | Native SwiftUI app (`mobile/ios-coach`) |
-| Install | Nothing | Build once with Xcode (below) |
-| Get the data | **USB cable**: Phone page → *Send via USB* (uses `adb reverse`) · or scan the QR code on the same Wi-Fi | Same Wi-Fi, **or** USB cable with *Personal Hotspot* on, then scan the QR code · or AirDrop the `.packoutcoach` file |
-| Offline | Keeps its last copy in the browser | Keeps its last copy on the phone |
+| Get data, **no network** | **Phone → Show QR code**, then in the app *Connect → Scan from computer screen* | **Phone → Send via USB** (cable, uses `adb reverse`) |
+| Practice / home | Same Wi-Fi: *Start sharing*, scan the link QR | Same, in the browser |
+| Anywhere | AirDrop / Files the `.packoutcoach` file | Import it on the web page |
+| Offline afterwards | Yes, last copy kept on the phone | Yes, kept in the browser |
 
-In Packout open **Phone**, enter your team number, then press the button for your phone.
-While *Start sharing* is on, Packout refreshes the pack every 30 seconds and the phone updates itself.
+## Getting the iPhone app
 
-## iPhone app (Packout Coach)
+Apple only lets *signed* apps run on a phone, so a downloaded app can't be double-clicked like the Mac one.
+Pick one (do it at home, before the event — it needs internet once):
 
-Needs a Mac with Xcode and an Apple ID (a free one works; the app stays installed for 7 days, then re-run it).
-
-1. Plug the iPhone into the Mac, unlock it and tap **Trust**.
-2. Open `mobile/ios-coach/PackoutCoach.xcodeproj` in Xcode.
-3. Select the **PackoutCoach** target → *Signing & Capabilities* → pick your **Team** (your Apple ID).
-   If Xcode says the bundle id is taken, change `com.packout.coach` to something unique.
-4. Choose your iPhone at the top and press **Run ▶**. On the phone: Settings → General → VPN & Device Management → trust your developer profile (first time only).
-5. In the app open **Connect** and scan the QR code from Packout's Phone page, or import a `.packoutcoach` file.
+1. **Sideloadly or AltStore (no Mac needed)** — download `PackoutCoach-<version>-unsigned.ipa` from the
+   [latest release](https://github.com/cliclye/packout/releases/latest), plug in your iPhone and install it with
+   [Sideloadly](https://sideloadly.io) (Mac/Windows) or [AltStore](https://altstore.io) using your own free Apple ID.
+   Free Apple IDs expire the app after **7 days** — re-install before each event (a paid $99 developer account lasts a year).
+2. **Xcode (Mac)** — open `mobile/ios-coach/PackoutCoach.xcodeproj`, choose your iPhone, set your Apple ID under
+   *Signing & Capabilities → Team*, press Run. Then trust the profile in Settings → General → VPN & Device Management.
+3. **TestFlight / App Store** — needs a paid Apple Developer account; the project is ready to archive when the team wants it.
 
 The project is generated from `project.yml` (`brew install xcodegen && xcodegen generate`).
+
+## At the event
+
+1. In Packout open **Phone**, enter your team number, press **Show QR code**.
+2. On the phone open **Packout Coach → Connect → Scan from computer screen**, point it at the screen (20–30 cm)
+   until all boxes turn green. If a frame keeps failing, pick *Easier* codes in the QR window.
+3. Press **Refresh data** in the QR window (or reopen it) before each match to send new scores and plans.
 
 ## Coach pack format (v1)
 
@@ -37,5 +47,8 @@ A sample generated from a real event is in `sample/coach-sample.json`.
 
 ## Security
 
-The data endpoint needs the secret key from the QR code/link and only runs while *Start sharing* is on.
-It never leaves your network (or the USB cable).
+The QR transfer uses no network. The optional Wi-Fi endpoint needs the secret key from its link and only runs while
+*Start sharing* is on; it never leaves your local network.
+
+Frame format for the QR stream: `PK1.<session>.<index>.<total>.<crc32>.<base64 slice>` of the raw-deflate-compressed JSON
+(see `src/shared/qrframes.js` and `ios-coach/Sources/FrameAssembler.swift`).

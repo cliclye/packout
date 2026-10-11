@@ -198,8 +198,9 @@ Anyone running Packout can import it — merge it into their competition or add 
 ### Phone (drive coach)
 
 **Phone** puts the plan on a phone so the drive coach doesn't need a laptop: your team's next matches with win
-chance and strategy, the full schedule with scores, every team's card, and rankings. Works on Android (USB or Wi-Fi,
-no install) and iPhone (native app in `mobile/ios-coach`). See [mobile/README.md](mobile/README.md).
+chance and strategy, the full schedule with scores, every team's card, and rankings. Because events ban Wi-Fi and hotspots,
+the main method is **a QR code on the computer screen** that the iPhone app (`mobile/ios-coach`, installable from the release's
+`.ipa`) scans with its camera — no network at all. Android can use a USB cable. See [mobile/README.md](mobile/README.md).
 
 ### Game Plan
 

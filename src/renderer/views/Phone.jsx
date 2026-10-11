@@ -3,6 +3,8 @@ import QRCode from 'qrcode';
 import { api, hasDesktop } from '../api';
 import { store, useApp, useCurrent } from '../store';
 import { Badge, Button, Card, Field, Icon, PageHeader } from '../components/ui';
+import QrStream from '../components/QrStream';
+import { framesForText } from '../lib/qrstream';
 import { buildPack, phoneState, publishNow, refreshStatus, startSharing, stopSharing, subscribePhone } from '../lib/phone';
 
 function Qr({ text }) {
@@ -22,6 +24,7 @@ export default function Phone() {
   const [team, setTeam] = useState((settings.myTeam || '').trim());
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState('');
+  const [stream, setStream] = useState(null); // { frames, bytes } while the QR display is open
 
   useEffect(() => { refreshStatus(); return subscribePhone(setPh); }, []);
   useEffect(() => setTeam((settings.myTeam || '').trim()), [settings.myTeam]);
@@ -38,6 +41,11 @@ export default function Phone() {
     await publishNow();
     const r = await api.coach.androidUsb();
     store.toast(`Opened Packout Coach on your Android phone (${r.device})`, 'success');
+  });
+  const showQr = (chunk = 450) => run('qr', async () => {
+    const pack = await buildPack({ refreshTba: true });
+    const { frames, compressedBytes } = await framesForText(JSON.stringify(pack), { chunk });
+    setStream({ frames, bytes: compressedBytes, chunk });
   });
   const exportFile = () => run('file', async () => {
     const pack = await buildPack({ refreshTba: true });
@@ -57,6 +65,7 @@ export default function Phone() {
           subtitle="Put the match plan, scores and team data on the drive coach’s phone — no laptop at the field"
           actions={ph.running ? <Badge tone="ok">Sharing on</Badge> : <Badge>Sharing off</Badge>}
         />
+        {stream && <QrStream frames={stream.frames} chunk={stream.chunk} onClose={() => setStream(null)} onRebuild={showQr} />}
         {msg && <div className="notice error" style={{ marginBottom: 14, whiteSpace: 'pre-wrap' }}>{msg}</div>}
         {ph.error && !msg && <div className="notice warn" style={{ marginBottom: 14 }}>{ph.error}</div>}
 
@@ -68,8 +77,15 @@ export default function Phone() {
               </Field>
             </Card>
 
-            <Card title="2 · Send it to the phone" subtitle="Plug in the phone, then press a button">
+            <Card title="2 · Send it to the phone" subtitle="Pick whatever your venue allows">
               <div className="stack">
+                <div className="phone-option highlight">
+                  <div>
+                    <strong>QR code on screen · works with no Wi-Fi, hotspot or cable</strong>
+                    <p className="muted">Shows a moving QR code. The Packout Coach iPhone app scans it with the camera and collects all the data in about 10 seconds. Nothing touches a network.</p>
+                  </div>
+                  <Button variant="primary" icon="eye" loading={busy === 'qr'} onClick={() => showQr()}>Show QR code</Button>
+                </div>
                 <div className="phone-option">
                   <div>
                     <strong>Android · USB cable</strong>
@@ -79,7 +95,7 @@ export default function Phone() {
                 </div>
                 <div className="phone-option">
                   <div>
-                    <strong>Any phone · Wi-Fi / hotspot / USB tethering</strong>
+                    <strong>Wi-Fi / hotspot (practice, home — not allowed at events)</strong>
                     <p className="muted">Starts a private page on this computer. Scan the code with the phone’s camera. iPhone: join the same Wi-Fi, or turn on Personal Hotspot and plug in the cable.</p>
                   </div>
                   <Button variant={ph.running ? 'secondary' : 'primary'} icon={ph.running ? 'stop' : 'play'} loading={busy === 'share'} onClick={toggle}>{ph.running ? 'Stop sharing' : 'Start sharing'}</Button>
@@ -118,10 +134,19 @@ export default function Phone() {
                 </div>
               )}
             </Card>
+            <Card title="Get the iPhone app" subtitle="Packout Coach — free, on the GitHub release page">
+              <div className="stack">
+                <p className="muted">Download <code>PackoutCoach-…-unsigned.ipa</code> from the latest release and install it with <b>Sideloadly</b> or <b>AltStore</b> (free, uses your own Apple ID; re-install every 7 days). Do this at home — it needs internet. At the event you only need the app and a camera.</p>
+                <div className="row" style={{ flexWrap: 'wrap' }}>
+                  <Button icon="external" onClick={() => api.shell.openExternal('https://github.com/cliclye/packout/releases/latest')}>Open download page</Button>
+                  <Button variant="ghost" icon="external" onClick={() => api.shell.openExternal('https://sideloadly.io')}>Sideloadly</Button>
+                </div>
+              </div>
+            </Card>
             <Card title="How it stays safe">
               <ul className="insight-list good">
                 <li><Icon name="check" size={15} />Only phones with the secret link can read the data, and only while sharing is on.</li>
-                <li><Icon name="check" size={15} />Everything stays on your local network (or the USB cable). Nothing goes to the internet.</li>
+                <li><Icon name="check" size={15} />The QR method uses no network at all. Wi-Fi sharing stays on your local network. Nothing goes to the internet.</li>
                 <li><Icon name="check" size={15} />The phone keeps its last copy, so it still works if the connection drops mid-match.</li>
               </ul>
             </Card>

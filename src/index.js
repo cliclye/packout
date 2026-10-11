@@ -53,6 +53,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      backgroundThrottling: !process.env.PACKOUT_DEBUG_PORT, // keep timers honest when driven by test scripts
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
   });

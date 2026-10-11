@@ -40,6 +40,11 @@ final class PackStore: ObservableObject {
         }
     }
 
+    /// Raw JSON delivered by the QR-frame scanner.
+    func importPack(_ data: Data, source: String) {
+        do { try accept(data); note("Received from \(source)") } catch { note(error.localizedDescription, error: true) }
+    }
+
     func loadDemo() {
         guard let url = Bundle.main.url(forResource: "sample-pack", withExtension: "json") else { return }
         do { try accept(Data(contentsOf: url)); note("Loaded demo data") } catch { note(error.localizedDescription, error: true) }
