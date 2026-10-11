@@ -1,5 +1,8 @@
 # Packout on the phone (drive coach)
 
+> This lives on the `phone-integration` branch. To drop it, delete the branch — `main` doesn't depend on it.
+> Preview builds from this branch are tagged `vX.Y.Z-phone` and published as *pre-releases*.
+
 Packout builds a **coach pack** — one small JSON file with the schedule, scores, win probabilities,
 your team's game plans for its next matches, and a card for every team — and gets it onto a phone.
 
