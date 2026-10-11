@@ -33,6 +33,7 @@ const newCompetition = (name, eventKey = '') => ({
   log: [],
   picklist: emptyPicklist(),
   strategyNotes: {},
+  tbaSnapshot: null,
 });
 
 let state = {
@@ -92,6 +93,8 @@ function hydrateCompetition(c) {
     videos: (c.videos || []).map(M.normalizeVideo),
     log: c.log || c.importLog || [],
     picklist: { ...emptyPicklist(), ...(c.picklist || {}) },
+    strategyNotes: c.strategyNotes || {},
+    tbaSnapshot: c.tbaSnapshot || null,
   };
 }
 
@@ -124,6 +127,7 @@ if (typeof window !== 'undefined') {
 
 // ---------------------------------------------------------------- helpers ---
 
+export const getAppState = () => state;
 export const getCurrent = () => state.competitions.find((c) => c.id === state.currentId) || null;
 
 function mutateCurrent(fn, logMessage) {
@@ -330,19 +334,40 @@ export const store = {
     if (!c) return null;
     return JSON.stringify({ app: 'packout', version: WORKSPACE_VERSION, competition: { ...c, paths: c.paths.map(packRun) } });
   },
-  importCompetitionJson(text) {
+  /** Reads a share file; mode 'new' adds it as its own competition, 'merge' folds it into the current one. */
+  importShare(text, mode = 'new') {
     const data = JSON.parse(text);
-    // accepts v2 backups and the old {competition, data:{...}} shape
+    // accepts v2 share files and the old {competition, data:{...}} backups
     let raw = data.competition;
-    if (!raw) throw new Error('This file is not a Packout competition backup.');
+    if (!raw) throw new Error('This file is not a Packout competition share or backup.');
     if (data.data) raw = { ...raw, ...data.data };
-    const comp = hydrateCompetition({ ...raw, id: undefined });
-    comp.id = newCompetition().id;
-    comp.name = `${raw.name || 'Imported'} (imported)`;
-    comp.log.push(`${new Date().toISOString()}  Restored from backup`);
+    const inc = hydrateCompetition({ ...raw, id: undefined });
+    if (mode === 'merge') {
+      const cur = getCurrent();
+      if (!cur) throw new Error('Create a competition first, or import as a new one.');
+      mutateCurrent(
+        (c) => ({
+          ...c,
+          eventKey: c.eventKey || inc.eventKey,
+          matches: mergeById(c.matches, inc.matches),
+          pits: mergeById(c.pits, inc.pits),
+          paths: mergeById(c.paths, inc.paths),
+          schedule: c.schedule.length ? c.schedule : inc.schedule,
+          strategyNotes: { ...(inc.strategyNotes || {}), ...(c.strategyNotes || {}) },
+          tbaSnapshot: (c.tbaSnapshot?.fetchedAt || 0) >= (inc.tbaSnapshot?.fetchedAt || 0) ? c.tbaSnapshot : inc.tbaSnapshot,
+        }),
+        `Merged shared file “${raw.name || 'competition'}”: ${inc.matches.length} match, ${inc.pits.length} pit, ${inc.paths.length} path records`
+      );
+      return getCurrent();
+    }
+    const comp = { ...inc, id: newCompetition().id, name: `${raw.name || 'Imported'} (shared)` };
+    comp.log = [...comp.log, `${new Date().toISOString()}  Imported from a shared file`];
     setState({ competitions: [...state.competitions, comp], currentId: comp.id });
     scheduleSave();
     return comp;
+  },
+  importCompetitionJson(text) {
+    return this.importShare(text, 'new');
   },
 };
 

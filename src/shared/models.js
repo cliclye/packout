@@ -52,6 +52,7 @@ function normalizePit(d = {}) {
     terrain: toInt(d.terrain),
     notes: d.notes ? String(d.notes) : '',
     imagePath: d.imagePath || null,
+    imageData: d.imageData || null, // embedded preview (shared files)
     importedAt: d.importedAt || new Date().toISOString(),
   };
 }

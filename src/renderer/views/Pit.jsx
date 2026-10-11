@@ -40,7 +40,7 @@ export default function Pit() {
             <div className="grid-3">
               {rows.map((p) => {
                 const L = pitLabels(p);
-                const img = mediaUrl(p.imagePath);
+                const img = p.imageData || mediaUrl(p.imagePath);
                 return (
                   <Card key={p.id} className="pit-card">
                     <button type="button" className="pit-open" onClick={() => { store.setSelectedTeam(p.teamNumber); store.go('teams'); }}>

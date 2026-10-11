@@ -30,7 +30,7 @@ contextBridge.exposeInMainWorld('packout', {
     save: (opts) => call('dialog:save', opts),
   },
   fs: { readText: (file) => call('fs:read-text', file) },
-  files: { pathFor: (file) => webUtils.getPathForFile(file) },
+  files: { pathFor: (file) => webUtils.getPathForFile(file), thumbnail: (file, w) => call('files:thumbnail', file, w) },
   shell: {
     reveal: (file) => call('shell:reveal', file),
     openExternal: (url) => call('shell:open-external', url),
@@ -45,6 +45,13 @@ contextBridge.exposeInMainWorld('packout', {
     start: () => call('adb:start'),
     stop: () => call('adb:stop'),
     onEvent: subscribe('adb:event'),
+  },
+  coach: {
+    status: () => call('coach:status'),
+    start: () => call('coach:start'),
+    stop: () => call('coach:stop'),
+    publish: (text) => call('coach:publish', text),
+    androidUsb: () => call('coach:android-usb'),
   },
   tba: { fetch: (endpoint, key) => call('tba:fetch', endpoint, key) },
   llm: { chat: (req) => call('llm:chat', req) },

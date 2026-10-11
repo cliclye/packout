@@ -3,12 +3,11 @@ import { api } from '../api';
 import { getSummaries, store, useApp, useCurrent } from '../store';
 import { AnimatedValue, Badge, Button, Card, Empty, Icon, PageHeader, SearchInput, Segmented, Spinner, Stat, fmt } from '../components/ui';
 import { BarList } from '../components/charts';
-import { LEVEL_NAMES, clock, lastPlayed, loadEvent, matchLabel, matchTime, nextUp, played, relTime, sortMatches, tbaMatchUrl, tbaTeamUrl, teamNum, videoLinks } from '../lib/tbaLive';
+import { LEVEL_NAMES, eventMemo, clock, lastPlayed, loadEvent, matchLabel, matchTime, nextUp, played, relTime, sortMatches, tbaMatchUrl, tbaTeamUrl, teamNum, videoLinks } from '../lib/tbaLive';
 import { naturalNumber } from '../../shared/models';
 import { fitModel, predictMatch, simulateQuals } from '../../shared/predict';
 
 // Survives page switches so the view opens instantly with the last data.
-let memo = { key: null, data: null };
 const REFRESH_MS = 30000;
 
 const pc = (p) => `${Math.round(p * 100)}%`;
@@ -118,7 +117,9 @@ export default function Event() {
   const { settings } = useApp();
   const summaries = getSummaries(comp);
   const eventKey = (comp.eventKey || '').trim();
-  const [data, setData] = useState(memo.key === eventKey ? memo.data : null);
+  const snap = comp.tbaSnapshot && comp.tbaSnapshot.info?.key === eventKey ? comp.tbaSnapshot : null;
+  const canLive = Boolean(settings.tbaApiKey && eventKey);
+  const [data, setData] = useState(eventMemo.key === eventKey && eventMemo.data ? eventMemo.data : snap);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [auto, setAuto] = useState(true);
@@ -135,12 +136,13 @@ export default function Event() {
   const defaulted = useRef(false);
 
   const refresh = useCallback(async (silent = false) => {
-    if (!eventKey) return;
+    if (!eventKey || !canLive) return;
     if (!silent) setLoading(true);
     try {
       const d = await loadEvent(eventKey);
       if (!alive.current) return;
-      memo = { key: eventKey, data: d };
+      eventMemo.key = eventKey;
+      eventMemo.data = d;
       setData(d);
       setError('');
     } catch (e) {
@@ -148,7 +150,7 @@ export default function Event() {
     } finally {
       if (alive.current) setLoading(false);
     }
-  }, [eventKey]);
+  }, [eventKey, canLive]);
 
   useEffect(() => {
     alive.current = true;
@@ -157,7 +159,7 @@ export default function Event() {
   }, [refresh]);
 
   useEffect(() => {
-    if (!auto || !eventKey) return undefined;
+    if (!auto || !canLive) return undefined;
     const id = setInterval(() => refresh(true), REFRESH_MS);
     return () => clearInterval(id);
   }, [auto, eventKey, refresh]);
@@ -222,7 +224,7 @@ export default function Event() {
   const levelsPresent = [...new Set(matches.map((m) => m.comp_level))];
 
   // ---- empty states -------------------------------------------------------
-  if (!settings.tbaApiKey || !eventKey) {
+  if (!data && (!settings.tbaApiKey || !eventKey)) {
     return (
       <div className="page"><div className="page-inner">
         <PageHeader title="Event Live" subtitle="Scores, schedule, rankings and videos from The Blue Alliance" />
@@ -251,9 +253,10 @@ export default function Event() {
           subtitle={info ? `${[info.city, info.state_prov].filter(Boolean).join(', ')} · ${info.start_date} → ${info.end_date} · ${eventKey}` : eventKey}
           actions={
             <>
-              <label className="check muted"><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto-refresh</label>
+              {!canLive && <Badge tone="warn">Snapshot · {new Date(data.fetchedAt).toLocaleString()}</Badge>}
+              {canLive && <label className="check muted"><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto-refresh</label>}
               {data && <span className="muted" style={{ fontSize: 12 }}>Updated {new Date(data.fetchedAt).toLocaleTimeString()}</span>}
-              <Button icon="rotate" loading={loading} onClick={() => refresh(false)}>Refresh</Button>
+              {canLive && <Button icon="rotate" loading={loading} onClick={() => refresh(false)}>Refresh</Button>}
               {info?.webcasts?.length > 0 && <Button icon="play" onClick={() => api.shell.openExternal(`https://www.youtube.com/watch?v=${info.webcasts[0].channel}`)}>Webcast</Button>}
               <Button variant="ghost" icon="external" onClick={() => api.shell.openExternal(`https://www.thebluealliance.com/event/${eventKey}`)}>TBA</Button>
             </>

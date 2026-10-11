@@ -41,32 +41,12 @@ export async function loadEvent(key) {
   };
 }
 
-export const teamNum = (key) => String(key).replace(/^frc/, '');
-const LEVELS = { qm: 0, ef: 1, qf: 2, sf: 3, f: 4 };
+// Last event data seen this session (shared by Event Live, Game Plan and share-file export).
+export const eventMemo = { key: null, data: null };
+
+import { teamNum, matchLabel, matchTime, played, sortMatches } from '../../shared/tbaUtil';
+export { teamNum, matchLabel, matchTime, played, sortMatches };
 export const LEVEL_NAMES = { qm: 'Qualifications', ef: 'Eighth-finals', qf: 'Quarterfinals', sf: 'Semifinals', f: 'Finals' };
-
-export function matchLabel(m, info) {
-  const dbl = info && info.playoff_type === 10;
-  switch (m.comp_level) {
-    case 'qm': return `Quals ${m.match_number}`;
-    case 'ef': return `EF ${m.set_number}-${m.match_number}`;
-    case 'qf': return `QF ${m.set_number}-${m.match_number}`;
-    case 'sf': return dbl ? `Playoff match ${m.set_number}` : `SF ${m.set_number}-${m.match_number}`;
-    case 'f': return `Final ${m.match_number}`;
-    default: return m.key;
-  }
-}
-
-export const matchTime = (m) => (m.actual_time || m.predicted_time || m.time || 0) * 1000;
-
-export function sortMatches(ms) {
-  return [...ms].sort((a, b) => LEVELS[a.comp_level] - LEVELS[b.comp_level] || (a.comp_level === 'qm' ? a.match_number - b.match_number : a.set_number - b.set_number || a.match_number - b.match_number));
-}
-
-/** Played = has real scores. Unplayed matches carry score -1. */
-export function played(m) {
-  return m.alliances.red.score >= 0 && m.alliances.blue.score >= 0;
-}
 
 export function nextUp(matches) {
   const pending = sortMatches(matches).filter((m) => !played(m));

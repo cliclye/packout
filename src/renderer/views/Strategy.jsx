@@ -6,7 +6,7 @@ import { TeamChip, WinBar } from './Event';
 import { buildField } from '../../shared/deepstats';
 import { fitModel, predictMatch } from '../../shared/predict';
 import { buildGamePlan } from '../../shared/strategy';
-import { clock, loadEvent, matchLabel, matchTime, played, relTime, sortMatches, teamNum } from '../lib/tbaLive';
+import { clock, eventMemo, loadEvent, matchLabel, matchTime, played, relTime, sortMatches, teamNum } from '../lib/tbaLive';
 
 const PHASES = ['Overall', 'Scouting', 'Defense', 'Auto', 'Teleop', 'Endgame', 'Risk'];
 const PRIORITY = { high: { tone: 'danger', label: 'High priority' }, med: { tone: 'accent', label: 'Medium' }, low: { tone: 'neutral', label: 'Good to know' } };
@@ -75,7 +75,8 @@ export default function Strategy() {
   const [ours, setOurs] = useState((settings.myTeam || '').trim());
   const [draft, setDraft] = useState((settings.myTeam || '').trim());
   const [matchKey, setMatchKey] = useState('');
-  const [event, setEvent] = useState(null);
+  const snapshot = comp.tbaSnapshot && comp.tbaSnapshot.info?.key === eventKey ? comp.tbaSnapshot : null;
+  const [event, setEvent] = useState(eventMemo.key === eventKey && eventMemo.data ? eventMemo.data : snapshot);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mapView, setMapView] = useState('heat');
@@ -88,6 +89,8 @@ export default function Strategy() {
     setLoading(true);
     try {
       const d = await loadEvent(eventKey);
+      eventMemo.key = eventKey;
+      eventMemo.data = d;
       if (alive.current) { setEvent(d); setError(''); }
     } catch (e) {
       if (alive.current) setError(e.message);

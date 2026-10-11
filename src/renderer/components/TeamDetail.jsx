@@ -38,7 +38,7 @@ export function PathExplorer({ runs, height }) {
 
 function PitPanel({ pit }) {
   const L = pitLabels(pit);
-  const img = mediaUrl(pit.imagePath);
+  const img = pit.imageData || mediaUrl(pit.imagePath);
   return (
     <div className="pit-mini">
       <div className="pit-photo">{img ? <img src={img} alt={`Team ${pit.teamNumber} robot`} /> : <span>No photo</span>}</div>

@@ -44,7 +44,7 @@ const browserShim = {
     return defaultPath;
   } },
   fs: { readText: noDesktop },
-  files: { pathFor: () => '' },
+  files: { pathFor: () => '', thumbnail: async () => null },
   shell: { reveal: noDesktop, openExternal: async (url) => window.open(url, '_blank') },
   sync: {
     defaultFolders: async () => [],
@@ -57,6 +57,7 @@ const browserShim = {
     stop: async () => ({ available: false, running: false, devices: [] }),
     onEvent: () => () => {},
   },
+  coach: { status: async () => ({ running: false, urls: [], key: '' }), start: noDesktop, stop: async () => ({ running: false, urls: [] }), publish: noDesktop, androidUsb: noDesktop },
   tba: { fetch: noDesktop },
   llm: { chat: noDesktop },
   tools: { status: async () => ({ python: { ok: false, message: 'Desktop app required' }, env: { ready: false, missing: [] }, ytdlp: null, ffmpeg: null, adb: null, roboflowKey: false }) },

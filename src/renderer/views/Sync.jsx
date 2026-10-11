@@ -4,6 +4,8 @@ import { store, useApp, useCurrent } from '../store';
 import { Badge, Button, Card, Field, Icon, LogBox, PageHeader, Stat, Spinner, confirmDialog } from '../components/ui';
 import { importPaths } from '../lib/importing';
 import { fetchEventSchedule } from '../lib/tba';
+import { buildShareText, inspectShare } from '../lib/share';
+import { Modal } from '../components/ui';
 
 export default function Sync() {
   const comp = useCurrent();
@@ -86,24 +88,37 @@ export default function Sync() {
     store.toast(`Loaded ${sched.length} matches from the bundled schedule`, 'success');
   };
 
-  const exportBackup = async () => {
-    const json = store.exportCompetitionJson();
+  const [incoming, setIncoming] = useState(null); // { text, info } awaiting merge/new choice
+  const exportShare = async () => {
+    setBusy('share');
     try {
-      const file = await api.dialog.save({ content: json, defaultPath: `${comp.name.replace(/\W+/g, '_')}_backup.json`, filters: [{ name: 'Packout backup', extensions: ['json'] }] });
-      if (file) store.toast('Backup saved', 'success');
+      const content = await buildShareText();
+      const file = await api.dialog.save({ content, defaultPath: `${comp.name.replace(/\W+/g, '_')}.packout`, filters: [{ name: 'Packout share file', extensions: ['packout', 'txt', 'json'] }] });
+      if (file) store.toast('Share file saved — send it to anyone running Packout', 'success');
+    } catch (e) {
+      store.toast(e.message, 'error');
+    } finally {
+      setBusy('');
+    }
+  };
+  const importShare = async () => {
+    try {
+      const file = await api.dialog.open([{ name: 'Packout share file', extensions: ['packout', 'txt', 'json'] }], 'Choose a shared competition file');
+      if (!file) return;
+      const text = await api.fs.readText(file);
+      setIncoming({ text, info: inspectShare(text) });
+    } catch (e) {
+      store.toast(`Could not read that file: ${e.message}`, 'error');
+    }
+  };
+  const confirmImport = (mode) => {
+    try {
+      const c = store.importShare(incoming.text, mode);
+      store.toast(mode === 'merge' ? `Merged into “${c.name}”` : `Added “${c.name}”`, 'success');
     } catch (e) {
       store.toast(e.message, 'error');
     }
-  };
-  const importBackup = async () => {
-    try {
-      const file = await api.dialog.open([{ name: 'Packout backup', extensions: ['json'] }], 'Choose a competition backup');
-      if (!file) return;
-      const c = store.importCompetitionJson(await api.fs.readText(file));
-      store.toast(`Restored “${c.name}”`, 'success');
-    } catch (e) {
-      store.toast(`Could not restore: ${e.message}`, 'error');
-    }
+    setIncoming(null);
   };
   const clear = async (kind) => {
     const labels = { samples: 'Remove the demo data?', paths: 'Delete all robot paths?', all: 'Delete all scouting data?' };
@@ -173,10 +188,13 @@ export default function Sync() {
               </div>
             </Card>
 
-            <Card title="Backup & restore" subtitle="Everything in this competition as one file">
-              <div className="row" style={{ flexWrap: 'wrap' }}>
-                <Button icon="download" onClick={exportBackup}>Export backup…</Button>
-                <Button icon="upload" onClick={importBackup}>Restore from backup…</Button>
+            <Card title="Share with another Packout" subtitle="One file with everything you see: scouting, pit photos, paths, schedule, notes and TBA data">
+              <div className="stack">
+                <div className="row" style={{ flexWrap: 'wrap' }}>
+                  <Button variant="primary" icon="download" loading={busy === 'share'} onClick={exportShare}>Export share file…</Button>
+                  <Button icon="upload" onClick={importShare}>Import share file…</Button>
+                </div>
+                <p className="muted">Send the <code>.packout</code> file by AirDrop, email or chat. The other person imports it and sees the same teams, rankings and plans — no account or server needed.</p>
               </div>
             </Card>
 
@@ -195,6 +213,20 @@ export default function Sync() {
           </div>
         </div>
       </div>
+      {incoming && (
+        <Modal title="Import shared competition" width={500} onClose={() => setIncoming(null)}
+          footer={<><Button onClick={() => setIncoming(null)}>Cancel</Button><Button onClick={() => confirmImport('new')}>Add as new competition</Button><Button variant="primary" onClick={() => confirmImport('merge')}>Merge into “{comp.name}”</Button></>}>
+          <div className="stack">
+            <div><strong style={{ fontSize: 16 }}>{incoming.info.name}</strong>{incoming.info.eventKey && <span className="muted"> · {incoming.info.eventKey}</span>}</div>
+            <div className="mini-stats">
+              <div><span>Match records</span><strong>{incoming.info.counts.matches}</strong></div>
+              <div><span>Pit profiles</span><strong>{incoming.info.counts.pits}</strong></div>
+              <div><span>Robot paths</span><strong>{incoming.info.counts.paths}</strong></div>
+            </div>
+            <p className="muted">{incoming.info.exportedAt ? `Exported ${new Date(incoming.info.exportedAt).toLocaleString()}. ` : ''}{incoming.info.hasTba ? 'Includes a snapshot of Blue Alliance data. ' : ''}<strong>Merge</strong> adds anything new to your current competition (nothing of yours is overwritten); <strong>Add as new</strong> keeps it separate.</p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

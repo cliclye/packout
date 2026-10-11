@@ -189,6 +189,18 @@ competition's event key; refreshes every 30s with ETag caching):
   roughly 70–83% of matches called correctly on 2025 events using TBA data only.
 - **Rankings, OPR/DPR/CCWM, alliances & playoff bracket, awards** – cross-referenced with your own scouting (pick score, average points)
 
+### Share a competition
+
+**Sync & Import → Share with another Packout** exports one `.packout` text file with everything you see:
+scouting records, pit profiles *with photos*, AI paths, schedule, notes and a snapshot of the Blue Alliance data.
+Anyone running Packout can import it — merge it into their competition or add it as a new one — no server needed.
+
+### Phone (drive coach)
+
+**Phone** puts the plan on a phone so the drive coach doesn't need a laptop: your team's next matches with win
+chance and strategy, the full schedule with scores, every team's card, and rankings. Works on Android (USB or Wi-Fi,
+no install) and iPhone (native app in `mobile/ios-coach`). See [mobile/README.md](mobile/README.md).
+
 ### Game Plan
 
 Pick your team (say 1294) and a match — by default its next one — and get a plan built from
