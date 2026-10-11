@@ -148,3 +148,20 @@ out/
 # Build output
 .webpack/
 out/
+
+# Never commit secrets, personal data or stray build output
+/index.js
+/index.js.LICENSE.txt
+settings.json
+workspace.json
+workspace.json.bak
+coach*.json
+*.packout
+*.packoutcoach
+*.ipa
+.DS_Store
+**/xcuserdata/
+**/DerivedData/
+*.pem
+*.p12
+*.mobileprovision
