@@ -1,6 +1,6 @@
 // Caches the app shell so the coach page opens with no connection (needs a secure context, e.g. localhost over USB).
-const CACHE = 'packout-coach-v1';
-const SHELL = ['./', 'index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'icon.png'];
+const CACHE = 'packout-coach-v2';
+const SHELL = ['./', 'index.html', 'app.js', 'frames.js', 'jsqr.js', 'styles.css', 'manifest.webmanifest', 'icon.png'];
 self.addEventListener('install', (e) => e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())));
 self.addEventListener('activate', (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', (e) => {

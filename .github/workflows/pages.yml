@@ -1,0 +1,35 @@
+name: Publish Android coach web app
+
+# Publishes src/resources/coach to https://<owner>.github.io/packout/ so Android phones can install
+# the Packout Coach web app (camera scanning needs https). One-time setup: repo Settings -> Pages ->
+# Source: "GitHub Actions". Until that is switched on this job fails harmlessly.
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'src/resources/coach/**', '.github/workflows/pages.yml' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: src/resources/coach
+      - id: deployment
+        uses: actions/deploy-pages@v4

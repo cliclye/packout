@@ -17,7 +17,7 @@ let server = null;
 let pack = null; // { text, etag, at }
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.json': 'application/json; charset=utf-8' };
-const STATIC = new Set(['index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'sw.js', 'icon.png']);
+const STATIC = new Set(['index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'sw.js', 'icon.png', 'frames.js', 'jsqr.js']);
 
 function resourceFile(name) {
   const candidates = [
@@ -124,7 +124,7 @@ function publish(text) {
 /** Android over USB: reverse-forward the port, then open Chrome on the phone. */
 async function androidUsb() {
   const adb = findCommand(['adb']);
-  if (!adb) throw new Error('adb not found. Install Android platform-tools (macOS: brew install android-platform-tools) and enable USB debugging on the phone.');
+  if (!adb) throw new Error('adb not found. Install Android platform-tools (macOS: brew install android-platform-tools · Windows: unzip Google’s platform-tools to C:\\platform-tools) and enable USB debugging on the phone. Or skip the cable: scan the QR code with the Packout Coach web app instead.');
   const list = await capture(adb, ['devices']);
   const devices = list.stdout.split('\n').map((l) => l.trim().split(/\s+/)).filter((p) => p[1] === 'device').map((p) => p[0]);
   if (!devices.length) throw new Error('No Android phone found. Plug it in, unlock it and accept the "Allow USB debugging" prompt.');

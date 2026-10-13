@@ -1,8 +1,5 @@
 # Packout on the phone (drive coach)
 
-> This lives on the `phone-integration` branch. To drop it, delete the branch — `main` doesn't depend on it.
-> Preview builds from this branch are tagged `vX.Y.Z-phone` and published as *pre-releases*.
-
 Packout builds a **coach pack** — one small JSON file with the schedule, scores, win probabilities,
 your team's game plans for its next matches, and a card for every team — and gets it onto a phone.
 
@@ -11,12 +8,24 @@ Packout compresses the pack (~8 KB) and shows it as a short looping series of QR
 8 seconds per loop). The iPhone app's camera collects every frame, checks them, and rebuilds the pack.
 No network, cable or server involved — and it works for repeat updates between matches.
 
-| | iPhone / iPad (native app) | Android (or any browser) |
+Works from **Windows or Mac** to **iPhone or Android** — the computer only shows QR codes (or serves a file), so the
+computer's OS doesn't matter.
+
+| | iPhone / iPad (native app) | Android (web app, installs from Chrome) |
 | --- | --- | --- |
-| Get data, **no network** | **Phone → Show QR code**, then in the app *Data → Scan from computer screen* | **Phone → Send via USB** (cable, uses `adb reverse`) |
+| Get data, **no network** | **Phone → Show QR code**, then in the app *Data → Scan from computer screen* | **Phone → Show QR code**, then in the web app tap **📷 Scan** |
+| Cable instead | – | **Phone → Send via USB** (uses `adb reverse`; needs Android platform-tools) |
 | Practice / home | Same Wi-Fi: *Start sharing*, scan the link QR | Same, in the browser |
-| Anywhere | AirDrop / Files the `.packoutcoach` file | Import it on the web page |
+| Anywhere | AirDrop / Files the `.packoutcoach` file | *Import file* on the web page |
 | Offline afterwards | Yes, last copy kept on the phone | Yes, kept in the browser |
+
+## Getting the Android app
+
+It is a web app, so there is nothing to sideload. At home (needs internet once), open
+**https://cliclye.github.io/packout/** in Chrome on the phone (Packout → Phone shows a QR code for it), then
+**⋮ → Install app**. After that it works offline and reads the QR stream with the camera (Chrome's built-in QR
+detector, with a bundled jsQR fallback). *Maintainers:* enable it once under repo Settings → Pages → Source:
+*GitHub Actions*; `.github/workflows/pages.yml` publishes `src/resources/coach`.
 
 ## Getting the iPhone app
 

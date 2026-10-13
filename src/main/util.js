@@ -20,6 +20,10 @@ function extraPathDirs() {
       path.join(local, 'Programs', 'Python', 'Python312'),
       path.join(local, 'Programs', 'Python', 'Python312', 'Scripts'),
       path.join(home, 'scoop', 'shims'),
+      'C:\\platform-tools',
+      path.join(home, 'platform-tools'),
+      path.join(home, 'Downloads', 'platform-tools'),
+      path.join(process.env.ProgramFiles || 'C:\\Program Files', 'platform-tools'),
       'C:\\Program Files\\Eclipse Adoptium\\jre\\bin',
     ];
   }

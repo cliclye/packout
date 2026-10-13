@@ -17,7 +17,8 @@
     "make": "electron-forge make",
     "release": "electron-forge release",
     "lint": "echo \"No linting configured\"",
-    "test:scout": "node test/scout.test.js"
+    "test:scout": "node test/scout.test.js",
+    "test:frames": "node test/frames.test.js"
   },
   "dependencies": {
     "@babel/core": "^8.0.6",

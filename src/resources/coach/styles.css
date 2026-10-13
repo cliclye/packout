@@ -42,3 +42,13 @@ table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nu
 .empty { text-align: center; padding: 40px 20px; color: var(--text2); }
 .empty h2 { color: var(--text); margin-bottom: 6px; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom)); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 600; z-index: 20; }
+
+.scan { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; }
+.scan video { flex: 1; width: 100%; min-height: 0; object-fit: cover; }
+.scan-panel { position: absolute; left: 10px; right: 10px; bottom: max(10px, env(safe-area-inset-bottom)); background: rgba(14, 16, 22, .88); backdrop-filter: blur(14px); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+.scan-grid { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+.scan-grid i { width: 18px; height: 12px; border-radius: 3px; background: rgba(255,255,255,.14); }
+.scan-grid i.on { background: #5cc78f; }
+.scan-hint { color: #aab; } .scan-hint.warn { color: #e6ad57; }
+.scan-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+header button + button { margin-left: 6px; }

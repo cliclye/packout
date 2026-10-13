@@ -7,6 +7,8 @@ import QrStream from '../components/QrStream';
 import { framesForText } from '../lib/qrstream';
 import { buildPack, phoneState, publishNow, refreshStatus, startSharing, stopSharing, subscribePhone } from '../lib/phone';
 
+const ANDROID_URL = 'https://cliclye.github.io/packout/';
+
 function Qr({ text }) {
   const [src, setSrc] = useState('');
   useEffect(() => {
@@ -82,14 +84,14 @@ export default function Phone() {
                 <div className="phone-option highlight">
                   <div>
                     <strong>QR code on screen · works with no Wi-Fi, hotspot or cable</strong>
-                    <p className="muted">Shows a moving QR code. The Packout Coach iPhone app scans it with the camera and collects all the data in about 10 seconds. Nothing touches a network.</p>
+                    <p className="muted">Shows a moving QR code. The Packout Coach app on an iPhone, or the Packout Coach web app on Android, scans it with the camera and collects all the data in about 10 seconds. Nothing touches a network.</p>
                   </div>
                   <Button variant="primary" icon="eye" loading={busy === 'qr'} onClick={() => showQr()}>Show QR code</Button>
                 </div>
                 <div className="phone-option">
                   <div>
-                    <strong>Android · USB cable</strong>
-                    <p className="muted">Opens the coach page on the phone through the cable — no Wi-Fi needed. Needs USB debugging and <code>adb</code>.</p>
+                    <strong>Android · USB cable (alternative to the QR code)</strong>
+                    <p className="muted">Opens the coach page on the phone through the cable — no Wi-Fi needed. Needs USB debugging and <code>adb</code> (Android platform-tools).</p>
                   </div>
                   <Button variant="primary" icon="phone" loading={busy === 'usb'} onClick={usb}>Send via USB</Button>
                 </div>
@@ -140,6 +142,15 @@ export default function Phone() {
                 <div className="row" style={{ flexWrap: 'wrap' }}>
                   <Button icon="external" onClick={() => api.shell.openExternal('https://github.com/cliclye/packout/releases/latest')}>Open download page</Button>
                   <Button variant="ghost" icon="external" onClick={() => api.shell.openExternal('https://sideloadly.io')}>Sideloadly</Button>
+                </div>
+              </div>
+            </Card>
+            <Card title="Get the Android app" subtitle="Packout Coach web app — installs from Chrome, then works offline">
+              <div className="phone-share">
+                <Qr text={ANDROID_URL} />
+                <div className="stack" style={{ minWidth: 0 }}>
+                  <p className="muted">On the phone scan this, open the page in Chrome, then <b>⋮ → Install app</b> (or Add to Home screen). Do it at home — it needs internet once. After that it opens offline and its <b>📷 Scan</b> button reads the QR code from this screen. Works the same from a Windows or Mac computer.</p>
+                  <div className="row" style={{ gap: 6 }}><code className="grow" style={{ wordBreak: 'break-all', fontSize: 12 }}>{ANDROID_URL}</code><Button size="sm" variant="ghost" onClick={() => copy(ANDROID_URL)}>Copy</Button></div>
                 </div>
               </div>
             </Card>

@@ -64,8 +64,8 @@
 
   function empty() {
     var hasKey = !!localStorage.getItem(TOKEN_KEY);
-    return '<main><div class="card empty"><h2>No match data yet</h2><p>' + (hasKey ? 'Tap Sync while connected to Packout.' : 'In Packout open <b>Phone</b> and scan the QR code, or plug in your Android phone and press the USB button.') + '</p>' +
-      '<p><button class="primary" data-act="sync">Sync now</button> <button data-act="import">Import file</button></p></div></main>';
+    return '<main><div class="card empty"><h2>No match data yet</h2><p>' + (hasKey ? 'Tap Sync while connected to Packout.' : 'In Packout on the computer open <b>Phone → Show QR code</b>, then tap <b>Scan</b> here. No Wi-Fi needed.') + '</p>' +
+      '<p><button class="primary" data-act="scan">📷 Scan from computer screen</button></p><p><button data-act="sync">Sync (Wi-Fi / USB)</button> <button data-act="import">Import file</button></p></div></main>';
   }
 
   function teamBrief(t, color, me) {
@@ -157,12 +157,112 @@
     if (active) { var el = $app.querySelector('[data-act=search]'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   }
 
+
+  // ---- QR scan (no network): collects the looping frames Packout shows on the computer screen ----
+  var scanner = null;
+  function loadScript(src) {
+    return new Promise(function (ok, fail) { var el = document.createElement('script'); el.src = src; el.onload = ok; el.onerror = function () { fail(new Error('Could not load ' + src)); }; document.head.appendChild(el); });
+  }
+  function stopScan() {
+    if (!scanner) return;
+    scanner.alive = false;
+    if (scanner.stream) scanner.stream.getTracks().forEach(function (t) { t.stop(); });
+    scanner.el.remove(); scanner = null;
+  }
+  function startScan() {
+    if (scanner) return;
+    if (!window.PackoutFrames) { toast('App files missing — reload the page'); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.isSecureContext) {
+      toast('Camera needs a secure page: open the https:// Packout Coach link, or use the USB button in Packout.'); return;
+    }
+    var el = document.createElement('div'); el.className = 'scan';
+    el.innerHTML = '<video playsinline muted autoplay></video><div class="scan-panel"><b class="scan-title">Point at the moving QR code in Packout</b>' +
+      '<div class="scan-grid"></div><small class="scan-hint">Hold 20–30 cm from the screen. It loops, so start anywhere.</small>' +
+      '<div class="scan-row"><button data-z="1">1×</button><button data-z="2">2×</button><button data-z="3">3×</button><button data-torch hidden>🔦</button><button data-cancel>Cancel</button></div></div>';
+    document.body.appendChild(el);
+    var video = el.querySelector('video');
+    var asm = new PackoutFrames.Assembler();
+    var sc = scanner = { el: el, alive: true, stream: null, lastSeen: Date.now() };
+    el.querySelector('[data-cancel]').onclick = stopScan;
+    var title = el.querySelector('.scan-title'), grid = el.querySelector('.scan-grid'), hint = el.querySelector('.scan-hint');
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false }).then(function (stream) {
+      if (!sc.alive) { stream.getTracks().forEach(function (t) { t.stop(); }); return; }
+      sc.stream = stream; video.srcObject = stream;
+      var track = stream.getVideoTracks()[0], caps = track.getCapabilities ? track.getCapabilities() : {};
+      try { if (caps.focusMode && caps.focusMode.indexOf('continuous') >= 0) track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (e) {}
+      el.querySelectorAll('[data-z]').forEach(function (b) {
+        if (!caps.zoom) { b.hidden = true; return; }
+        b.onclick = function () { try { track.applyConstraints({ advanced: [{ zoom: Math.min(+b.dataset.z, caps.zoom.max) }] }); } catch (e) {} };
+      });
+      var tb = el.querySelector('[data-torch]'), on = false;
+      if (caps.torch) { tb.hidden = false; tb.onclick = function () { on = !on; try { track.applyConstraints({ advanced: [{ torch: on }] }); } catch (e) {} }; }
+      return detectorFor().then(function (detect) { loop(detect); });
+    }).catch(function (e) { toast(e && e.name === 'NotAllowedError' ? 'Allow camera access to scan' : 'Camera unavailable: ' + (e && e.message || e)); stopScan(); });
+
+    function detectorFor() {
+      if ('BarcodeDetector' in window) {
+        return Promise.resolve(window.BarcodeDetector.getSupportedFormats ? window.BarcodeDetector.getSupportedFormats() : ['qr_code']).then(function (f) {
+          if (f.indexOf('qr_code') < 0) throw new Error('no qr');
+          var d = new BarcodeDetector({ formats: ['qr_code'] });
+          return function () { return d.detect(video).then(function (r) { return r.map(function (x) { return x.rawValue; }); }); };
+        }).catch(function () { return jsqrDetector(); });
+      }
+      return jsqrDetector();
+    }
+    function jsqrDetector() {
+      return (window.jsQR ? Promise.resolve() : loadScript('jsqr.js')).then(function () {
+        var c = document.createElement('canvas'), g = c.getContext('2d', { willReadFrequently: true });
+        return function () {
+          var w = video.videoWidth, h = video.videoHeight; if (!w) return Promise.resolve([]);
+          var k = Math.min(1, 1280 / w); c.width = Math.round(w * k); c.height = Math.round(h * k);
+          g.drawImage(video, 0, 0, c.width, c.height);
+          var img = g.getImageData(0, 0, c.width, c.height), r = window.jsQR(img.data, c.width, c.height, { inversionAttempts: 'dontInvert' });
+          return Promise.resolve(r ? [r.data] : []);
+        };
+      });
+    }
+    function paint(received, total) {
+      title.textContent = total ? 'Collecting frames — ' + received + ' of ' + total : title.textContent;
+      if (total && grid.children.length !== total) { grid.innerHTML = ''; for (var i = 0; i < total; i++) grid.appendChild(document.createElement('i')); }
+      var have = asm.indexes();
+      for (var j = 0; j < grid.children.length; j++) grid.children[j].className = have.indexOf(j) >= 0 ? 'on' : '';
+    }
+    function finish(bytes) {
+      PackoutFrames.inflateText(bytes).then(function (text) { var p = validate(JSON.parse(text)); stopScan(); save(p); state.tab = 'next'; if (navigator.vibrate) navigator.vibrate(60); toast('Received ' + (p.event ? p.event.name : p.competition.name)); render(); })
+        .catch(function (e) { toast('Could not read the data: ' + e.message); stopScan(); });
+    }
+    function loop(detect) {
+      var busy = false;
+      (function tick() {
+        if (!sc.alive) return;
+        if (!busy && video.readyState >= 2) {
+          busy = true;
+          detect().then(function (codes) {
+            codes.forEach(function (raw) {
+              if (!sc.alive) return;
+              sc.lastSeen = Date.now();
+              var r = asm.add(raw);
+              if (r.state === 'progress') paint(r.received, r.total);
+              else if (r.state === 'failed') { toast(r.message); paint(0, asm.total); }
+              else if (r.state === 'complete') { sc.alive = false; finish(r.bytes); }
+            });
+          }).catch(function () {}).then(function () { busy = false; });
+        }
+        hint.className = 'scan-hint' + (Date.now() - sc.lastSeen > 3000 ? ' warn' : '');
+        hint.textContent = Date.now() - sc.lastSeen > 3000 ? 'No code in view. Fill the frame with the QR, hold 20–30 cm away, raise the computer screen brightness, tap the code to focus.' : 'Hold 20–30 cm from the screen. It loops, so start anywhere.';
+        setTimeout(tick, 40);
+      })();
+    }
+  }
+
   // ---- events ------------------------------------------------------------------
   $app.addEventListener('click', function (e) {
     var t = e.target.closest('[data-tab],[data-act],[data-filter],[data-team]');
     if (!t) return;
     if (t.dataset.tab) { state.tab = t.dataset.tab; state.team = null; window.scrollTo(0, 0); render(); }
     else if (t.dataset.filter) { state.filter = t.dataset.filter; render(); }
+    else if (t.dataset.act === 'scan') startScan();
     else if (t.dataset.act === 'sync') sync(false);
     else if (t.dataset.act === 'import') document.getElementById('file').click();
     else if (t.dataset.act === 'back') { state.team = null; render(); }
