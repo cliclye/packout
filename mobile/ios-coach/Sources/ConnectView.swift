@@ -1,8 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
-#if canImport(VisionKit)
-import VisionKit
-#endif
+import AVFoundation
+import Vision
 
 struct ConnectView: View {
     @EnvironmentObject var store: PackStore
@@ -11,11 +10,7 @@ struct ConnectView: View {
     @State private var importing = false
 
     private var canScan: Bool {
-        #if canImport(VisionKit)
-        return DataScannerViewController.isSupported
-        #else
-        return false
-        #endif
+        AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) != nil
     }
 
     var body: some View {
@@ -70,14 +65,12 @@ struct ConnectView: View {
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, UTType(filenameExtension: "packoutcoach") ?? .data]) { result in
             if case .success(let url) = result { store.importFile(url) }
         }
-        #if canImport(VisionKit)
         .fullScreenCover(isPresented: $scanning) {
             FrameScannerScreen(
                 onPack: { data in scanning = false; store.importPack(data, source: "the computer screen") },
                 onLink: { code in scanning = false; link = code; connect() },
                 onCancel: { scanning = false })
         }
-        #endif
     }
 
     private func step(_ n: Int, _ text: String) -> some View {
@@ -92,7 +85,6 @@ struct ConnectView: View {
     }
 }
 
-#if canImport(VisionKit)
 /// Camera screen that collects every frame of the looping QR sequence (or a single link QR).
 @MainActor
 final class ScanModel: ObservableObject {
@@ -100,6 +92,9 @@ final class ScanModel: ObservableObject {
     @Published var total = 0
     @Published var indexes: Set<Int> = []
     @Published var error: String?
+    @Published var zoom: CGFloat = 1
+    @Published var torch = false
+    @Published var lastSeen = Date()
     private let assembler = FrameAssembler()
     var onPack: (Data) -> Void = { _ in }
     var onLink: (String) -> Void = { _ in }
@@ -107,9 +102,10 @@ final class ScanModel: ObservableObject {
 
     func handle(_ payload: String) {
         guard !finished else { return }
+        lastSeen = Date()
         if payload.lowercased().hasPrefix("http") { finished = true; onLink(payload); return }
         switch assembler.add(payload) {
-        case .progress(let r, let t): received = r; total = t; indexes = assembler.receivedIndexes; error = nil
+        case .progress(let r, let t): if r > received { UIImpactFeedbackGenerator(style: .light).impactOccurred() }; received = r; total = t; indexes = assembler.receivedIndexes; error = nil
         case .complete(let data): finished = true; UINotificationFeedbackGenerator().notificationOccurred(.success); onPack(data)
         case .failed(let m): error = m; received = 0; total = 0; indexes = []
         case .ignored: break
@@ -139,8 +135,21 @@ struct FrameScannerScreen: View {
                     Text("Point at the moving QR code in Packout").font(.headline)
                     Text("Hold about 20–30 cm from the screen. It loops, so you can start anywhere.").font(.footnote).foregroundStyle(Theme.text2).multilineTextAlignment(.center)
                 }
+                TimelineView(.periodic(from: .now, by: 1)) { _ in
+                    if Date().timeIntervalSince(model.lastSeen) > 3 {
+                        Text("No code in view. Fill the frame with the QR, hold 20–30 cm away, turn the computer screen brightness up, and tap the code to focus.")
+                            .font(.footnote).foregroundStyle(Theme.warn).multilineTextAlignment(.center)
+                    }
+                }
                 if let e = model.error { Text(e).font(.footnote).foregroundStyle(Theme.danger) }
-                Button("Cancel", role: .cancel) { onCancel() }.buttonStyle(.bordered)
+                HStack(spacing: 8) {
+                    ForEach([1.0, 1.5, 2.0, 3.0], id: \.self) { z in
+                        Button(z == 1 ? "1×" : String(format: "%.1f×", z)) { model.zoom = CGFloat(z) }
+                            .buttonStyle(.bordered).tint(model.zoom == CGFloat(z) ? Theme.accent : Theme.text3)
+                    }
+                    Button { model.torch.toggle() } label: { Image(systemName: model.torch ? "flashlight.on.fill" : "flashlight.off.fill") }.buttonStyle(.bordered)
+                    Button("Cancel", role: .cancel) { onCancel() }.buttonStyle(.bordered)
+                }
             }
             .padding(16).frame(maxWidth: .infinity)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22)).padding(12)
@@ -149,24 +158,103 @@ struct FrameScannerScreen: View {
     }
 }
 
+/// Reads every camera frame with Vision. DataScanner only reports an item when it appears or moves,
+/// which misses a code that changes in place; this looks at each frame, so no QR frame is skipped.
 struct ScannerRepresentable: UIViewControllerRepresentable {
     let model: ScanModel
-    func makeCoordinator() -> Coordinator { Coordinator(model) }
-    func makeUIViewController(context: Context) -> DataScannerViewController {
-        let vc = DataScannerViewController(recognizedDataTypes: [.barcode(symbologies: [.qr])], qualityLevel: .accurate, recognizesMultipleItems: false, isHighFrameRateTrackingEnabled: false, isHighlightingEnabled: true)
-        vc.delegate = context.coordinator
-        try? vc.startScanning()
+    func makeUIViewController(context: Context) -> CameraController {
+        let vc = CameraController()
+        vc.onPayload = { [weak model] p in model?.handle(p) }
         return vc
     }
-    func updateUIViewController(_ vc: DataScannerViewController, context: Context) {}
-    final class Coordinator: NSObject, DataScannerViewControllerDelegate {
-        let model: ScanModel
-        init(_ m: ScanModel) { model = m }
-        func dataScanner(_ s: DataScannerViewController, didAdd items: [RecognizedItem], allItems: [RecognizedItem]) { forward(items) }
-        func dataScanner(_ s: DataScannerViewController, didUpdate items: [RecognizedItem], allItems: [RecognizedItem]) { forward(items) }
-        private func forward(_ items: [RecognizedItem]) {
-            for case .barcode(let b) in items { if let p = b.payloadStringValue { Task { @MainActor in model.handle(p) } } }
+    func updateUIViewController(_ vc: CameraController, context: Context) {
+        vc.setZoom(model.zoom)
+        vc.setTorch(model.torch)
+    }
+}
+
+final class CameraController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
+    var onPayload: (String) -> Void = { _ in }
+    private let session = AVCaptureSession()
+    private let queue = DispatchQueue(label: "packout.scan", qos: .userInitiated)
+    private var device: AVCaptureDevice?
+    private var preview: AVCaptureVideoPreviewLayer?
+    private var lastPayload = ""
+    private var lastPayloadAt = Date.distantPast
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
+        AVCaptureDevice.requestAccess(for: .video) { ok in
+            DispatchQueue.main.async { if ok { self.configure() } }
+        }
+    }
+
+    private func configure() {
+        guard let dev = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+              let input = try? AVCaptureDeviceInput(device: dev) else { return }
+        device = dev
+        session.beginConfiguration()
+        session.sessionPreset = session.canSetSessionPreset(.hd1920x1080) ? .hd1920x1080 : .high
+        if session.canAddInput(input) { session.addInput(input) }
+        let out = AVCaptureVideoDataOutput()
+        out.alwaysDiscardsLateVideoFrames = true
+        out.setSampleBufferDelegate(self, queue: queue)
+        if session.canAddOutput(out) { session.addOutput(out) }
+        session.commitConfiguration()
+
+        if (try? dev.lockForConfiguration()) != nil {
+            if dev.isFocusModeSupported(.continuousAutoFocus) { dev.focusMode = .continuousAutoFocus }
+            if dev.isAutoFocusRangeRestrictionSupported { dev.autoFocusRangeRestriction = .near }   // screens are close
+            if dev.isExposureModeSupported(.continuousAutoExposure) { dev.exposureMode = .continuousAutoExposure }
+            dev.unlockForConfiguration()
+        }
+        let layer = AVCaptureVideoPreviewLayer(session: session)
+        layer.videoGravity = .resizeAspectFill
+        layer.frame = view.bounds
+        view.layer.addSublayer(layer)
+        preview = layer
+        let tap = UITapGestureRecognizer(target: self, action: #selector(focusTap(_:)))
+        view.addGestureRecognizer(tap)
+        DispatchQueue.global(qos: .userInitiated).async { self.session.startRunning() }
+    }
+
+    override func viewDidLayoutSubviews() { super.viewDidLayoutSubviews(); preview?.frame = view.bounds }
+    override func viewWillDisappear(_ animated: Bool) { super.viewWillDisappear(animated); session.stopRunning(); setTorch(false) }
+
+    @objc private func focusTap(_ g: UITapGestureRecognizer) {
+        guard let dev = device, let layer = preview else { return }
+        let p = layer.captureDevicePointConverted(fromLayerPoint: g.location(in: view))
+        guard (try? dev.lockForConfiguration()) != nil else { return }
+        if dev.isFocusPointOfInterestSupported { dev.focusPointOfInterest = p; dev.focusMode = .continuousAutoFocus }
+        if dev.isExposurePointOfInterestSupported { dev.exposurePointOfInterest = p; dev.exposureMode = .continuousAutoExposure }
+        dev.unlockForConfiguration()
+    }
+
+    func setZoom(_ z: CGFloat) {
+        guard let dev = device, abs(dev.videoZoomFactor - z) > 0.01, (try? dev.lockForConfiguration()) != nil else { return }
+        dev.videoZoomFactor = max(1, min(z, dev.activeFormat.videoMaxZoomFactor))
+        dev.unlockForConfiguration()
+    }
+
+    func setTorch(_ on: Bool) {
+        guard let dev = device, dev.hasTorch, (dev.torchMode == .on) != on, (try? dev.lockForConfiguration()) != nil else { return }
+        dev.torchMode = on ? .on : .off
+        dev.unlockForConfiguration()
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let pixels = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        let request = VNDetectBarcodesRequest()
+        request.symbologies = [.qr]
+        try? VNImageRequestHandler(cvPixelBuffer: pixels, orientation: .right, options: [:]).perform([request])
+        for case let code as VNBarcodeObservation in request.results ?? [] {
+            guard let payload = code.payloadStringValue else { continue }
+            // Same frame seen on consecutive camera frames: pass it on at most every 150 ms.
+            if payload == lastPayload && Date().timeIntervalSince(lastPayloadAt) < 0.15 { continue }
+            lastPayload = payload; lastPayloadAt = Date()
+            DispatchQueue.main.async { self.onPayload(payload) }
         }
     }
 }
-#endif
+

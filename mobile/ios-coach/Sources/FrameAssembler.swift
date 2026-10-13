@@ -15,18 +15,29 @@ final class FrameAssembler {
     private(set) var total = 0
     private var crc = ""
     private var chunks: [Int: String] = [:]
+    private var pendingSession: String?
+    private var pendingCount = 0
 
     var received: Int { chunks.count }
     var receivedIndexes: Set<Int> { Set(chunks.keys) }
 
-    func reset() { session = nil; total = 0; crc = ""; chunks = [:] }
+    func reset() { pendingSession = nil; pendingCount = 0; session = nil; total = 0; crc = ""; chunks = [:] }
 
     func add(_ payload: String) -> Result {
         guard payload.hasPrefix("PK1.") else { return .ignored }
         let parts = payload.split(separator: ".", maxSplits: 5, omittingEmptySubsequences: false)
         guard parts.count == 6, let index = Int(parts[2]), let n = Int(parts[3]), n > 0, index >= 0, index < n else { return .ignored }
         let sid = String(parts[1])
-        if sid != session { reset(); session = sid; total = n; crc = String(parts[4]) }
+        if sid != session {
+            // A single stray misread shouldn't wipe progress: switch sessions only when the new id repeats.
+            if session != nil && !chunks.isEmpty {
+                if sid != pendingSession { pendingSession = sid; pendingCount = 1; return .progress(received: chunks.count, total: total) }
+                pendingCount += 1
+                if pendingCount < 2 { return .progress(received: chunks.count, total: total) }
+            }
+            reset(); session = sid; total = n; crc = String(parts[4])
+        }
+        pendingSession = nil; pendingCount = 0
         guard n == total else { return .ignored }
         chunks[index] = String(parts[5])
         guard chunks.count == total else { return .progress(received: chunks.count, total: total) }

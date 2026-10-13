@@ -13,7 +13,7 @@ No network, cable or server involved — and it works for repeat updates between
 
 | | iPhone / iPad (native app) | Android (or any browser) |
 | --- | --- | --- |
-| Get data, **no network** | **Phone → Show QR code**, then in the app *Connect → Scan from computer screen* | **Phone → Send via USB** (cable, uses `adb reverse`) |
+| Get data, **no network** | **Phone → Show QR code**, then in the app *Data → Scan from computer screen* | **Phone → Send via USB** (cable, uses `adb reverse`) |
 | Practice / home | Same Wi-Fi: *Start sharing*, scan the link QR | Same, in the browser |
 | Anywhere | AirDrop / Files the `.packoutcoach` file | Import it on the web page |
 | Offline afterwards | Yes, last copy kept on the phone | Yes, kept in the browser |
@@ -36,7 +36,7 @@ The project is generated from `project.yml` (`brew install xcodegen && xcodegen 
 ## At the event
 
 1. In Packout open **Phone**, enter your team number, press **Show QR code**.
-2. On the phone open **Packout Coach → Connect → Scan from computer screen**, point it at the screen (20–30 cm)
+2. On the phone open **Packout Coach → Data → Scan from computer screen**, point it at the screen (20–30 cm)
    until all boxes turn green. If a frame keeps failing, pick *Easier* codes in the QR window.
 3. Press **Refresh data** in the QR window (or reopen it) before each match to send new scores and plans.
 

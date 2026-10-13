@@ -152,20 +152,26 @@ struct Collapsible<Content: View>: View {
     }
 }
 
-/// "Updated 3 min ago" pill; turns amber when the data is getting old.
+/// Freshness indicator for the toolbar. The toolbar already draws a glass capsule, so this is just a dot and text.
 struct FreshnessPill: View {
     let date: Date?
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { _ in
             let age = date.map { -$0.timeIntervalSinceNow / 60 } ?? .infinity
             let tint: Color = age < 30 ? Theme.ok : age < 180 ? Theme.warn : Theme.danger
-            HStack(spacing: 5) {
-                Circle().fill(tint).frame(width: 7, height: 7)
-                Text(date == nil ? "No data" : age < 1 ? "Just now" : rel(date)).font(.caption.weight(.semibold))
+            HStack(spacing: 6) {
+                Circle().fill(tint).frame(width: 8, height: 8)
+                Text(label(age)).font(.footnote.weight(.semibold)).foregroundStyle(.primary)
             }
-            .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(tint.opacity(0.14), in: Capsule()).foregroundStyle(tint)
+            .padding(.horizontal, 4)
         }
+    }
+    private func label(_ m: Double) -> String {
+        if date == nil { return "No data" }
+        if m < 1 { return "Just now" }
+        if m < 60 { return "\(Int(m)) min ago" }
+        if m < 60 * 24 { return "\(Int(m / 60)) h ago" }
+        return "\(Int(m / 1440)) d ago"
     }
 }
 

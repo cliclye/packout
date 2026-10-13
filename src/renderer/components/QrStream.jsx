@@ -27,8 +27,15 @@ export default function QrStream({ frames, chunk = 450, onClose, onRebuild, titl
 
   useEffect(() => {
     if (!canvas.current || !frames[i]) return;
-    const size = Math.max(320, Math.min(window.innerHeight - 220, window.innerWidth - 80, 760));
-    QRCode.toCanvas(canvas.current, frames[i], { errorCorrectionLevel: 'M', margin: 2, width: size, color: { dark: '#000000', light: '#ffffff' } }).catch(() => {});
+    // Whole pixels per module keeps the edges crisp (a fractional scale blurs dense codes), and a
+    // 4-module quiet zone is what scanners expect.
+    const margin = 4;
+    const target = Math.max(320, Math.min(window.innerHeight - 220, window.innerWidth - 80, 800));
+    try {
+      const modules = QRCode.create(frames[i], { errorCorrectionLevel: 'M' }).modules.size;
+      const scale = Math.max(3, Math.floor(target / (modules + margin * 2)));
+      QRCode.toCanvas(canvas.current, frames[i], { errorCorrectionLevel: 'M', margin, scale, color: { dark: '#000000', light: '#ffffff' } }).catch(() => {});
+    } catch { /* frame too large for a QR; the builder keeps chunks small enough that this does not happen */ }
   }, [i, frames]);
 
   return (
@@ -36,7 +43,7 @@ export default function QrStream({ frames, chunk = 450, onClose, onRebuild, titl
       <div className="qrstream-head">
         <div>
           <h2>{title}</h2>
-          <p>Open <b>Packout Coach → Connect → Scan from computer screen</b>. Hold the phone 20–30 cm away until all boxes turn green. It loops, so start anywhere.</p>
+          <p>Open <b>Packout Coach → Data → Scan from computer screen</b>. Hold the phone 20–30 cm away until all boxes turn green (tap the code on the phone to focus; turn this screen's brightness up). It loops, so start anywhere.</p>
         </div>
         <Button icon="x" onClick={onClose}>Close</Button>
       </div>
