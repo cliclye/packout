@@ -1,18 +1,19 @@
 import SwiftUI
 
 enum Theme {
-    static let bg = Color(red: 0.047, green: 0.055, blue: 0.075)
-    static let surface = Color(red: 0.078, green: 0.09, blue: 0.118)
-    static let surface2 = Color(red: 0.098, green: 0.114, blue: 0.149)
-    static let border = Color(red: 0.145, green: 0.165, blue: 0.216)
-    static let accent = Color(red: 0.427, green: 0.514, blue: 1.0)
-    static let red = Color(red: 1.0, green: 0.353, blue: 0.373)
-    static let blue = Color(red: 0.302, green: 0.553, blue: 1.0)
-    static let ok = Color(red: 0.235, green: 0.812, blue: 0.49)
-    static let warn = Color(red: 0.953, green: 0.635, blue: 0.227)
-    static let danger = Color(red: 1.0, green: 0.4, blue: 0.455)
-    static let text2 = Color(red: 0.667, green: 0.698, blue: 0.765)
-    static let text3 = Color(red: 0.49, green: 0.525, blue: 0.604)
+    // Near-neutral surfaces, one calm accent, alliance colours kept for small touches only.
+    static let bg = Color(red: 0.039, green: 0.043, blue: 0.055)
+    static let surface = Color(red: 0.075, green: 0.082, blue: 0.098)
+    static let surface2 = Color(red: 0.102, green: 0.110, blue: 0.129)
+    static let border = Color.white.opacity(0.07)
+    static let accent = Color(red: 0.51, green: 0.58, blue: 0.97)
+    static let red = Color(red: 0.89, green: 0.40, blue: 0.42)
+    static let blue = Color(red: 0.38, green: 0.60, blue: 0.93)
+    static let ok = Color(red: 0.36, green: 0.78, blue: 0.56)
+    static let warn = Color(red: 0.90, green: 0.68, blue: 0.34)
+    static let danger = Color(red: 0.92, green: 0.45, blue: 0.47)
+    static let text2 = Color(red: 0.70, green: 0.72, blue: 0.77)
+    static let text3 = Color(red: 0.50, green: 0.53, blue: 0.59)
 }
 
 struct Card<Content: View>: View {
@@ -25,8 +26,8 @@ struct Card<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.border))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.border, lineWidth: 0.5))
     }
 }
 
@@ -38,8 +39,8 @@ struct TeamChip: View {
         Text(team)
             .font(.subheadline.weight(.bold).monospacedDigit())
             .padding(.horizontal, 9).padding(.vertical, 3)
-            .foregroundStyle(me ? Theme.bg : color)
-            .background(me ? Theme.accent : color.opacity(0.18), in: RoundedRectangle(cornerRadius: 8))
+            .foregroundStyle(me ? Theme.bg : Color.white.opacity(0.92))
+            .background(me ? Theme.accent : color.opacity(0.22), in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -49,7 +50,7 @@ struct Badge: View {
     var body: some View {
         Text(text).font(.caption2.weight(.bold))
             .padding(.horizontal, 8).padding(.vertical, 3)
-            .foregroundStyle(tint).background(tint.opacity(0.16), in: Capsule())
+            .foregroundStyle(tint).background(tint.opacity(0.13), in: Capsule())
     }
 }
 
@@ -64,8 +65,8 @@ struct WinBar: View {
         VStack(spacing: 3) {
             GeometryReader { g in
                 HStack(spacing: 0) {
-                    Text("\(Int((pRed * 100).rounded()))%").padding(.leading, 12).frame(width: g.size.width * r, height: g.size.height, alignment: .leading).background(Theme.red.opacity(0.95))
-                    Text("\(100 - Int((pRed * 100).rounded()))%").padding(.trailing, 12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing).background(Theme.blue.opacity(0.85))
+                    Text("\(Int((pRed * 100).rounded()))%").padding(.leading, 12).frame(width: g.size.width * r, height: g.size.height, alignment: .leading).background(Theme.red.opacity(0.85))
+                    Text("\(100 - Int((pRed * 100).rounded()))%").padding(.trailing, 12).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing).background(Theme.blue.opacity(0.80))
                 }
                 .font((tall ? Font.headline : Font.footnote).weight(.heavy)).foregroundStyle(.white)
                 .clipShape(Capsule())
@@ -147,8 +148,8 @@ struct Collapsible<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.border))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.border, lineWidth: 0.5))
     }
 }
 

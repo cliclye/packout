@@ -75,7 +75,7 @@ struct PlanView: View {
         return Card {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("\(Int((plan.pOurs * 100).rounded()))%").font(.system(size: 52, weight: .heavy, design: .rounded)).monospacedDigit().foregroundStyle(plan.pOurs >= 0.5 ? Theme.ok : Theme.warn)
+                    Text("\(Int((plan.pOurs * 100).rounded()))%").font(.system(size: 52, weight: .heavy, design: .rounded)).monospacedDigit().foregroundStyle(.white)
                     Text("our win chance").font(.footnote).foregroundStyle(Theme.text3)
                 }
                 Spacer()
@@ -100,11 +100,11 @@ struct PlanView: View {
 
     private func column(_ title: String, _ teams: [String], _ c: Color) -> some View {
         VStack(spacing: 6) {
-            Text(title).font(.caption2.weight(.heavy)).tracking(1).foregroundStyle(c)
+            Text(title).font(.caption2.weight(.bold)).tracking(1.2).foregroundStyle(c.opacity(0.9))
             ForEach(teams, id: \.self) { t in
                 Text(t).font(.title3.weight(.bold).monospacedDigit()).frame(maxWidth: .infinity).padding(.vertical, 7)
-                    .foregroundStyle(t == pack.myTeam ? Theme.bg : c)
-                    .background(t == pack.myTeam ? Theme.accent : c.opacity(0.16), in: RoundedRectangle(cornerRadius: 10))
+                    .foregroundStyle(t == pack.myTeam ? Theme.bg : Color.white.opacity(0.92))
+                    .background(t == pack.myTeam ? Theme.accent : c.opacity(0.20), in: RoundedRectangle(cornerRadius: 10))
             }
         }.frame(maxWidth: .infinity)
     }
@@ -116,7 +116,7 @@ struct PlanView: View {
             Card(title: "Key points") {
                 VStack(spacing: 8) { ForEach(Array(high)) { r in
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: "exclamationmark.circle.fill").foregroundStyle(Theme.danger)
+                        Image(systemName: "exclamationmark.circle.fill").foregroundStyle(Theme.warn)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(r.title).font(.subheadline.weight(.bold)).fixedSize(horizontal: false, vertical: true)
                             Text(r.detail).font(.footnote).foregroundStyle(Theme.text2).fixedSize(horizontal: false, vertical: true)
@@ -145,7 +145,7 @@ struct PlanView: View {
 
 struct RecRow: View {
     let rec: CoachPack.Plan.Rec
-    private var tint: Color { rec.priority == "high" ? Theme.danger : rec.priority == "med" ? Theme.accent : Theme.border }
+    private var tint: Color { rec.priority == "high" ? Theme.warn : rec.priority == "med" ? Theme.accent.opacity(0.7) : Theme.border }
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             Rectangle().fill(tint).frame(width: 4)
@@ -153,7 +153,7 @@ struct RecRow: View {
                 HStack(alignment: .top) {
                     Text(rec.title).font(.subheadline.weight(.bold)).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 6)
-                    Badge(text: rec.priority == "high" ? "HIGH" : rec.priority == "med" ? "MED" : "FYI", tint: rec.priority == "high" ? Theme.danger : rec.priority == "med" ? Theme.accent : Theme.text2)
+                    Badge(text: rec.priority == "high" ? "HIGH" : rec.priority == "med" ? "MED" : "FYI", tint: rec.priority == "high" ? Theme.warn : rec.priority == "med" ? Theme.accent : Theme.text3)
                 }
                 Text(rec.detail).font(.subheadline).foregroundStyle(Theme.text2).fixedSize(horizontal: false, vertical: true)
             }.padding(10)
@@ -178,7 +178,7 @@ struct TeamBrief: View {
                 TeamChip(team: member.team, color: color, me: member.team == me)
                 Text(t?.name ?? "").font(.footnote).foregroundStyle(Theme.text3).lineLimit(1)
                 Spacer()
-                if top { Badge(text: "TOP THREAT", tint: Theme.danger) }
+                if top { Badge(text: "TOP THREAT", tint: Theme.warn) }
                 Badge(text: member.role, tint: member.role == "Unscouted" ? Theme.warn : Theme.text2)
                 if t != nil { Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Theme.text3) }
             }
