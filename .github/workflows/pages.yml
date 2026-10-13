@@ -28,6 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true   # turns Pages on automatically when the token is allowed to; otherwise see the note above
       - uses: actions/upload-pages-artifact@v3
         with:
           path: src/resources/coach
