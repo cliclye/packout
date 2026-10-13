@@ -19,8 +19,6 @@ The app is unsigned, so macOS may say it can't verify the developer: right-click
 
 Installers are built by GitHub Actions whenever a `v*` tag is pushed (`git tag v1.0.1 && git push --tags`).
 
-> **Drive coach on your phone:** the Phone page streams the match plan to an iPhone (or Android) as a QR code, so no Wi‑Fi is needed. See [mobile/README.md](mobile/README.md). The phone-free version of the app is kept on the [`no-phone`](https://github.com/cliclye/packout/tree/no-phone) branch.
-
 ## Features
 
 - **Dashboard**: Overview of team rankings, efficiency, reliability, and data health
@@ -197,6 +195,12 @@ competition's event key; refreshes every 30s with ETag caching):
 scouting records, pit profiles *with photos*, AI paths, schedule, notes and a snapshot of the Blue Alliance data.
 Anyone running Packout can import it — merge it into their competition or add it as a new one — no server needed.
 
+### Phone (drive coach)
+
+**Phone** puts the plan on a phone so the drive coach doesn't need a laptop: your team's next matches with win
+chance and strategy, the full schedule with scores, every team's card, and rankings. Because events ban Wi-Fi and hotspots,
+the main method is **a QR code on the computer screen** that the iPhone app (`mobile/ios-coach`, installable from the release's
+`.ipa`) scans with its camera — no network at all. Android can use a USB cable. See [mobile/README.md](mobile/README.md).
 
 ### Game Plan
 
