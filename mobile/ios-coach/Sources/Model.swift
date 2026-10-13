@@ -26,7 +26,7 @@ struct CoachPack: Codable, Equatable {
         struct ModelInfo: Codable, Equatable { var accuracy: Double; var graded: Int }
     }
 
-    struct Match: Codable, Equatable, Identifiable {
+    struct Match: Codable, Hashable, Identifiable {
         var key: String
         var label: String
         var level: String
@@ -46,7 +46,7 @@ struct CoachPack: Codable, Equatable {
         var date: Date? { time.map { Date(timeIntervalSince1970: $0 / 1000) } }
     }
 
-    struct TeamEntry: Codable, Equatable, Identifiable {
+    struct TeamEntry: Codable, Hashable, Identifiable {
         var number: String
         var name: String?
         var scouted: Bool

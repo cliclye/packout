@@ -16,27 +16,23 @@ struct PlanView: View {
                 if let m = current, let plan = pack.plans[m.key] {
                     picker(m)
                     hero(m, plan)
+                    priorities(plan)
+                    alliances(m, plan)
                     ForEach(phases, id: \.self) { phase in
                         let recs = plan.recs.filter { $0.phase == phase }
                         if !recs.isEmpty {
-                            Card(title: phase) {
-                                ForEach(recs) { r in RecRow(rec: r) }
+                            Collapsible(phase, count: recs.count, open: phase == "Overall" || recs.contains { $0.priority == "high" }) {
+                                VStack(spacing: 8) { ForEach(recs) { RecRow(rec: $0) } }
                             }
                         }
                     }
-                    let oppColor = plan.ourColor == "red" ? Theme.blue : Theme.red
-                    let ourColor = plan.ourColor == "red" ? Theme.red : Theme.blue
-                    Card(title: "Opponents") {
-                        ForEach(plan.opponents.sorted { ($0.threat ?? 0) > ($1.threat ?? 0) }) { o in
-                            TeamBrief(pack: pack, member: o, color: oppColor, me: pack.myTeam)
-                        }
-                    }
-                    Card(title: "Our alliance") {
-                        ForEach(plan.partners) { o in TeamBrief(pack: pack, member: o, color: ourColor, me: pack.myTeam) }
-                    }
                     if !plan.note.isEmpty { Card(title: "Match notes") { Text(plan.note) } }
+                    NavigationLink(value: m) {
+                        Label("Full match page", systemImage: "list.bullet.rectangle").font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(.vertical, 6)
+                    }.buttonStyle(.bordered)
                 } else {
                     Card { VStack(spacing: 8) {
+                        Image(systemName: "flag.checkered").font(.largeTitle).foregroundStyle(Theme.text3)
                         Text("No game plan yet").font(.headline)
                         Text(pack.myTeam.isEmpty ? "Choose your team in Packout’s Phone page and sync again." : "Team \(pack.myTeam) has no upcoming matches in the schedule.")
                             .foregroundStyle(Theme.text2).multilineTextAlignment(.center)
@@ -44,39 +40,104 @@ struct PlanView: View {
                 }
             }
             .padding(16)
+            .animation(.snappy, value: selected)
         }
+        .background(Theme.bg)
     }
 
+    /// Horizontal strip of our matches; the next one is selected by default.
     private func picker(_ m: CoachPack.Match) -> some View {
-        Menu {
-            ForEach(planned) { x in
-                Button { selected = x.key } label: { Text("\(x.label) — \(x.played ? "played" : clock(x.date))") }
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(planned) { x in
+                        let on = x.key == m.key
+                        Button { UISelectionFeedbackGenerator().selectionChanged(); selected = x.key } label: {
+                            VStack(spacing: 1) {
+                                Text(x.label).font(.subheadline.weight(.bold))
+                                Text(x.played ? "played" : clock(x.date)).font(.caption2)
+                            }
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .foregroundStyle(on ? Theme.bg : Color.primary)
+                            .background(on ? Theme.accent : Theme.surface2, in: RoundedRectangle(cornerRadius: 12))
+                            .opacity(x.played && !on ? 0.6 : 1)
+                        }.buttonStyle(.plain).id(x.key)
+                    }
+                }.padding(.horizontal, 2)
             }
-        } label: {
-            HStack { Text("\(m.label) · \(m.played ? "played" : clock(m.date))"); Spacer(); Image(systemName: "chevron.up.chevron.down").font(.caption) }
-                .padding(12).background(Theme.surface2, in: RoundedRectangle(cornerRadius: 12))
-        }.foregroundStyle(.primary)
+            .onAppear { proxy.scrollTo(m.key, anchor: .center) }
+        }
     }
 
     private func hero(_ m: CoachPack.Match, _ plan: CoachPack.Plan) -> some View {
         let pRed = plan.ourColor == "red" ? plan.pOurs : 1 - plan.pOurs
+        let ourColor = plan.ourColor == "red" ? Theme.red : Theme.blue
         return Card {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("\(Int((plan.pOurs * 100).rounded()))%").font(.system(size: 44, weight: .heavy, design: .rounded)).monospacedDigit()
+                    Text("\(Int((plan.pOurs * 100).rounded()))%").font(.system(size: 52, weight: .heavy, design: .rounded)).monospacedDigit().foregroundStyle(plan.pOurs >= 0.5 ? Theme.ok : Theme.warn)
                     Text("our win chance").font(.footnote).foregroundStyle(Theme.text3)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(m.label).font(.headline)
-                    Text(m.played ? "Final \(m.redScore ?? 0)–\(m.blueScore ?? 0)" : "\(clock(m.date)) · \(rel(m.date))").font(.footnote).foregroundStyle(Theme.text3)
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text(m.label).font(.title3.weight(.bold))
+                    if m.played {
+                        Text("Final \(m.redScore ?? 0)–\(m.blueScore ?? 0)").font(.footnote).foregroundStyle(Theme.text3)
+                    } else {
+                        Text(clock(m.date)).font(.footnote).foregroundStyle(Theme.text3)
+                        Text(rel(m.date)).font(.subheadline.weight(.bold)).foregroundStyle(Theme.accent)
+                    }
+                    Badge(text: "We’re \(plan.ourColor.uppercased())", tint: ourColor)
                 }
             }
             WinBar(pRed: pRed, projRed: m.projRed, projBlue: m.projBlue, tall: true)
-            FlowLayout(spacing: 6) {
-                ForEach(m.red, id: \.self) { TeamChip(team: $0, color: Theme.red, me: $0 == pack.myTeam) }
-                Text("vs").font(.footnote).foregroundStyle(Theme.text3)
-                ForEach(m.blue, id: \.self) { TeamChip(team: $0, color: Theme.blue, me: $0 == pack.myTeam) }
+            HStack(alignment: .top, spacing: 10) {
+                column("RED", m.red, Theme.red)
+                column("BLUE", m.blue, Theme.blue)
+            }
+        }
+    }
+
+    private func column(_ title: String, _ teams: [String], _ c: Color) -> some View {
+        VStack(spacing: 6) {
+            Text(title).font(.caption2.weight(.heavy)).tracking(1).foregroundStyle(c)
+            ForEach(teams, id: \.self) { t in
+                Text(t).font(.title3.weight(.bold).monospacedDigit()).frame(maxWidth: .infinity).padding(.vertical, 7)
+                    .foregroundStyle(t == pack.myTeam ? Theme.bg : c)
+                    .background(t == pack.myTeam ? Theme.accent : c.opacity(0.16), in: RoundedRectangle(cornerRadius: 10))
+            }
+        }.frame(maxWidth: .infinity)
+    }
+
+    /// The handful of "high" recommendations, up front, so a quick glance is enough in the queue.
+    @ViewBuilder private func priorities(_ plan: CoachPack.Plan) -> some View {
+        let high = plan.recs.filter { $0.priority == "high" }.prefix(3)
+        if !high.isEmpty {
+            Card(title: "Key points") {
+                VStack(spacing: 8) { ForEach(Array(high)) { r in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.circle.fill").foregroundStyle(Theme.danger)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(r.title).font(.subheadline.weight(.bold)).fixedSize(horizontal: false, vertical: true)
+                            Text(r.detail).font(.footnote).foregroundStyle(Theme.text2).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                } }
+            }
+        }
+    }
+
+    private func alliances(_ m: CoachPack.Match, _ plan: CoachPack.Plan) -> some View {
+        let oppColor = plan.ourColor == "red" ? Theme.blue : Theme.red
+        let ourColor = plan.ourColor == "red" ? Theme.red : Theme.blue
+        return VStack(spacing: 14) {
+            Collapsible("Opponents", count: plan.opponents.count, tint: oppColor) {
+                VStack(spacing: 8) { ForEach(plan.opponents.sorted { ($0.threat ?? 0) > ($1.threat ?? 0) }) { o in
+                    TeamBrief(pack: pack, member: o, color: oppColor, me: pack.myTeam, top: o.team == plan.topThreat)
+                } }
+            }
+            Collapsible("Our alliance", count: plan.partners.count, tint: ourColor) {
+                VStack(spacing: 8) { ForEach(plan.partners) { TeamBrief(pack: pack, member: $0, color: ourColor, me: pack.myTeam) } }
             }
         }
     }
@@ -97,24 +158,29 @@ struct RecRow: View {
                 Text(rec.detail).font(.subheadline).foregroundStyle(Theme.text2).fixedSize(horizontal: false, vertical: true)
             }.padding(10)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surface2, in: RoundedRectangle(cornerRadius: 10))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
 
+/// Compact team card; tap to open the full team page.
 struct TeamBrief: View {
     let pack: CoachPack
     let member: CoachPack.Plan.Member
     let color: Color
     let me: String
+    var top = false
     var body: some View {
         let t = pack.teams[member.team]
-        VStack(alignment: .leading, spacing: 8) {
+        let content = VStack(alignment: .leading, spacing: 8) {
             HStack {
                 TeamChip(team: member.team, color: color, me: member.team == me)
                 Text(t?.name ?? "").font(.footnote).foregroundStyle(Theme.text3).lineLimit(1)
                 Spacer()
+                if top { Badge(text: "TOP THREAT", tint: Theme.danger) }
                 Badge(text: member.role, tint: member.role == "Unscouted" ? Theme.warn : Theme.text2)
+                if t != nil { Image(systemName: "chevron.right").font(.caption2.weight(.bold)).foregroundStyle(Theme.text3) }
             }
             if let t, t.scouted {
                 Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 6) {
@@ -128,9 +194,11 @@ struct TeamBrief: View {
             }
         }
         .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surface2, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(alignment: .leading) { Rectangle().fill(color).frame(width: 4).clipShape(RoundedRectangle(cornerRadius: 2)) }
+        .overlay(alignment: .leading) { Rectangle().fill(color).frame(width: 4) }
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        if let t { NavigationLink(value: t) { content }.buttonStyle(.plain) } else { content }
     }
 }
 

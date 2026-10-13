@@ -100,3 +100,80 @@ func rel(_ d: Date?) -> String {
     let t = a >= 60 ? "\(a / 60)h \(a % 60)m" : "\(a) min"
     return m > 0 ? "in \(t)" : "\(t) ago"
 }
+
+/// Thin horizontal gauge used for 0–1 rates (accuracy, climb, uptime).
+struct StatBar: View {
+    let label: String
+    let value: Double?
+    var display: String? = nil
+    var tint: Color = Theme.accent
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack { Text(label).font(.caption).foregroundStyle(Theme.text3); Spacer(); Text(display ?? pct(value)).font(.caption.weight(.bold).monospacedDigit()) }
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Theme.border)
+                    Capsule().fill(tint).frame(width: g.size.width * CGFloat(max(0, min(1, value ?? 0))))
+                }
+            }.frame(height: 6)
+        }
+    }
+}
+
+/// Section with a tappable header that folds its content away.
+struct Collapsible<Content: View>: View {
+    let title: String
+    var count: Int? = nil
+    var tint: Color = Theme.text3
+    @State var open: Bool
+    @ViewBuilder var content: Content
+    init(_ title: String, count: Int? = nil, tint: Color = Theme.text3, open: Bool = true, @ViewBuilder content: () -> Content) {
+        self.title = title; self.count = count; self.tint = tint; self._open = State(initialValue: open); self.content = content()
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                withAnimation(.snappy(duration: 0.25)) { open.toggle() }
+            } label: {
+                HStack(spacing: 8) {
+                    Text(title.uppercased()).font(.caption.weight(.bold)).tracking(0.6).foregroundStyle(tint)
+                    if let count { Text("\(count)").font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.border, in: Capsule()).foregroundStyle(Theme.text2) }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Theme.text3).rotationEffect(.degrees(open ? 90 : 0))
+                }.contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            if open { content.transition(.opacity.combined(with: .move(edge: .top))) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.border))
+    }
+}
+
+/// "Updated 3 min ago" pill; turns amber when the data is getting old.
+struct FreshnessPill: View {
+    let date: Date?
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 30)) { _ in
+            let age = date.map { -$0.timeIntervalSinceNow / 60 } ?? .infinity
+            let tint: Color = age < 30 ? Theme.ok : age < 180 ? Theme.warn : Theme.danger
+            HStack(spacing: 5) {
+                Circle().fill(tint).frame(width: 7, height: 7)
+                Text(date == nil ? "No data" : age < 1 ? "Just now" : rel(date)).font(.caption.weight(.semibold))
+            }
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(tint.opacity(0.14), in: Capsule()).foregroundStyle(tint)
+        }
+    }
+}
+
+/// "W", "L" or "T" result for a team in a played match, nil when unplayed or the team wasn't in it.
+func result(of team: String, in m: CoachPack.Match) -> String? {
+    guard m.played else { return nil }
+    let onRed = m.red.contains(team), onBlue = m.blue.contains(team)
+    guard onRed || onBlue else { return nil }
+    guard let w = m.winner, w == "red" || w == "blue" else { return "T" }
+    return (w == "red") == onRed ? "W" : "L"
+}

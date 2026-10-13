@@ -26,22 +26,26 @@ struct ConnectView: View {
                         .background((store.isError ? Theme.danger : Theme.ok).opacity(0.16), in: RoundedRectangle(cornerRadius: 12))
                         .foregroundStyle(store.isError ? Theme.danger : Theme.ok)
                 }
+                Card(title: "Get data from your computer — no Wi-Fi needed") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        step(1, "In Packout on your computer open Phone → Show QR code.")
+                        step(2, "Tap the button below and point the camera at the moving code.")
+                        step(3, "Hold steady until every box turns green (about 10 seconds).")
+                    }
+                    Text("Nothing is sent over a network.").font(.caption).foregroundStyle(Theme.text3)
+                    if canScan {
+                        Button { scanning = true } label: { Label("Scan from computer screen", systemImage: "qrcode.viewfinder").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 8) }
+                            .buttonStyle(.borderedProminent).controlSize(.large)
+                    } else {
+                        Text("Camera scanning isn’t available on this device.").font(.footnote).foregroundStyle(Theme.warn)
+                    }
+                }
                 Card(title: "Status") {
                     if let p = store.pack {
                         Text(p.event?.name ?? p.competition.name).font(.headline)
                         Text("Team \(p.myTeam.isEmpty ? "–" : p.myTeam) · \(p.matches.count) matches · \(p.teams.count) teams").font(.subheadline).foregroundStyle(Theme.text2)
                         if let d = store.lastSync { Text("Last update \(d.formatted(date: .abbreviated, time: .shortened))").font(.footnote).foregroundStyle(Theme.text3) }
                     } else { Text("No data yet").foregroundStyle(Theme.text2) }
-                }
-                Card(title: "Get data from your computer — no Wi-Fi needed") {
-                    Text("In Packout open Phone → Show QR code. Point this camera at the moving QR code until every frame is collected (about 10 seconds). Nothing is sent over a network.")
-                        .font(.footnote).foregroundStyle(Theme.text2)
-                    if canScan {
-                        Button { scanning = true } label: { Label("Scan from computer screen", systemImage: "qrcode.viewfinder").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6) }
-                            .buttonStyle(.borderedProminent)
-                    } else {
-                        Text("Camera scanning isn’t available on this device.").font(.footnote).foregroundStyle(Theme.warn)
-                    }
                 }
                 Card(title: "Other ways") {
                     Button { importing = true } label: { Label("Import a coach file (AirDrop / Files)", systemImage: "square.and.arrow.down").frame(maxWidth: .infinity) }.buttonStyle(.bordered)
@@ -74,6 +78,13 @@ struct ConnectView: View {
                 onCancel: { scanning = false })
         }
         #endif
+    }
+
+    private func step(_ n: Int, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("\(n)").font(.caption.weight(.heavy)).frame(width: 22, height: 22).background(Theme.accent.opacity(0.2), in: Circle()).foregroundStyle(Theme.accent)
+            Text(text).font(.subheadline).foregroundStyle(Theme.text2).fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func connect() {
