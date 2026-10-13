@@ -1,0 +1,3411 @@
+{
+ "format": "packout-coach",
+ "version": 1,
+ "generatedAt": "2026-10-11T05:45:55.119Z",
+ "competition": {
+  "name": "Sample Event",
+  "eventKey": "2025wasno"
+ },
+ "event": {
+  "name": "PNW District Glacier Peak Event",
+  "city": "Snohomish",
+  "start": "2025-02-28",
+  "end": "2025-03-02"
+ },
+ "myTeam": "10498",
+ "summary": {
+  "qualsPlayed": 36,
+  "qualsTotal": 66,
+  "myRank": 24,
+  "myRecord": "5-7-0",
+  "model": {
+   "accuracy": 0.833,
+   "graded": 36
+  }
+ },
+ "matches": [
+  {
+   "key": "2025wasno_qm1",
+   "label": "Quals 1",
+   "level": "qm",
+   "number": 1,
+   "time": 1740856670000,
+   "red": [
+    "4918",
+    "3218",
+    "2930"
+   ],
+   "blue": [
+    "4131",
+    "5827",
+    "10498"
+   ],
+   "played": true,
+   "redScore": 113,
+   "blueScore": 45,
+   "winner": "red",
+   "pRed": 0.81,
+   "projRed": 98,
+   "projBlue": 65,
+   "video": "https://www.youtube.com/watch?v=PKiY3UqTEUE"
+  },
+  {
+   "key": "2025wasno_qm2",
+   "label": "Quals 2",
+   "level": "qm",
+   "number": 2,
+   "time": 1740857215000,
+   "red": [
+    "3393",
+    "4469",
+    "3826"
+   ],
+   "blue": [
+    "4173",
+    "1318",
+    "4512"
+   ],
+   "played": true,
+   "redScore": 48,
+   "blueScore": 54,
+   "winner": "blue",
+   "pRed": 0.597,
+   "projRed": 78,
+   "projBlue": 69,
+   "video": "https://www.youtube.com/watch?v=3yMHbi-nOtg"
+  },
+  {
+   "key": "2025wasno_qm3",
+   "label": "Quals 3",
+   "level": "qm",
+   "number": 3,
+   "time": 1740857839000,
+   "red": [
+    "10079",
+    "2980",
+    "2046"
+   ],
+   "blue": [
+    "4089",
+    "5588",
+    "2929"
+   ],
+   "played": true,
+   "redScore": 80,
+   "blueScore": 13,
+   "winner": "red",
+   "pRed": 0.765,
+   "projRed": 86,
+   "projBlue": 59,
+   "video": "https://www.youtube.com/watch?v=5drJ0ZF-a40"
+  },
+  {
+   "key": "2025wasno_qm4",
+   "label": "Quals 4",
+   "level": "qm",
+   "number": 4,
+   "time": 1740858356000,
+   "red": [
+    "7627",
+    "9680",
+    "2903"
+   ],
+   "blue": [
+    "4450",
+    "5941",
+    "9450"
+   ],
+   "played": true,
+   "redScore": 48,
+   "blueScore": 92,
+   "winner": "blue",
+   "pRed": 0.265,
+   "projRed": 63,
+   "projBlue": 87,
+   "video": "https://www.youtube.com/watch?v=Rh9ZEYrAvD4"
+  },
+  {
+   "key": "2025wasno_qm5",
+   "label": "Quals 5",
+   "level": "qm",
+   "number": 5,
+   "time": 1740859034000,
+   "red": [
+    "9442",
+    "4911",
+    "6076"
+   ],
+   "blue": [
+    "10416",
+    "1778",
+    "7461"
+   ],
+   "played": true,
+   "redScore": 83,
+   "blueScore": 90,
+   "winner": "blue",
+   "pRed": 0.483,
+   "projRed": 92,
+   "projBlue": 94,
+   "video": "https://www.youtube.com/watch?v=q0hy1w-gLuQ"
+  },
+  {
+   "key": "2025wasno_qm6",
+   "label": "Quals 6",
+   "level": "qm",
+   "number": 6,
+   "time": 1740859749000,
+   "red": [
+    "5827",
+    "2522",
+    "360"
+   ],
+   "blue": [
+    "10079",
+    "3393",
+    "4682"
+   ],
+   "played": true,
+   "redScore": 100,
+   "blueScore": 68,
+   "winner": "red",
+   "pRed": 0.743,
+   "projRed": 96,
+   "projBlue": 71,
+   "video": "https://www.youtube.com/watch?v=B9g3qDXku60"
+  },
+  {
+   "key": "2025wasno_qm7",
+   "label": "Quals 7",
+   "level": "qm",
+   "number": 7,
+   "time": 1740860304000,
+   "red": [
+    "4173",
+    "5941",
+    "4089"
+   ],
+   "blue": [
+    "1318",
+    "10498",
+    "2903"
+   ],
+   "played": true,
+   "redScore": 13,
+   "blueScore": 47,
+   "winner": "blue",
+   "pRed": 0.381,
+   "projRed": 63,
+   "projBlue": 74,
+   "video": "https://www.youtube.com/watch?v=-zwPP_l6NuY"
+  },
+  {
+   "key": "2025wasno_qm8",
+   "label": "Quals 8",
+   "level": "qm",
+   "number": 8,
+   "time": 1740860809000,
+   "red": [
+    "10416",
+    "4512",
+    "4911"
+   ],
+   "blue": [
+    "7627",
+    "9442",
+    "7461"
+   ],
+   "played": true,
+   "redScore": 58,
+   "blueScore": 75,
+   "winner": "blue",
+   "pRed": 0.382,
+   "projRed": 72,
+   "projBlue": 83,
+   "video": "https://www.youtube.com/watch?v=Ke3a-3K4Sbw"
+  },
+  {
+   "key": "2025wasno_qm9",
+   "label": "Quals 9",
+   "level": "qm",
+   "number": 9,
+   "time": 1740861325000,
+   "red": [
+    "2930",
+    "9680",
+    "360"
+   ],
+   "blue": [
+    "4131",
+    "5588",
+    "2980"
+   ],
+   "played": true,
+   "redScore": 96,
+   "blueScore": 22,
+   "winner": "red",
+   "pRed": 0.75,
+   "projRed": 89,
+   "projBlue": 64,
+   "video": "https://www.youtube.com/watch?v=wuP-H3URH4A"
+  },
+  {
+   "key": "2025wasno_qm10",
+   "label": "Quals 10",
+   "level": "qm",
+   "number": 10,
+   "time": 1740861826000,
+   "red": [
+    "4450",
+    "2046",
+    "2522"
+   ],
+   "blue": [
+    "4682",
+    "6076",
+    "4918"
+   ],
+   "played": true,
+   "redScore": 102,
+   "blueScore": 44,
+   "winner": "red",
+   "pRed": 0.744,
+   "projRed": 93,
+   "projBlue": 68,
+   "video": "https://www.youtube.com/watch?v=Rxjz302oTRA"
+  },
+  {
+   "key": "2025wasno_qm11",
+   "label": "Quals 11",
+   "level": "qm",
+   "number": 11,
+   "time": 1740862384000,
+   "red": [
+    "3826",
+    "2929",
+    "9450"
+   ],
+   "blue": [
+    "3218",
+    "1778",
+    "4469"
+   ],
+   "played": true,
+   "redScore": 111,
+   "blueScore": 142,
+   "winner": "blue",
+   "pRed": 0.23,
+   "projRed": 89,
+   "projBlue": 117,
+   "video": "https://www.youtube.com/watch?v=AKLbw0QpwFw"
+  },
+  {
+   "key": "2025wasno_qm12",
+   "label": "Quals 12",
+   "level": "qm",
+   "number": 12,
+   "time": 1740866436000,
+   "red": [
+    "5827",
+    "7461",
+    "3393"
+   ],
+   "blue": [
+    "9680",
+    "4173",
+    "10498"
+   ],
+   "played": true,
+   "redScore": 27,
+   "blueScore": 20,
+   "winner": "red",
+   "pRed": 0.576,
+   "projRed": 61,
+   "projBlue": 53,
+   "video": "https://www.youtube.com/watch?v=4gciX0UvHRk"
+  },
+  {
+   "key": "2025wasno_qm13",
+   "label": "Quals 13",
+   "level": "qm",
+   "number": 13,
+   "time": 1740866855000,
+   "red": [
+    "360",
+    "4131",
+    "10416"
+   ],
+   "blue": [
+    "10079",
+    "5588",
+    "2903"
+   ],
+   "played": true,
+   "redScore": 69,
+   "blueScore": 55,
+   "winner": "red",
+   "pRed": 0.668,
+   "projRed": 85,
+   "projBlue": 69,
+   "video": "https://www.youtube.com/watch?v=f2DUx3KGKNk"
+  },
+  {
+   "key": "2025wasno_qm14",
+   "label": "Quals 14",
+   "level": "qm",
+   "number": 14,
+   "time": 1740867308000,
+   "red": [
+    "4089",
+    "4911",
+    "9450"
+   ],
+   "blue": [
+    "4682",
+    "1778",
+    "2929"
+   ],
+   "played": true,
+   "redScore": 134,
+   "blueScore": 95,
+   "winner": "red",
+   "pRed": 0.599,
+   "projRed": 99,
+   "projBlue": 89,
+   "video": "https://www.youtube.com/watch?v=Rpzws7fNEwo"
+  },
+  {
+   "key": "2025wasno_qm15",
+   "label": "Quals 15",
+   "level": "qm",
+   "number": 15,
+   "time": 1740867812000,
+   "red": [
+    "6076",
+    "3218",
+    "4450"
+   ],
+   "blue": [
+    "4469",
+    "1318",
+    "9442"
+   ],
+   "played": true,
+   "redScore": 49,
+   "blueScore": 153,
+   "winner": "blue",
+   "pRed": 0.259,
+   "projRed": 78,
+   "projBlue": 103,
+   "video": "https://www.youtube.com/watch?v=BvNm15cRF3w"
+  },
+  {
+   "key": "2025wasno_qm16",
+   "label": "Quals 16",
+   "level": "qm",
+   "number": 16,
+   "time": 1740868267000,
+   "red": [
+    "2930",
+    "2046",
+    "5941"
+   ],
+   "blue": [
+    "4918",
+    "4512",
+    "3826"
+   ],
+   "played": true,
+   "redScore": 98,
+   "blueScore": 45,
+   "winner": "red",
+   "pRed": 0.691,
+   "projRed": 91,
+   "projBlue": 72,
+   "video": "https://www.youtube.com/watch?v=J94gHGd-iBY"
+  },
+  {
+   "key": "2025wasno_qm17",
+   "label": "Quals 17",
+   "level": "qm",
+   "number": 17,
+   "time": 1740868836000,
+   "red": [
+    "10498",
+    "4682",
+    "7627"
+   ],
+   "blue": [
+    "9450",
+    "2522",
+    "2980"
+   ],
+   "played": true,
+   "redScore": 44,
+   "blueScore": 125,
+   "winner": "blue",
+   "pRed": 0.127,
+   "projRed": 64,
+   "projBlue": 107,
+   "video": "https://www.youtube.com/watch?v=gw8SrTLpBbM"
+  },
+  {
+   "key": "2025wasno_qm18",
+   "label": "Quals 18",
+   "level": "qm",
+   "number": 18,
+   "time": 1740869512000,
+   "red": [
+    "7461",
+    "5588",
+    "9442"
+   ],
+   "blue": [
+    "4173",
+    "3393",
+    "1778"
+   ],
+   "played": true,
+   "redScore": 105,
+   "blueScore": 115,
+   "winner": "blue",
+   "pRed": 0.325,
+   "projRed": 76,
+   "projBlue": 94,
+   "video": "https://www.youtube.com/watch?v=lG_P63RCnUg"
+  },
+  {
+   "key": "2025wasno_qm19",
+   "label": "Quals 19",
+   "level": "qm",
+   "number": 19,
+   "time": 1740870156000,
+   "red": [
+    "2046",
+    "3826",
+    "360"
+   ],
+   "blue": [
+    "1318",
+    "2930",
+    "4450"
+   ],
+   "played": true,
+   "redScore": 130,
+   "blueScore": 95,
+   "winner": "red",
+   "pRed": 0.586,
+   "projRed": 97,
+   "projBlue": 89,
+   "video": "https://www.youtube.com/watch?v=ZomcJddRVV0"
+  },
+  {
+   "key": "2025wasno_qm20",
+   "label": "Quals 20",
+   "level": "qm",
+   "number": 20,
+   "time": 1740870627000,
+   "red": [
+    "5941",
+    "4911",
+    "4469"
+   ],
+   "blue": [
+    "6076",
+    "5827",
+    "10416"
+   ],
+   "played": true,
+   "redScore": 66,
+   "blueScore": 70,
+   "winner": "blue",
+   "pRed": 0.566,
+   "projRed": 75,
+   "projBlue": 69,
+   "video": "https://www.youtube.com/watch?v=w-6ih1jLDMc"
+  },
+  {
+   "key": "2025wasno_qm21",
+   "label": "Quals 21",
+   "level": "qm",
+   "number": 21,
+   "time": 1740871255000,
+   "red": [
+    "4131",
+    "7627",
+    "4918"
+   ],
+   "blue": [
+    "2929",
+    "10079",
+    "9680"
+   ],
+   "played": true,
+   "redScore": 65,
+   "blueScore": 28,
+   "winner": "red",
+   "pRed": 0.636,
+   "projRed": 73,
+   "projBlue": 59,
+   "video": "https://www.youtube.com/watch?v=nHZ0OqR6cXg"
+  },
+  {
+   "key": "2025wasno_qm22",
+   "label": "Quals 22",
+   "level": "qm",
+   "number": 22,
+   "time": 1740871695000,
+   "red": [
+    "3218",
+    "2903",
+    "2522"
+   ],
+   "blue": [
+    "4089",
+    "2980",
+    "4512"
+   ],
+   "played": true,
+   "redScore": 112,
+   "blueScore": 79,
+   "winner": "red",
+   "pRed": 0.753,
+   "projRed": 96,
+   "projBlue": 70,
+   "video": "https://www.youtube.com/watch?v=q6Gow5g3eaA"
+  },
+  {
+   "key": "2025wasno_qm23",
+   "label": "Quals 23",
+   "level": "qm",
+   "number": 23,
+   "time": 1740872120000,
+   "red": [
+    "4450",
+    "4682",
+    "4173"
+   ],
+   "blue": [
+    "1778",
+    "3826",
+    "4911"
+   ],
+   "played": true,
+   "redScore": 54,
+   "blueScore": 126,
+   "winner": "blue",
+   "pRed": 0.117,
+   "projRed": 60,
+   "projBlue": 105,
+   "video": "https://www.youtube.com/watch?v=lqlVzNiXA00"
+  },
+  {
+   "key": "2025wasno_qm24",
+   "label": "Quals 24",
+   "level": "qm",
+   "number": 24,
+   "time": 1740872584000,
+   "red": [
+    "5588",
+    "360",
+    "4469"
+   ],
+   "blue": [
+    "9680",
+    "9442",
+    "4918"
+   ],
+   "played": true,
+   "redScore": 88,
+   "blueScore": 89,
+   "winner": "blue",
+   "pRed": 0.492,
+   "projRed": 83,
+   "projBlue": 84,
+   "video": "https://www.youtube.com/watch?v=UvDPvWcjDvo"
+  },
+  {
+   "key": "2025wasno_qm25",
+   "label": "Quals 25",
+   "level": "qm",
+   "number": 25,
+   "time": 1740873072000,
+   "red": [
+    "5827",
+    "2929",
+    "2980"
+   ],
+   "blue": [
+    "7461",
+    "4131",
+    "2046"
+   ],
+   "played": true,
+   "redScore": 45,
+   "blueScore": 63,
+   "winner": "blue",
+   "pRed": 0.379,
+   "projRed": 62,
+   "projBlue": 74,
+   "video": "https://www.youtube.com/watch?v=bupr7h95dOI"
+  },
+  {
+   "key": "2025wasno_qm26",
+   "label": "Quals 26",
+   "level": "qm",
+   "number": 26,
+   "time": 1740889687000,
+   "red": [
+    "2903",
+    "2930",
+    "10416"
+   ],
+   "blue": [
+    "4089",
+    "3393",
+    "3218"
+   ],
+   "played": true,
+   "redScore": 100,
+   "blueScore": 111,
+   "winner": "blue",
+   "pRed": 0.533,
+   "projRed": 86,
+   "projBlue": 83,
+   "video": "https://www.youtube.com/watch?v=3thGEhZnY9I"
+  },
+  {
+   "key": "2025wasno_qm27",
+   "label": "Quals 27",
+   "level": "qm",
+   "number": 27,
+   "time": 1740873964000,
+   "red": [
+    "1318",
+    "9450",
+    "10079"
+   ],
+   "blue": [
+    "5941",
+    "2522",
+    "4512"
+   ],
+   "played": true,
+   "redScore": 116,
+   "blueScore": 86,
+   "winner": "red",
+   "pRed": 0.772,
+   "projRed": 104,
+   "projBlue": 76,
+   "video": "https://www.youtube.com/watch?v=ExkYsyjaBMA"
+  },
+  {
+   "key": "2025wasno_qm28",
+   "label": "Quals 28",
+   "level": "qm",
+   "number": 28,
+   "time": 1740874446000,
+   "red": [
+    "10498",
+    "6076",
+    "1778"
+   ],
+   "blue": [
+    "4469",
+    "2980",
+    "7627"
+   ],
+   "played": true,
+   "redScore": 125,
+   "blueScore": 97,
+   "winner": "red",
+   "pRed": 0.678,
+   "projRed": 95,
+   "projBlue": 77,
+   "video": "https://www.youtube.com/watch?v=dfMsBFFeq1c"
+  },
+  {
+   "key": "2025wasno_qm29",
+   "label": "Quals 29",
+   "level": "qm",
+   "number": 29,
+   "time": 1740876161000,
+   "red": [
+    "360",
+    "2929",
+    "4173"
+   ],
+   "blue": [
+    "10416",
+    "2046",
+    "3218"
+   ],
+   "played": true,
+   "redScore": 93,
+   "blueScore": 111,
+   "winner": "blue",
+   "pRed": 0.278,
+   "projRed": 72,
+   "projBlue": 94,
+   "video": "https://www.youtube.com/watch?v=be8EEwfQ3AM"
+  },
+  {
+   "key": "2025wasno_qm30",
+   "label": "Quals 30",
+   "level": "qm",
+   "number": 30,
+   "time": 1740876641000,
+   "red": [
+    "4131",
+    "5941",
+    "1318"
+   ],
+   "blue": [
+    "4682",
+    "4911",
+    "2930"
+   ],
+   "played": true,
+   "redScore": 75,
+   "blueScore": 90,
+   "winner": "blue",
+   "pRed": 0.374,
+   "projRed": 72,
+   "projBlue": 84,
+   "video": "https://www.youtube.com/watch?v=ZJWpRfnwSVM"
+  },
+  {
+   "key": "2025wasno_qm31",
+   "label": "Quals 31",
+   "level": "qm",
+   "number": 31,
+   "time": 1740877118000,
+   "red": [
+    "4512",
+    "7461",
+    "2903"
+   ],
+   "blue": [
+    "2522",
+    "9680",
+    "6076"
+   ],
+   "played": true,
+   "redScore": 45,
+   "blueScore": 80,
+   "winner": "blue",
+   "pRed": 0.357,
+   "projRed": 60,
+   "projBlue": 74,
+   "video": "https://www.youtube.com/watch?v=QAkmzsTt5D4"
+  },
+  {
+   "key": "2025wasno_qm32",
+   "label": "Quals 32",
+   "level": "qm",
+   "number": 32,
+   "time": 1740877581000,
+   "red": [
+    "4918",
+    "10079",
+    "4089"
+   ],
+   "blue": [
+    "3826",
+    "10498",
+    "9442"
+   ],
+   "played": true,
+   "redScore": 83,
+   "blueScore": 106,
+   "winner": "blue",
+   "pRed": 0.398,
+   "projRed": 79,
+   "projBlue": 89,
+   "video": "https://www.youtube.com/watch?v=gfl_FXMpuOU"
+  },
+  {
+   "key": "2025wasno_qm33",
+   "label": "Quals 33",
+   "level": "qm",
+   "number": 33,
+   "time": 1740878114000,
+   "red": [
+    "7627",
+    "5827",
+    "4450"
+   ],
+   "blue": [
+    "3393",
+    "9450",
+    "5588"
+   ],
+   "played": true,
+   "redScore": 60,
+   "blueScore": 103,
+   "winner": "blue",
+   "pRed": 0.307,
+   "projRed": 67,
+   "projBlue": 86,
+   "video": "https://www.youtube.com/watch?v=H92lkhGJHJM"
+  },
+  {
+   "key": "2025wasno_qm34",
+   "label": "Quals 34",
+   "level": "qm",
+   "number": 34,
+   "time": 1740878591000,
+   "red": [
+    "2903",
+    "4469",
+    "4131"
+   ],
+   "blue": [
+    "2929",
+    "7461",
+    "2522"
+   ],
+   "played": true,
+   "redScore": 97,
+   "blueScore": 57,
+   "winner": "red",
+   "pRed": 0.565,
+   "projRed": 76,
+   "projBlue": 70,
+   "video": "https://www.youtube.com/watch?v=52zw0UmfAoQ"
+  },
+  {
+   "key": "2025wasno_qm35",
+   "label": "Quals 35",
+   "level": "qm",
+   "number": 35,
+   "time": 1740879045000,
+   "red": [
+    "4682",
+    "2046",
+    "9680"
+   ],
+   "blue": [
+    "2930",
+    "10079",
+    "1778"
+   ],
+   "played": true,
+   "redScore": 65,
+   "blueScore": 170,
+   "winner": "blue",
+   "pRed": 0.102,
+   "projRed": 69,
+   "projBlue": 118,
+   "video": "https://www.youtube.com/watch?v=-upIgOffyVQ"
+  },
+  {
+   "key": "2025wasno_qm36",
+   "label": "Quals 36",
+   "level": "qm",
+   "number": 36,
+   "time": 1740879484000,
+   "red": [
+    "3826",
+    "5941",
+    "5827"
+   ],
+   "blue": [
+    "360",
+    "6076",
+    "4089"
+   ],
+   "played": true,
+   "redScore": 66,
+   "blueScore": 87,
+   "winner": "blue",
+   "pRed": 0.311,
+   "projRed": 66,
+   "projBlue": 85,
+   "video": "https://www.youtube.com/watch?v=TduzCpTVUbc"
+  },
+  {
+   "key": "2025wasno_qm37",
+   "label": "Quals 37",
+   "level": "qm",
+   "number": 37,
+   "time": 1740879965000,
+   "red": [
+    "10498",
+    "4450",
+    "5588"
+   ],
+   "blue": [
+    "9450",
+    "3218",
+    "4512"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.131,
+   "projRed": 58,
+   "projBlue": 101,
+   "video": "https://www.youtube.com/watch?v=qkyQ_a8Ev-A"
+  },
+  {
+   "key": "2025wasno_qm38",
+   "label": "Quals 38",
+   "level": "qm",
+   "number": 38,
+   "time": 1740880510000,
+   "red": [
+    "2980",
+    "4918",
+    "1318"
+   ],
+   "blue": [
+    "4911",
+    "4173",
+    "7627"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.615,
+   "projRed": 80,
+   "projBlue": 69,
+   "video": "https://www.youtube.com/watch?v=0pUIOPhwlb8"
+  },
+  {
+   "key": "2025wasno_qm39",
+   "label": "Quals 39",
+   "level": "qm",
+   "number": 39,
+   "time": 1740880896000,
+   "red": [
+    "9442",
+    "10416",
+    "4682"
+   ],
+   "blue": [
+    "3393",
+    "9680",
+    "4131"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.766,
+   "projRed": 88,
+   "projBlue": 61,
+   "video": "https://www.youtube.com/watch?v=UQgVXYsKllU"
+  },
+  {
+   "key": "2025wasno_qm40",
+   "label": "Quals 40",
+   "level": "qm",
+   "number": 40,
+   "time": 1740881430000,
+   "red": [
+    "5941",
+    "3218",
+    "10498"
+   ],
+   "blue": [
+    "1778",
+    "4450",
+    "360"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.164,
+   "projRed": 74,
+   "projBlue": 111,
+   "video": "https://www.youtube.com/watch?v=h5gEbCJqIPo"
+  },
+  {
+   "key": "2025wasno_qm41",
+   "label": "Quals 41",
+   "level": "qm",
+   "number": 41,
+   "time": 1740881842000,
+   "red": [
+    "2929",
+    "4512",
+    "7627"
+   ],
+   "blue": [
+    "5827",
+    "2930",
+    "4173"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.331,
+   "projRed": 61,
+   "projBlue": 77,
+   "video": "https://www.youtube.com/watch?v=9PvVWZdH_Hg"
+  },
+  {
+   "key": "2025wasno_qm42",
+   "label": "Quals 42",
+   "level": "qm",
+   "number": 42,
+   "time": 1740882262000,
+   "red": [
+    "4918",
+    "9450",
+    "7461"
+   ],
+   "blue": [
+    "4469",
+    "4089",
+    "2046"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.49,
+   "projRed": 88,
+   "projBlue": 89,
+   "video": "https://www.youtube.com/watch?v=77zdaofRGAk"
+  },
+  {
+   "key": "2025wasno_qm43",
+   "label": "Quals 43",
+   "level": "qm",
+   "number": 43,
+   "time": 1740882684000,
+   "red": [
+    "5588",
+    "1318",
+    "4911"
+   ],
+   "blue": [
+    "2522",
+    "9442",
+    "10079"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.183,
+   "projRed": 74,
+   "projBlue": 108,
+   "video": "https://www.youtube.com/watch?v=3PYjxKhuv04"
+  },
+  {
+   "key": "2025wasno_qm44",
+   "label": "Quals 44",
+   "level": "qm",
+   "number": 44,
+   "time": 1740883106000,
+   "red": [
+    "2980",
+    "10416",
+    "3393"
+   ],
+   "blue": [
+    "2903",
+    "6076",
+    "3826"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.502,
+   "projRed": 72,
+   "projBlue": 72,
+   "video": "https://www.youtube.com/watch?v=ANiqL9M8ihQ"
+  },
+  {
+   "key": "2025wasno_qm45",
+   "label": "Quals 45",
+   "level": "qm",
+   "number": 45,
+   "time": 1740885022000,
+   "red": [
+    "2930",
+    "4089",
+    "4131"
+   ],
+   "blue": [
+    "4450",
+    "4512",
+    "4469"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.651,
+   "projRed": 86,
+   "projBlue": 71,
+   "video": "https://www.youtube.com/watch?v=e3CKpNXy1gw"
+  },
+  {
+   "key": "2025wasno_qm46",
+   "label": "Quals 46",
+   "level": "qm",
+   "number": 46,
+   "time": 1740885442000,
+   "red": [
+    "7627",
+    "1778",
+    "2522"
+   ],
+   "blue": [
+    "9442",
+    "360",
+    "5941"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.645,
+   "projRed": 113,
+   "projBlue": 99,
+   "video": "https://www.youtube.com/watch?v=uJmDzks5WTU"
+  },
+  {
+   "key": "2025wasno_qm47",
+   "label": "Quals 47",
+   "level": "qm",
+   "number": 47,
+   "time": 1740885804000,
+   "red": [
+    "2980",
+    "4173",
+    "3218"
+   ],
+   "blue": [
+    "9680",
+    "5827",
+    "9450"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.441,
+   "projRed": 77,
+   "projBlue": 83,
+   "video": "https://www.youtube.com/watch?v=masTAgroA6o"
+  },
+  {
+   "key": "2025wasno_qm48",
+   "label": "Quals 48",
+   "level": "qm",
+   "number": 48,
+   "time": 1740886222000,
+   "red": [
+    "4911",
+    "2903",
+    "3393"
+   ],
+   "blue": [
+    "2046",
+    "4918",
+    "5588"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.462,
+   "projRed": 74,
+   "projBlue": 77,
+   "video": "https://www.youtube.com/watch?v=t2PeH_VR0aA"
+  },
+  {
+   "key": "2025wasno_qm49",
+   "label": "Quals 49",
+   "level": "qm",
+   "number": 49,
+   "time": 1740886704000,
+   "red": [
+    "3826",
+    "4682",
+    "1318"
+   ],
+   "blue": [
+    "10498",
+    "10416",
+    "2929"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.646,
+   "projRed": 76,
+   "projBlue": 62,
+   "video": "https://www.youtube.com/watch?v=_wDDUYbsZts"
+  },
+  {
+   "key": "2025wasno_qm50",
+   "label": "Quals 50",
+   "level": "qm",
+   "number": 50,
+   "time": 1740887074000,
+   "red": [
+    "6076",
+    "7461",
+    "4173"
+   ],
+   "blue": [
+    "10079",
+    "4131",
+    "4450"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.343,
+   "projRed": 57,
+   "projBlue": 72,
+   "video": "https://www.youtube.com/watch?v=TDn4SAVj1aQ"
+  },
+  {
+   "key": "2025wasno_qm51",
+   "label": "Quals 51",
+   "level": "qm",
+   "number": 51,
+   "time": 1740887492000,
+   "red": [
+    "2522",
+    "4469",
+    "2930"
+   ],
+   "blue": [
+    "4911",
+    "2980",
+    "9680"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.842,
+   "projRed": 104,
+   "projBlue": 66,
+   "video": "https://www.youtube.com/watch?v=_R806DdjCaU"
+  },
+  {
+   "key": "2025wasno_qm52",
+   "label": "Quals 52",
+   "level": "qm",
+   "number": 52,
+   "time": 1740888144000,
+   "red": [
+    "2903",
+    "4089",
+    "1778"
+   ],
+   "blue": [
+    "5588",
+    "4682",
+    "5827"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.873,
+   "projRed": 102,
+   "projBlue": 58,
+   "video": "https://www.youtube.com/watch?v=w11g3WCAdE8"
+  },
+  {
+   "key": "2025wasno_qm53",
+   "label": "Quals 53",
+   "level": "qm",
+   "number": 53,
+   "time": 1740888682000,
+   "red": [
+    "7461",
+    "3826",
+    "10079"
+   ],
+   "blue": [
+    "3218",
+    "7627",
+    "1318"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.31,
+   "projRed": 70,
+   "projBlue": 89,
+   "video": "https://www.youtube.com/watch?v=-3E0HwpFRKI"
+  },
+  {
+   "key": "2025wasno_qm54",
+   "label": "Quals 54",
+   "level": "qm",
+   "number": 54,
+   "time": 1740889169000,
+   "red": [
+    "2046",
+    "9442",
+    "2929"
+   ],
+   "blue": [
+    "9450",
+    "360",
+    "10498"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.405,
+   "projRed": 94,
+   "projBlue": 103,
+   "video": "https://www.youtube.com/watch?v=O76pLQY6hvY"
+  },
+  {
+   "key": "2025wasno_qm55",
+   "label": "Quals 55",
+   "level": "qm",
+   "number": 55,
+   "time": 1740935716000,
+   "red": [
+    "4512",
+    "3393",
+    "6076"
+   ],
+   "blue": [
+    "10416",
+    "4918",
+    "5941"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.452,
+   "projRed": 65,
+   "projBlue": 70,
+   "video": "https://www.youtube.com/watch?v=I0vbJSOSgKM"
+  },
+  {
+   "key": "2025wasno_qm56",
+   "label": "Quals 56",
+   "level": "qm",
+   "number": 56,
+   "time": 1740936180000,
+   "red": [
+    "7461",
+    "4469",
+    "4682"
+   ],
+   "blue": [
+    "5588",
+    "7627",
+    "2930"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.374,
+   "projRed": 66,
+   "projBlue": 78,
+   "video": "https://www.youtube.com/watch?v=pEfm9mD4meY"
+  },
+  {
+   "key": "2025wasno_qm57",
+   "label": "Quals 57",
+   "level": "qm",
+   "number": 57,
+   "time": 1740936545000,
+   "red": [
+    "1778",
+    "1318",
+    "9680"
+   ],
+   "blue": [
+    "2046",
+    "2903",
+    "5827"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.681,
+   "projRed": 98,
+   "projBlue": 80,
+   "video": "https://www.youtube.com/watch?v=lIQ_r7Bz3Wo"
+  },
+  {
+   "key": "2025wasno_qm58",
+   "label": "Quals 58",
+   "level": "qm",
+   "number": 58,
+   "time": 1740937169000,
+   "red": [
+    "9442",
+    "4450",
+    "2980"
+   ],
+   "blue": [
+    "5941",
+    "2929",
+    "3393"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.788,
+   "projRed": 89,
+   "projBlue": 58,
+   "video": "https://www.youtube.com/watch?v=BZrsMBtxXh4"
+  },
+  {
+   "key": "2025wasno_qm59",
+   "label": "Quals 59",
+   "level": "qm",
+   "number": 59,
+   "time": 1740937752000,
+   "red": [
+    "4512",
+    "10498",
+    "10079"
+   ],
+   "blue": [
+    "360",
+    "4918",
+    "4911"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.285,
+   "projRed": 68,
+   "projBlue": 90,
+   "video": "https://www.youtube.com/watch?v=JFZQa8AkdiQ"
+  },
+  {
+   "key": "2025wasno_qm60",
+   "label": "Quals 60",
+   "level": "qm",
+   "number": 60,
+   "time": 1740938378000,
+   "red": [
+    "9450",
+    "4173",
+    "10416"
+   ],
+   "blue": [
+    "2522",
+    "4089",
+    "3826"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.514,
+   "projRed": 90,
+   "projBlue": 88,
+   "video": "https://www.youtube.com/watch?v=FPySDc3mEQk"
+  },
+  {
+   "key": "2025wasno_qm61",
+   "label": "Quals 61",
+   "level": "qm",
+   "number": 61,
+   "time": 1740938785000,
+   "red": [
+    "3218",
+    "4131",
+    "9442"
+   ],
+   "blue": [
+    "6076",
+    "7627",
+    "2046"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.705,
+   "projRed": 101,
+   "projBlue": 80,
+   "video": "https://www.youtube.com/watch?v=WveVP_oxPCU"
+  },
+  {
+   "key": "2025wasno_qm62",
+   "label": "Quals 62",
+   "level": "qm",
+   "number": 62,
+   "time": 1740939256000,
+   "red": [
+    "4469",
+    "10079",
+    "5827"
+   ],
+   "blue": [
+    "2980",
+    "2903",
+    "5941"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.626,
+   "projRed": 79,
+   "projBlue": 67,
+   "video": "https://www.youtube.com/watch?v=VO_FHnBGHI8"
+  },
+  {
+   "key": "2025wasno_qm63",
+   "label": "Quals 63",
+   "level": "qm",
+   "number": 63,
+   "time": 1740939786000,
+   "red": [
+    "1318",
+    "10416",
+    "4089"
+   ],
+   "blue": [
+    "4512",
+    "360",
+    "4682"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.538,
+   "projRed": 81,
+   "projBlue": 77,
+   "video": "https://www.youtube.com/watch?v=lH_EYZMIc8g"
+  },
+  {
+   "key": "2025wasno_qm64",
+   "label": "Quals 64",
+   "level": "qm",
+   "number": 64,
+   "time": 1740940222000,
+   "red": [
+    "4173",
+    "2522",
+    "5588"
+   ],
+   "blue": [
+    "2929",
+    "2930",
+    "6076"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.459,
+   "projRed": 72,
+   "projBlue": 76,
+   "video": "https://www.youtube.com/watch?v=VljMTk2VQUw"
+  },
+  {
+   "key": "2025wasno_qm65",
+   "label": "Quals 65",
+   "level": "qm",
+   "number": 65,
+   "time": 1740940817000,
+   "red": [
+    "1778",
+    "9450",
+    "4131"
+   ],
+   "blue": [
+    "3393",
+    "4450",
+    "4918"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.912,
+   "projRed": 122,
+   "projBlue": 70,
+   "video": "https://www.youtube.com/watch?v=6is_yG1eCEs"
+  },
+  {
+   "key": "2025wasno_qm66",
+   "label": "Quals 66",
+   "level": "qm",
+   "number": 66,
+   "time": 1740941242000,
+   "red": [
+    "9680",
+    "3826",
+    "3218"
+   ],
+   "blue": [
+    "4911",
+    "10498",
+    "7461"
+   ],
+   "played": false,
+   "redScore": null,
+   "blueScore": null,
+   "winner": null,
+   "pRed": 0.626,
+   "projRed": 75,
+   "projBlue": 63,
+   "video": "https://www.youtube.com/watch?v=eVvyCliWKl8"
+  }
+ ],
+ "teams": {
+  "360": {
+   "number": "360",
+   "name": "The Revolution",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 37.1,
+   "tbaRank": 7,
+   "record": "8-4-0",
+   "opr": 44.4,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "1318": {
+   "number": "1318",
+   "name": "Issaquah Robotics Society",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 30.2,
+   "tbaRank": 4,
+   "record": "9-3-0",
+   "opr": 42.1,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "1778": {
+   "number": "1778",
+   "name": "Chill Out",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 52.5,
+   "tbaRank": 1,
+   "record": "11-1-0",
+   "opr": 76,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "2046": {
+   "number": "2046",
+   "name": "Bear Metal",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 34.5,
+   "tbaRank": 6,
+   "record": "8-4-0",
+   "opr": 50.1,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "2522": {
+   "number": "2522",
+   "name": "Royal Robotics",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 37.1,
+   "tbaRank": 5,
+   "record": "8-4-0",
+   "opr": 40.3,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "2903": {
+   "number": "2903",
+   "name": "NeoBots",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 23.8,
+   "tbaRank": 17,
+   "record": "5-7-0",
+   "opr": 27.4,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "2929": {
+   "number": "2929",
+   "name": "Emeral Ridge JAGBOTS",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 16.6,
+   "tbaRank": 33,
+   "record": "1-11-0",
+   "opr": 7.2,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "2930": {
+   "number": "2930",
+   "name": "Sonic Squirrels",
+   "scouted": true,
+   "matches": 5,
+   "rank": 3,
+   "pickScore": 85.5,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 37.4,
+   "tbaRank": 3,
+   "record": "9-3-0",
+   "opr": 58.2,
+   "avgPoints": 53.3,
+   "auto": 13.8,
+   "tele": 26.8,
+   "endgame": 11.2,
+   "accuracy": 0.804,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 2.2,
+   "strengths": [
+    "Accurate shooter — 80% of attempts go in (top 15%).",
+    "Dependable climber — succeeds on 100% of attempts."
+   ],
+   "risks": [
+    "Swingy results: 45.0–60.5 pts range."
+   ],
+   "startLeft": 0.5
+  },
+  "2980": {
+   "number": "2980",
+   "name": "Whidbey Island Wildcats",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 24,
+   "tbaRank": 30,
+   "record": "4-8-0",
+   "opr": 19.8,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "3218": {
+   "number": "3218",
+   "name": "Panther Robotics",
+   "scouted": true,
+   "matches": 5,
+   "rank": 1,
+   "pickScore": 88.5,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 34.8,
+   "tbaRank": 8,
+   "record": "8-4-0",
+   "opr": 39.1,
+   "avgPoints": 57.9,
+   "auto": 15.2,
+   "tele": 30,
+   "endgame": 11.2,
+   "accuracy": 0.798,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 1.8,
+   "strengths": [
+    "Elite scorer — top 5% at 57.9 pts per match.",
+    "Strong autonomous (top 15%): 15.2 pts on average.",
+    "High cycle volume: 24.8 shots per match."
+   ],
+   "risks": [],
+   "startLeft": 0.5
+  },
+  "3393": {
+   "number": "3393",
+   "name": "Horns of Havoc",
+   "scouted": true,
+   "matches": 5,
+   "rank": 7,
+   "pickScore": 75.9,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 22.9,
+   "tbaRank": 26,
+   "record": "5-7-0",
+   "opr": 14,
+   "avgPoints": 41.2,
+   "auto": 12.2,
+   "tele": 22.4,
+   "endgame": 5.6,
+   "accuracy": 0.758,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 2.2,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts."
+   ],
+   "risks": [],
+   "startLeft": null
+  },
+  "3826": {
+   "number": "3826",
+   "name": "Sequim Robotics Federation \"SRF\"",
+   "scouted": true,
+   "matches": 5,
+   "rank": 8,
+   "pickScore": 74.5,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 25.7,
+   "tbaRank": 19,
+   "record": "5-7-0",
+   "opr": 28.4,
+   "avgPoints": 41,
+   "auto": 10.8,
+   "tele": 18.8,
+   "endgame": 10.4,
+   "accuracy": 0.684,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 1.8,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts.",
+    "Very consistent — scores stay within ±2.4 pts."
+   ],
+   "risks": [
+    "Low scoring output (bottom 25%): 41.0 pts per match.",
+    "Misses a lot — only 68% accuracy."
+   ],
+   "startLeft": null
+  },
+  "4089": {
+   "number": "4089",
+   "name": "Stealth Robotics",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 25.5,
+   "tbaRank": 14,
+   "record": "6-6-0",
+   "opr": 33,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "4131": {
+   "number": "4131",
+   "name": "Iron Patriots",
+   "scouted": true,
+   "matches": 5,
+   "rank": 4,
+   "pickScore": 84.2,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 22.9,
+   "tbaRank": 11,
+   "record": "7-5-0",
+   "opr": 17.9,
+   "avgPoints": 52.7,
+   "auto": 13.2,
+   "tele": 29.2,
+   "endgame": 8.8,
+   "accuracy": 0.779,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 2,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts."
+   ],
+   "risks": [
+    "Swingy results: 41.5–59.5 pts range.",
+    "Struggles against defense: 6.6 pts lower when defended."
+   ],
+   "startLeft": 0.5
+  },
+  "4173": {
+   "number": "4173",
+   "name": "Bark Bots",
+   "scouted": true,
+   "matches": 5,
+   "rank": 10,
+   "pickScore": 73.8,
+   "role": "Efficient Scorer",
+   "risk": "Low",
+   "rating": 18.3,
+   "tbaRank": 27,
+   "record": "4-8-0",
+   "opr": 17,
+   "avgPoints": 38.8,
+   "auto": 10.6,
+   "tele": 16.8,
+   "endgame": 10.4,
+   "accuracy": 0.738,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 1.8,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts."
+   ],
+   "risks": [
+    "Low scoring output (bottom 5%): 38.8 pts per match.",
+    "Misses a lot — only 74% accuracy."
+   ],
+   "startLeft": null
+  },
+  "4450": {
+   "number": "4450",
+   "name": "Olympia Robotics Federation",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 21.4,
+   "tbaRank": 13,
+   "record": "6-6-0",
+   "opr": 19.1,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "4469": {
+   "number": "4469",
+   "name": "R.A.I.D. (Raider Artificial Intelligence Division)",
+   "scouted": true,
+   "matches": 5,
+   "rank": 9,
+   "pickScore": 74.5,
+   "role": "Efficient Scorer",
+   "risk": "Low",
+   "rating": 29.5,
+   "tbaRank": 9,
+   "record": "7-5-0",
+   "opr": 48.7,
+   "avgPoints": 39.4,
+   "auto": 11.2,
+   "tele": 20,
+   "endgame": 7.2,
+   "accuracy": 0.731,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 2,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts."
+   ],
+   "risks": [
+    "Low scoring output (bottom 15%): 39.4 pts per match.",
+    "Misses a lot — only 73% accuracy."
+   ],
+   "startLeft": null
+  },
+  "4512": {
+   "number": "4512",
+   "name": "Otter Chaos",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 20.1,
+   "tbaRank": 31,
+   "record": "4-8-0",
+   "opr": 19.3,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "4682": {
+   "number": "4682",
+   "name": "CyBears",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 20,
+   "tbaRank": 29,
+   "record": "3-9-0",
+   "opr": 15.5,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "4911": {
+   "number": "4911",
+   "name": "CyberKnights",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 26.8,
+   "tbaRank": 25,
+   "record": "5-7-0",
+   "opr": 27.3,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "4918": {
+   "number": "4918",
+   "name": "The Roboctopi",
+   "scouted": true,
+   "matches": 5,
+   "rank": 2,
+   "pickScore": 88,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 25.9,
+   "tbaRank": 18,
+   "record": "6-6-0",
+   "opr": 16,
+   "avgPoints": 56.5,
+   "auto": 16.2,
+   "tele": 30,
+   "endgame": 8.8,
+   "accuracy": 0.806,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 2,
+   "strengths": [
+    "Elite scorer — top 15% at 56.5 pts per match.",
+    "Strong autonomous (top 5%): 16.2 pts on average.",
+    "Accurate shooter — 81% of attempts go in (top 5%)."
+   ],
+   "risks": [
+    "Swingy results: 53.5–68.0 pts range."
+   ],
+   "startLeft": 0.5
+  },
+  "5588": {
+   "number": "5588",
+   "name": "Reign Robotics",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 16.8,
+   "tbaRank": 28,
+   "record": "3-9-0",
+   "opr": 5.6,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "5827": {
+   "number": "5827",
+   "name": "Code Purple",
+   "scouted": true,
+   "matches": 5,
+   "rank": 5,
+   "pickScore": 80.6,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 21.5,
+   "tbaRank": 16,
+   "record": "6-6-0",
+   "opr": 27.5,
+   "avgPoints": 47.6,
+   "auto": 13.4,
+   "tele": 26,
+   "endgame": 7.2,
+   "accuracy": 0.754,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 2,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts.",
+    "Very consistent — scores stay within ±3.3 pts."
+   ],
+   "risks": [],
+   "startLeft": 0.5
+  },
+  "5941": {
+   "number": "5941",
+   "name": "Cast Iron Orcas",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 18.8,
+   "tbaRank": 32,
+   "record": "2-10-0",
+   "opr": 5.7,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "6076": {
+   "number": "6076",
+   "name": "ReVamp",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 22.2,
+   "tbaRank": 20,
+   "record": "7-5-0",
+   "opr": 17.8,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "7461": {
+   "number": "7461",
+   "name": "Sushi Squad",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 16.4,
+   "tbaRank": 21,
+   "record": "5-7-0",
+   "opr": 8.2,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "7627": {
+   "number": "7627",
+   "name": "Bearcat Robotics",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 23.8,
+   "tbaRank": 23,
+   "record": "5-7-0",
+   "opr": 21.6,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "9442": {
+   "number": "9442",
+   "name": "Miso Mechanics",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 43.3,
+   "tbaRank": 12,
+   "record": "8-4-0",
+   "opr": 62.7,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "9450": {
+   "number": "9450",
+   "name": "Velocity Raptors",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 46.2,
+   "tbaRank": 2,
+   "record": "10-2-0",
+   "opr": 68,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "9680": {
+   "number": "9680",
+   "name": "SIA Phoenix Rising",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 15,
+   "tbaRank": 22,
+   "record": "5-7-0",
+   "opr": 7.1,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "10079": {
+   "number": "10079",
+   "name": "ArrowDynamics",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 27.9,
+   "tbaRank": 15,
+   "record": "6-6-0",
+   "opr": 30.9,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "10416": {
+   "number": "10416",
+   "name": "Radical Raccoons",
+   "scouted": false,
+   "matches": 0,
+   "rank": null,
+   "pickScore": null,
+   "role": null,
+   "risk": null,
+   "rating": 25.1,
+   "tbaRank": 10,
+   "record": "7-5-0",
+   "opr": 22.4,
+   "avgPoints": null,
+   "auto": null,
+   "tele": null,
+   "endgame": null,
+   "accuracy": null,
+   "climbRate": null,
+   "uptime": null,
+   "defense": null,
+   "strengths": [],
+   "risks": [],
+   "startLeft": null
+  },
+  "10498": {
+   "number": "10498",
+   "name": "Heron Robotics",
+   "scouted": true,
+   "matches": 5,
+   "rank": 6,
+   "pickScore": 76.9,
+   "role": "Captain Core",
+   "risk": "Low",
+   "rating": 20.1,
+   "tbaRank": 24,
+   "record": "5-7-0",
+   "opr": 14.7,
+   "avgPoints": 43,
+   "auto": 13.2,
+   "tele": 24,
+   "endgame": 4.8,
+   "accuracy": 0.762,
+   "climbRate": 1,
+   "uptime": 1,
+   "defense": 1.8,
+   "strengths": [
+    "Dependable climber — succeeds on 100% of attempts."
+   ],
+   "risks": [
+    "Struggles against defense: 6.3 pts lower when defended."
+   ],
+   "startLeft": 0.5
+  }
+ },
+ "plans": {
+  "2025wasno_qm32": {
+   "ourColor": "blue",
+   "pOurs": 0.602,
+   "ourExpected": 127,
+   "oppExpected": 110,
+   "topThreat": "4918",
+   "partners": [
+    {
+     "team": "3826",
+     "role": "Endgame specialist"
+    },
+    {
+     "team": "10498",
+     "role": "Primary scorer"
+    },
+    {
+     "team": "9442",
+     "role": "Unscouted"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "4918",
+     "role": "Primary scorer",
+     "threat": 56.5
+    },
+    {
+     "team": "10079",
+     "role": "Unscouted",
+     "threat": 27.9
+    },
+    {
+     "team": "4089",
+     "role": "Unscouted",
+     "threat": 25.5
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 10079",
+     "detail": "Opponent with no scouting data — TBA shows rank 15 (6-6-0), OPR 30.9. Our model rates them 27.9 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 4089",
+     "detail": "Opponent with no scouting data — TBA shows rank 14 (6-6-0), OPR 33.0. Our model rates them 25.5 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Defense",
+     "priority": "high",
+     "title": "Have 3826 defend 4918",
+     "detail": "4918 averages 56.5 pts at 81% accuracy. 3826 is the best defender here (rating 1.8/5, 18s per match playing D)."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 9442",
+     "detail": "Partner with no scouting data — TBA shows rank 12 (8-4-0), OPR 62.7. Our model rates them 43.3 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "med",
+     "title": "Slight edge (60%) — don’t give it away",
+     "detail": "You’re ahead on paper but it’s close. A failed auto or a missed climb is enough to flip it; the plan below targets the swing factors."
+    },
+    {
+     "phase": "Auto",
+     "priority": "med",
+     "title": "Auto advantage (+7.8 pts)",
+     "detail": "Expected auto: us 24.0 vs them 16.2. Run your normal routines cleanly — a fumbled auto is the main way to give this back."
+    },
+    {
+     "phase": "Teleop",
+     "priority": "med",
+     "title": "Teleop outlook: 44.8 vs 31.5 pts",
+     "detail": "10498 is your top teleop scorer (24.0 teleop pts, 77% accuracy) — keep their cycles clear of traffic."
+    },
+    {
+     "phase": "Endgame",
+     "priority": "med",
+     "title": "Endgame edge: 15.2 vs 8.8 pts",
+     "detail": "Everyone on your alliance usually climbs; start the climb on time and avoid failed attempts."
+    },
+    {
+     "phase": "Teleop",
+     "priority": "low",
+     "title": "Use 3826’s passing",
+     "detail": "3826 averages 2.0 passes per match — feed 10498 to keep their cycle going."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  },
+  "2025wasno_qm37": {
+   "ourColor": "red",
+   "pOurs": 0.131,
+   "ourExpected": 81,
+   "oppExpected": 124,
+   "topThreat": "3218",
+   "partners": [
+    {
+     "team": "10498",
+     "role": "Primary scorer"
+    },
+    {
+     "team": "4450",
+     "role": "Unscouted"
+    },
+    {
+     "team": "5588",
+     "role": "Unscouted"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "9450",
+     "role": "Unscouted",
+     "threat": 46.2
+    },
+    {
+     "team": "3218",
+     "role": "Primary scorer",
+     "threat": 57.9
+    },
+    {
+     "team": "4512",
+     "role": "Unscouted",
+     "threat": 20.1
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 9450",
+     "detail": "Opponent with no scouting data — TBA shows rank 2 (10-2-0), OPR 68.0. Our model rates them 46.2 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 4512",
+     "detail": "Opponent with no scouting data — TBA shows rank 31 (4-8-0), OPR 19.3. Our model rates them 20.1 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "high",
+     "title": "Underdog (13%) — we need an edge",
+     "detail": "Take calculated risks: commit a robot to defending their top scorer, push cycle speed, and make sure every partner attempts the highest reliable climb."
+    },
+    {
+     "phase": "Defense",
+     "priority": "high",
+     "title": "You defend 3218",
+     "detail": "3218 averages 57.9 pts at 80% accuracy. 10498 is the best defender here (rating 1.8/5, 22s per match playing D)."
+    },
+    {
+     "phase": "Teleop",
+     "priority": "high",
+     "title": "Teleop outlook: 25.0 vs 31.5 pts",
+     "detail": "10498 is your top teleop scorer (24.0 teleop pts, 77% accuracy) — keep their cycles clear of traffic. You’re behind on paper, so look to speed up cycles and use passing from partners."
+    },
+    {
+     "phase": "Endgame",
+     "priority": "high",
+     "title": "They out-climb us by ~6.4 pts",
+     "detail": "Expected endgame: us 4.8 vs them 11.2. Get every robot into a climb with ~20s left."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 4450",
+     "detail": "Partner with no scouting data — TBA shows rank 13 (6-6-0), OPR 19.1. Our model rates them 21.4 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 5588",
+     "detail": "Partner with no scouting data — TBA shows rank 28 (3-9-0), OPR 5.6. Our model rates them 16.8 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Auto",
+     "priority": "low",
+     "title": "Auto is even",
+     "detail": "Expected auto: us 13.2 vs them 15.2."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  },
+  "2025wasno_qm40": {
+   "ourColor": "red",
+   "pOurs": 0.164,
+   "ourExpected": 120,
+   "oppExpected": 111,
+   "topThreat": "1778",
+   "partners": [
+    {
+     "team": "5941",
+     "role": "Unscouted"
+    },
+    {
+     "team": "3218",
+     "role": "Primary scorer"
+    },
+    {
+     "team": "10498",
+     "role": "Endgame specialist"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "1778",
+     "role": "Unscouted",
+     "threat": 52.5
+    },
+    {
+     "team": "4450",
+     "role": "Unscouted",
+     "threat": 21.4
+    },
+    {
+     "team": "360",
+     "role": "Unscouted",
+     "threat": 37.1
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 1778",
+     "detail": "Opponent with no scouting data — TBA shows rank 1 (11-1-0), OPR 76.0. Our model rates them 52.5 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 4450",
+     "detail": "Opponent with no scouting data — TBA shows rank 13 (6-6-0), OPR 19.1. Our model rates them 21.4 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 360",
+     "detail": "Opponent with no scouting data — TBA shows rank 7 (8-4-0), OPR 44.4. Our model rates them 37.1 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "high",
+     "title": "Underdog (16%) — we need an edge",
+     "detail": "Take calculated risks: commit a robot to defending their top scorer, push cycle speed, and make sure every partner attempts the highest reliable climb."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 5941",
+     "detail": "Partner with no scouting data — TBA shows rank 32 (2-10-0), OPR 5.7. Our model rates them 18.8 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  },
+  "2025wasno_qm49": {
+   "ourColor": "blue",
+   "pOurs": 0.354,
+   "ourExpected": 85,
+   "oppExpected": 91,
+   "topThreat": "3826",
+   "partners": [
+    {
+     "team": "10498",
+     "role": "Primary scorer"
+    },
+    {
+     "team": "10416",
+     "role": "Unscouted"
+    },
+    {
+     "team": "2929",
+     "role": "Unscouted"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "3826",
+     "role": "Primary scorer",
+     "threat": 41
+    },
+    {
+     "team": "4682",
+     "role": "Unscouted",
+     "threat": 20
+    },
+    {
+     "team": "1318",
+     "role": "Unscouted",
+     "threat": 30.2
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 4682",
+     "detail": "Opponent with no scouting data — TBA shows rank 29 (3-9-0), OPR 15.5. Our model rates them 20.0 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 1318",
+     "detail": "Opponent with no scouting data — TBA shows rank 4 (9-3-0), OPR 42.1. Our model rates them 30.2 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "high",
+     "title": "Slight underdog (35%) — find an edge",
+     "detail": "Look for the matchup where you can gain points: defend their top scorer, win auto, and make sure every partner climbs."
+    },
+    {
+     "phase": "Defense",
+     "priority": "high",
+     "title": "You defend 3826",
+     "detail": "3826 averages 41.0 pts at 68% accuracy. 10498 is the best defender here (rating 1.8/5, 22s per match playing D)."
+    },
+    {
+     "phase": "Endgame",
+     "priority": "high",
+     "title": "They out-climb us by ~5.6 pts",
+     "detail": "Expected endgame: us 4.8 vs them 10.4. Get every robot into a climb with ~20s left."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 10416",
+     "detail": "Partner with no scouting data — TBA shows rank 10 (7-5-0), OPR 22.4. Our model rates them 25.1 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 2929",
+     "detail": "Partner with no scouting data — TBA shows rank 33 (1-11-0), OPR 7.2. Our model rates them 16.6 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Teleop",
+     "priority": "med",
+     "title": "Teleop outlook: 25.0 vs 19.8 pts",
+     "detail": "10498 is your top teleop scorer (24.0 teleop pts, 77% accuracy) — keep their cycles clear of traffic."
+    },
+    {
+     "phase": "Auto",
+     "priority": "low",
+     "title": "Auto is even",
+     "detail": "Expected auto: us 13.2 vs them 10.8."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  },
+  "2025wasno_qm54": {
+   "ourColor": "blue",
+   "pOurs": 0.595,
+   "ourExpected": 126,
+   "oppExpected": 94,
+   "topThreat": "9442",
+   "partners": [
+    {
+     "team": "9450",
+     "role": "Unscouted"
+    },
+    {
+     "team": "360",
+     "role": "Unscouted"
+    },
+    {
+     "team": "10498",
+     "role": "Primary scorer"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "2046",
+     "role": "Unscouted",
+     "threat": 34.5
+    },
+    {
+     "team": "9442",
+     "role": "Unscouted",
+     "threat": 43.3
+    },
+    {
+     "team": "2929",
+     "role": "Unscouted",
+     "threat": 16.6
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 2046",
+     "detail": "Opponent with no scouting data — TBA shows rank 6 (8-4-0), OPR 50.1. Our model rates them 34.5 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 9442",
+     "detail": "Opponent with no scouting data — TBA shows rank 12 (8-4-0), OPR 62.7. Our model rates them 43.3 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 2929",
+     "detail": "Opponent with no scouting data — TBA shows rank 33 (1-11-0), OPR 7.2. Our model rates them 16.6 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 9450",
+     "detail": "Partner with no scouting data — TBA shows rank 2 (10-2-0), OPR 68.0. Our model rates them 46.2 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 360",
+     "detail": "Partner with no scouting data — TBA shows rank 7 (8-4-0), OPR 44.4. Our model rates them 37.1 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "med",
+     "title": "Slight edge (59%) — don’t give it away",
+     "detail": "You’re ahead on paper but it’s close. A failed auto or a missed climb is enough to flip it; the plan below targets the swing factors."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  },
+  "2025wasno_qm59": {
+   "ourColor": "red",
+   "pOurs": 0.285,
+   "ourExpected": 91,
+   "oppExpected": 120,
+   "topThreat": "4918",
+   "partners": [
+    {
+     "team": "4512",
+     "role": "Unscouted"
+    },
+    {
+     "team": "10498",
+     "role": "Primary scorer"
+    },
+    {
+     "team": "10079",
+     "role": "Unscouted"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "360",
+     "role": "Unscouted",
+     "threat": 37.1
+    },
+    {
+     "team": "4918",
+     "role": "Primary scorer",
+     "threat": 56.5
+    },
+    {
+     "team": "4911",
+     "role": "Unscouted",
+     "threat": 26.8
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 360",
+     "detail": "Opponent with no scouting data — TBA shows rank 7 (8-4-0), OPR 44.4. Our model rates them 37.1 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 4911",
+     "detail": "Opponent with no scouting data — TBA shows rank 25 (5-7-0), OPR 27.3. Our model rates them 26.8 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "high",
+     "title": "Underdog (28%) — we need an edge",
+     "detail": "Take calculated risks: commit a robot to defending their top scorer, push cycle speed, and make sure every partner attempts the highest reliable climb."
+    },
+    {
+     "phase": "Defense",
+     "priority": "high",
+     "title": "You defend 4918",
+     "detail": "4918 averages 56.5 pts at 81% accuracy. 10498 is the best defender here (rating 1.8/5, 22s per match playing D)."
+    },
+    {
+     "phase": "Teleop",
+     "priority": "high",
+     "title": "Teleop outlook: 25.0 vs 31.5 pts",
+     "detail": "10498 is your top teleop scorer (24.0 teleop pts, 77% accuracy) — keep their cycles clear of traffic. You’re behind on paper, so look to speed up cycles and use passing from partners."
+    },
+    {
+     "phase": "Endgame",
+     "priority": "high",
+     "title": "They out-climb us by ~4.0 pts",
+     "detail": "Expected endgame: us 4.8 vs them 8.8. Get every robot into a climb with ~20s left."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 4512",
+     "detail": "Partner with no scouting data — TBA shows rank 31 (4-8-0), OPR 19.3. Our model rates them 20.1 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 10079",
+     "detail": "Partner with no scouting data — TBA shows rank 15 (6-6-0), OPR 30.9. Our model rates them 27.9 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Auto",
+     "priority": "low",
+     "title": "Auto is even",
+     "detail": "Expected auto: us 13.2 vs them 16.2."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  },
+  "2025wasno_qm66": {
+   "ourColor": "blue",
+   "pOurs": 0.374,
+   "ourExpected": 86,
+   "oppExpected": 114,
+   "topThreat": "3218",
+   "partners": [
+    {
+     "team": "4911",
+     "role": "Unscouted"
+    },
+    {
+     "team": "10498",
+     "role": "Primary scorer"
+    },
+    {
+     "team": "7461",
+     "role": "Unscouted"
+    }
+   ],
+   "opponents": [
+    {
+     "team": "9680",
+     "role": "Unscouted",
+     "threat": 15
+    },
+    {
+     "team": "3826",
+     "role": "Endgame specialist",
+     "threat": 41
+    },
+    {
+     "team": "3218",
+     "role": "Primary scorer",
+     "threat": 57.9
+    }
+   ],
+   "recs": [
+    {
+     "phase": "Scouting",
+     "priority": "high",
+     "title": "No scouting on 9680",
+     "detail": "Opponent with no scouting data — TBA shows rank 22 (5-7-0), OPR 7.1. Our model rates them 15.0 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Overall",
+     "priority": "high",
+     "title": "Slight underdog (37%) — find an edge",
+     "detail": "Look for the matchup where you can gain points: defend their top scorer, win auto, and make sure every partner climbs."
+    },
+    {
+     "phase": "Defense",
+     "priority": "high",
+     "title": "You defend 3218",
+     "detail": "3218 averages 57.9 pts at 80% accuracy. 10498 is the best defender here (rating 1.8/5, 22s per match playing D)."
+    },
+    {
+     "phase": "Auto",
+     "priority": "high",
+     "title": "Opponents out-score us in auto by ~12.8 pts",
+     "detail": "Expected auto: us 13.2 vs them 26.0. Make sure 10498 (13.2 auto pts) runs their strongest routine and the others don’t cross its lane; consider a conservative auto from weaker robots to avoid collisions."
+    },
+    {
+     "phase": "Teleop",
+     "priority": "high",
+     "title": "Teleop outlook: 25.0 vs 51.3 pts",
+     "detail": "10498 is your top teleop scorer (24.0 teleop pts, 77% accuracy) — keep their cycles clear of traffic. You’re behind on paper, so look to speed up cycles and use passing from partners."
+    },
+    {
+     "phase": "Endgame",
+     "priority": "high",
+     "title": "They out-climb us by ~16.8 pts",
+     "detail": "Expected endgame: us 4.8 vs them 21.6. Get every robot into a climb with ~20s left."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 4911",
+     "detail": "Partner with no scouting data — TBA shows rank 25 (5-7-0), OPR 27.3. Our model rates them 26.8 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Scouting",
+     "priority": "med",
+     "title": "No scouting on 7461",
+     "detail": "Partner with no scouting data — TBA shows rank 21 (5-7-0), OPR 8.2. Our model rates them 16.4 pts/match. Have a scout watch them in this match."
+    },
+    {
+     "phase": "Risk",
+     "priority": "low",
+     "title": "Watch-outs for you (10498)",
+     "detail": "Struggles against defense: 6.3 pts lower when defended."
+    }
+   ],
+   "note": ""
+  }
+ },
+ "rankings": [
+  {
+   "rank": 1,
+   "team": "1778",
+   "record": "11-1-0",
+   "played": 12
+  },
+  {
+   "rank": 2,
+   "team": "9450",
+   "record": "10-2-0",
+   "played": 12
+  },
+  {
+   "rank": 3,
+   "team": "2930",
+   "record": "9-3-0",
+   "played": 12
+  },
+  {
+   "rank": 4,
+   "team": "1318",
+   "record": "9-3-0",
+   "played": 12
+  },
+  {
+   "rank": 5,
+   "team": "2522",
+   "record": "8-4-0",
+   "played": 12
+  },
+  {
+   "rank": 6,
+   "team": "2046",
+   "record": "8-4-0",
+   "played": 12
+  },
+  {
+   "rank": 7,
+   "team": "360",
+   "record": "8-4-0",
+   "played": 12
+  },
+  {
+   "rank": 8,
+   "team": "3218",
+   "record": "8-4-0",
+   "played": 12
+  },
+  {
+   "rank": 9,
+   "team": "4469",
+   "record": "7-5-0",
+   "played": 12
+  },
+  {
+   "rank": 10,
+   "team": "10416",
+   "record": "7-5-0",
+   "played": 12
+  },
+  {
+   "rank": 11,
+   "team": "4131",
+   "record": "7-5-0",
+   "played": 12
+  },
+  {
+   "rank": 12,
+   "team": "9442",
+   "record": "8-4-0",
+   "played": 12
+  },
+  {
+   "rank": 13,
+   "team": "4450",
+   "record": "6-6-0",
+   "played": 12
+  },
+  {
+   "rank": 14,
+   "team": "4089",
+   "record": "6-6-0",
+   "played": 12
+  },
+  {
+   "rank": 15,
+   "team": "10079",
+   "record": "6-6-0",
+   "played": 12
+  },
+  {
+   "rank": 16,
+   "team": "5827",
+   "record": "6-6-0",
+   "played": 12
+  },
+  {
+   "rank": 17,
+   "team": "2903",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 18,
+   "team": "4918",
+   "record": "6-6-0",
+   "played": 12
+  },
+  {
+   "rank": 19,
+   "team": "3826",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 20,
+   "team": "6076",
+   "record": "7-5-0",
+   "played": 12
+  },
+  {
+   "rank": 21,
+   "team": "7461",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 22,
+   "team": "9680",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 23,
+   "team": "7627",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 24,
+   "team": "10498",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 25,
+   "team": "4911",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 26,
+   "team": "3393",
+   "record": "5-7-0",
+   "played": 12
+  },
+  {
+   "rank": 27,
+   "team": "4173",
+   "record": "4-8-0",
+   "played": 12
+  },
+  {
+   "rank": 28,
+   "team": "5588",
+   "record": "3-9-0",
+   "played": 12
+  },
+  {
+   "rank": 29,
+   "team": "4682",
+   "record": "3-9-0",
+   "played": 12
+  },
+  {
+   "rank": 30,
+   "team": "2980",
+   "record": "4-8-0",
+   "played": 12
+  },
+  {
+   "rank": 31,
+   "team": "4512",
+   "record": "4-8-0",
+   "played": 12
+  },
+  {
+   "rank": 32,
+   "team": "5941",
+   "record": "2-10-0",
+   "played": 12
+  },
+  {
+   "rank": 33,
+   "team": "2929",
+   "record": "1-11-0",
+   "played": 12
+  }
+ ]
+}

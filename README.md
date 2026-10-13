@@ -19,9 +19,7 @@ The app is unsigned, so macOS may say it can't verify the developer: right-click
 
 Installers are built by GitHub Actions whenever a `v*` tag is pushed (`git tag v1.0.1 && git push --tags`).
 
-> **Branches:** `main` is the stable app. The drive-coach phone integration (QR-code transfer, iPhone app, Android USB)
-> lives on the [`phone-integration`](https://github.com/cliclye/packout/tree/phone-integration) branch — it can be
-> merged in or dropped independently.
+> **Drive coach on your phone:** the Phone page streams the match plan to an iPhone (or Android) as a QR code, so no Wi‑Fi is needed. See [mobile/README.md](mobile/README.md). The phone-free version of the app is kept on the [`no-phone`](https://github.com/cliclye/packout/tree/no-phone) branch.
 
 ## Features
 
