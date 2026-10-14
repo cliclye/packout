@@ -46,13 +46,6 @@ contextBridge.exposeInMainWorld('packout', {
     stop: () => call('adb:stop'),
     onEvent: subscribe('adb:event'),
   },
-  coach: {
-    status: () => call('coach:status'),
-    start: () => call('coach:start'),
-    stop: () => call('coach:stop'),
-    publish: (text) => call('coach:publish', text),
-    androidUsb: () => call('coach:android-usb'),
-  },
   tba: { fetch: (endpoint, key) => call('tba:fetch', endpoint, key) },
   nexus: { fetch: (endpoint) => call('nexus:fetch', endpoint) },
   llm: { chat: (req) => call('llm:chat', req) },

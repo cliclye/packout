@@ -8,7 +8,6 @@ const importer = require('./main/importer');
 const adb = require('./main/adb');
 const netApi = require('./main/net');
 const ai = require('./main/ai');
-const coach = require('./main/coach');
 const scout = require('./main/scout');
 const { findCommand } = require('./main/util');
 
@@ -120,7 +119,6 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   adb.stop();
-  coach.stop();
   if (process.platform !== 'darwin') app.quit();
 });
 
@@ -232,11 +230,6 @@ handle('ai:track', (id, params) => ai.trackRun(id, params));
 handle('ai:save-csv', (p) => ai.saveCsv(p));
 handle('ai:default-calibration', () => scout.DEFAULT_CALIBRATION);
 
-handle('coach:status', () => coach.status());
-handle('coach:start', () => coach.start());
-handle('coach:stop', () => coach.stop());
-handle('coach:publish', (text) => coach.publish(text));
-handle('coach:android-usb', () => coach.androidUsb());
 
 handle('schedule:bundled', () => {
   const candidates = [

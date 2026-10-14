@@ -18,7 +18,6 @@
     "release": "electron-forge release",
     "lint": "echo \"No linting configured\"",
     "test:scout": "node test/scout.test.js",
-    "test:frames": "node test/frames.test.js",
     "test:nexus": "node test/nexus.test.js"
   },
   "dependencies": {
@@ -30,7 +29,6 @@
     "babel-loader": "^10.1.1",
     "electron-squirrel-startup": "^1.0.1",
     "html-webpack-plugin": "^5.6.8",
-    "qrcode": "^1.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

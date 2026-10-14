@@ -6,7 +6,6 @@ import CompetitionModal from './components/CompetitionModal';
 import Dashboard from './views/Dashboard';
 import Event from './views/Event';
 import Strategy from './views/Strategy';
-import Phone from './views/Phone';
 import Picklist from './views/Picklist';
 import Teams from './views/Teams';
 import Analysis from './views/Analysis';
@@ -33,13 +32,12 @@ const NAV = [
     { id: 'pit', label: 'Pit Scouting', icon: 'wrench' },
   ] },
   { group: 'Data', items: [
-    { id: 'phone', label: 'Phone', icon: 'phone' },
     { id: 'sync', label: 'Sync & Import', icon: 'sync' },
     { id: 'settings', label: 'Settings', icon: 'sliders' },
   ] },
 ];
 
-const VIEWS = { dashboard: Dashboard, event: Event, strategy: Strategy, phone: Phone, picklist: Picklist, teams: Teams, analysis: Analysis, film: Film, trace: Trace, pit: Pit, sync: Sync, settings: Settings };
+const VIEWS = { dashboard: Dashboard, event: Event, strategy: Strategy, picklist: Picklist, teams: Teams, analysis: Analysis, film: Film, trace: Trace, pit: Pit, sync: Sync, settings: Settings };
 
 function CompSwitcher({ onNew }) {
   const { competitions, currentId } = useApp();
