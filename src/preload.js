@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld('packout', {
     androidUsb: () => call('coach:android-usb'),
   },
   tba: { fetch: (endpoint, key) => call('tba:fetch', endpoint, key) },
+  nexus: { fetch: (endpoint) => call('nexus:fetch', endpoint) },
   llm: { chat: (req) => call('llm:chat', req) },
   tools: { status: () => call('tools:status'), updateYtDlp: () => call('tools:update-ytdlp') },
   video: { download: (req) => call('video:download', req) },

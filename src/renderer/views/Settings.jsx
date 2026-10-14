@@ -63,6 +63,13 @@ export default function Settings() {
             <p style={{ marginTop: 8 }}><button type="button" className="link-btn" onClick={() => api.shell.openExternal('https://www.thebluealliance.com/account')}>Open thebluealliance.com/account →</button></p>
           </Card>
 
+          <Card title="FRC Nexus" subtitle="Live queuing times and your Red/Blue position on the Game Plan page">
+            <div className="stack">
+              <SettingInput name="nexusApiKey" type="secret" label="Nexus API key" hint="Free key from frc.nexus/api. Queue data only exists for events that run queuing through Nexus." placeholder="Nexus API key" />
+            </div>
+            <p style={{ marginTop: 8 }}><button type="button" className="link-btn" onClick={() => api.shell.openExternal('https://frc.nexus/api')}>Get a key at frc.nexus/api →</button></p>
+          </Card>
+
           <Card title="AI path tracing" subtitle="Robot detection with Roboflow">
             <div className="stack">
               <SettingInput name="roboflowApiKey" type="secret" label="Roboflow API key" hint="Private key from roboflow.com → Settings → API Keys. Used to run the robot detection model." placeholder="Roboflow private API key" />

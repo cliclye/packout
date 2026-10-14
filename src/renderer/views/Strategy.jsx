@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { getSummaries, store, useApp, useCurrent } from '../store';
+import { api } from '../api';
 import { Badge, Button, Card, Empty, Icon, PageHeader, Segmented, Spinner, fmt, pct } from '../components/ui';
 import FieldView, { FieldLegend } from '../components/FieldView';
 import { TeamChip, WinBar } from './Event';
 import { buildField } from '../../shared/deepstats';
 import { fitModel, predictMatch } from '../../shared/predict';
 import { buildGamePlan } from '../../shared/strategy';
+import { findNexusMatch, matchesUntilQueue, stationOf, timeline } from '../../shared/nexus';
+import { loadNexus } from '../lib/nexus';
 import { clock, eventMemo, loadEvent, matchLabel, matchTime, played, relTime, sortMatches, teamNum } from '../lib/tbaLive';
 
 const PHASES = ['Overall', 'Scouting', 'Defense', 'Auto', 'Teleop', 'Endgame', 'Risk'];
@@ -67,6 +70,78 @@ function TeamBrief({ c, color, ours, onOpen, summary }) {
   );
 }
 
+/** Queue schedule and driver-station position from FRC Nexus. */
+function NexusCard({ hasKey, nexus, nm, ours, now }) {
+  if (!hasKey) {
+    return (
+      <Card title="Queue & field position" subtitle="Powered by FRC Nexus">
+        <div className="notice">Add a free Nexus API key in <button type="button" className="link-btn" onClick={() => store.go('settings')}>Settings</button> to see when to queue and whether you’re Red 1, 2, 3 or Blue 1, 2, 3.</div>
+      </Card>
+    );
+  }
+  const link = <button type="button" className="link-btn" onClick={() => api.shell.openExternal('https://frc.nexus')}>frc.nexus</button>;
+  if (nexus.error && !nexus.data) {
+    return <Card title="Queue & field position" subtitle="Powered by FRC Nexus"><div className="notice warn">{nexus.error}</div></Card>;
+  }
+  if (!nexus.data) return <Card title="Queue & field position"><div className="row"><Spinner /> <span className="muted">Loading from Nexus…</span></div></Card>;
+  if (!nm) {
+    return (
+      <Card title="Queue & field position" subtitle="Powered by FRC Nexus">
+        <div className="notice">{nexus.data.matches?.length ? 'This match isn’t in Nexus yet.' : 'Nexus has no schedule for this event yet — the event may not be using Nexus for queuing.'} Data from {link}.</div>
+      </Card>
+    );
+  }
+  const st = stationOf(nm, ours);
+  const steps = timeline(nm);
+  const next = steps.find((s) => !s.done);
+  const away = matchesUntilQueue(nexus.data, nm);
+  const stale = nexus.error ? <Badge tone="warn">Offline — showing last data</Badge> : null;
+  const live = nm.status === 'On field' ? 'ok' : nm.status === 'Now queuing' || nm.status === 'On deck' ? 'accent' : 'neutral';
+  const slot = (color, list) => (
+    <div className={`nx-side ${color}`}>
+      <b>{color === 'red' ? 'Red' : 'Blue'}</b>
+      {[0, 1, 2].map((i) => {
+        const t = (list || [])[i];
+        return <div key={i} className={`nx-slot ${t && String(t).replace(/^frc/, '') === ours ? 'me' : ''}`}><span>{color === 'red' ? 'R' : 'B'}{i + 1}</span><strong>{t ? String(t).replace(/^frc/, '') : '—'}</strong></div>;
+      })}
+    </div>
+  );
+  return (
+    <Card title="Queue & field position" subtitle={`${nm.label} · powered by FRC Nexus`} actions={<div className="row" style={{ gap: 8 }}>{stale}<Badge tone={live}>{nm.status}</Badge></div>}>
+      <div className="nx">
+        <div className="nx-station">
+          {st ? (
+            <>
+              <div className="nx-label">Your driver station</div>
+              <div className={`nx-big ${st.color}`}>{st.label}</div>
+            </>
+          ) : <div className="muted">Team {ours} isn’t listed in this Nexus match.</div>}
+          <div className="nx-pos">{slot('red', nm.redTeams)}{slot('blue', nm.blueTeams)}</div>
+        </div>
+        <div className="nx-times">
+          {nexus.data.nowQueuing && <p className="muted" style={{ marginBottom: 8 }}>Now queuing: <strong style={{ color: 'var(--text)' }}>{nexus.data.nowQueuing}</strong>{away !== null && away > 0 ? ` · ours queues ${away} match${away === 1 ? '' : 'es'} later` : ''}</p>}
+          <ol className="nx-steps">
+            {steps.map((s) => (
+              <li key={s.id} className={`${s.done ? 'done' : ''} ${next && next.id === s.id ? 'next' : ''}`}>
+                <span className="dot">{s.done ? <Icon name="check" size={12} /> : null}</span>
+                <div className="grow"><strong>{s.label}</strong><small>{s.hint}</small></div>
+                <div className="nx-at"><strong>{s.at ? new Date(s.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '–'}</strong><small>{s.done ? 'done' : s.at ? `${s.estimated ? '~' : ''}${relTime(s.at, now)}` : 'not yet estimated'}</small></div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+      {nm.breakAfter && <p className="muted" style={{ marginTop: 10 }}>Break after this match: {nm.breakAfter}</p>}
+      {(nexus.data.announcements || []).length > 0 && (
+        <div className="stack" style={{ marginTop: 12, gap: 6 }}>
+          {nexus.data.announcements.map((a, i) => <div key={i} className="notice warn">{a.announcement || a.text || a.message || JSON.stringify(a)}</div>)}
+        </div>
+      )}
+      <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>Queue data from {link}. Estimates move as the event runs.</p>
+    </Card>
+  );
+}
+
 export default function Strategy() {
   const comp = useCurrent();
   const { settings } = useApp();
@@ -82,6 +157,7 @@ export default function Strategy() {
   const [mapView, setMapView] = useState('heat');
   const [now, setNow] = useState(Date.now());
   const alive = useRef(true);
+  const [nexus, setNexus] = useState({ data: null, error: '' });
 
   const canTba = Boolean(settings.tbaApiKey && eventKey);
   const refresh = async () => {
@@ -99,6 +175,16 @@ export default function Strategy() {
     }
   };
   useEffect(() => { alive.current = true; refresh(); return () => { alive.current = false; }; }, [eventKey, settings.tbaApiKey]);
+  // Nexus queue data refreshes every 20 s while this page is open.
+  const hasNexus = Boolean(settings.nexusApiKey && eventKey);
+  useEffect(() => {
+    if (!hasNexus) { setNexus({ data: null, error: '' }); return undefined; }
+    let live = true;
+    const pull = () => loadNexus(eventKey).then((d) => live && setNexus({ data: d, error: '' })).catch((e) => live && setNexus((n) => ({ data: n.data, error: e.message })));
+    pull();
+    const id = setInterval(pull, 20000);
+    return () => { live = false; clearInterval(id); };
+  }, [eventKey, settings.nexusApiKey]);
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(id); }, []);
 
   const matches = useMemo(() => sortMatches(event ? event.matches : fromSchedule(comp.schedule)), [event, comp.schedule]);
@@ -133,6 +219,7 @@ export default function Strategy() {
   const openTeam = (n) => { if (field.profiles.get(n)?.matches) { store.setSelectedTeam(n); store.go('teams'); } };
   const oppRuns = plan ? comp.paths.filter((p) => plan.opp.some((c) => c.team === p.teamNumber)) : [];
   const ourRuns = plan ? comp.paths.filter((p) => plan.mine.some((c) => c.team === p.teamNumber)) : [];
+  const nexusMatch = useMemo(() => findNexusMatch(nexus.data, match), [nexus.data, match]);
   const noteKey = match ? `${ours}:${match.key}` : '';
 
   // ---- empty states --------------------------------------------------------------
@@ -194,6 +281,8 @@ export default function Strategy() {
                 </div>
               </div>
             </Card>
+
+            <NexusCard hasKey={hasNexus} nexus={nexus} nm={nexusMatch} ours={ours} now={now} />
 
             <div className="grid-main" style={{ gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1fr)' }}>
               <div className="col">

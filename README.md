@@ -210,6 +210,11 @@ auto / teleop / endgame outlook with numbers, risks (breakdown-prone partners, s
 opponent start-lane tendencies and heatmaps from AI paths, and a notes box saved with the competition.
 Teams nobody has scouted fall back to TBA rank, record and OPR, and are flagged so you can scout them live.
 
+**Queue & field position (FRC Nexus):** add a free key from [frc.nexus/api](https://frc.nexus/api) under Settings → FRC Nexus and the plan
+shows your driver station (Red 1/2/3 or Blue 1/2/3), the whole alliance layout, and when to queue, go on deck, go on field and start,
+with live "now queuing" status and event announcements (refreshed every 20 s). Only events that run queuing through Nexus have data.
+Queue data from [frc.nexus](https://frc.nexus).
+
 ### Analysis
 
 - **Overview** – league leaderboards, scatter plots and role mix, filterable by team or match.

@@ -196,6 +196,7 @@ handle('adb:start', () => adb.start((ev) => send('adb:event', ev)));
 handle('adb:stop', () => adb.stop());
 
 handle('tba:fetch', (endpoint, key) => netApi.fetchBlueAlliance(endpoint, key || storage.getSettings().tbaApiKey));
+handle('nexus:fetch', (endpoint) => netApi.fetchNexus(endpoint, storage.getSettings().nexusApiKey));
 handle('llm:chat', (req) => {
   const s = storage.getSettings();
   const provider = s.llmProvider === 'anthropic' ? 'anthropic' : 'openai';

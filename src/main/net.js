@@ -34,6 +34,32 @@ async function fetchBlueAlliance(endpoint, apiKey) {
   }
 }
 
+/** FRC Nexus v1 GET (queuing status and match timing). Key goes in the Nexus-Api-Key header. */
+async function fetchNexus(endpoint, apiKey) {
+  if (!apiKey) return { status: 401, error: 'Add your Nexus API key in Settings.' };
+  const url = `https://frc.nexus/api/v1${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+  try {
+    const res = await net.fetch(url, { headers: { 'Nexus-Api-Key': apiKey, 'User-Agent': 'Packout-Desktop' } });
+    const text = await res.text();
+    let data = text;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      /* leave as text */
+    }
+    if (!res.ok) {
+      const msg = res.status === 401 ? 'Add your Nexus API key in Settings.'
+        : res.status === 403 ? 'Nexus rejected the API key. Check it at frc.nexus/api.'
+        : res.status === 404 ? 'Nexus has no data for this event.'
+        : `Nexus returned HTTP ${res.status}.`;
+      return { status: res.status, error: msg, data };
+    }
+    return { status: res.status, data };
+  } catch (e) {
+    return { status: 0, error: `Could not reach Nexus: ${e.message}` };
+  }
+}
+
 /**
  * One-shot chat completion for the picklist assistant. Messages are
  * [{role:'user'|'assistant', content}]. Done in main: Anthropic's API rejects
@@ -68,4 +94,4 @@ async function chat({ provider, apiKey, model, system, messages }) {
   }
 }
 
-module.exports = { fetchBlueAlliance, chat };
+module.exports = { fetchBlueAlliance, fetchNexus, chat };

@@ -59,6 +59,7 @@ const browserShim = {
   },
   coach: { status: async () => ({ running: false, urls: [], key: '' }), start: noDesktop, stop: async () => ({ running: false, urls: [] }), publish: noDesktop, androidUsb: noDesktop },
   tba: { fetch: noDesktop },
+  nexus: { fetch: noDesktop },
   llm: { chat: noDesktop },
   tools: { status: async () => ({ python: { ok: false, message: 'Desktop app required' }, env: { ready: false, missing: [] }, ytdlp: null, ffmpeg: null, adb: null, roboflowKey: false }) },
   video: { download: noDesktop },

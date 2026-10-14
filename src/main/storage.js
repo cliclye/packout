@@ -6,6 +6,7 @@ const { ensureDir, writeFileAtomic } = require('./util');
 const DEFAULT_SETTINGS = {
   roboflowApiKey: '',
   tbaApiKey: '',
+  nexusApiKey: '',
   llmProvider: 'openai',
   llmApiKey: '',
   openaiModel: 'gpt-6-luna',
