@@ -163,6 +163,10 @@ export default function Sync() {
                   <Button icon="sync" onClick={rescan}>Rescan default folders</Button>
                 </div>
               </div>
+              <label className="row" style={{ marginTop: 12, gap: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={Boolean(settings.autoImportFolders)} onChange={(e) => store.updateSettings({ autoImportFolders: e.target.checked })} />
+                <span>Import from these folders automatically when Packout opens <small className="muted">(off by default — a new install starts empty)</small></span>
+              </label>
               <div style={{ marginTop: 14 }}>
                 {folders.map((f) => (
                   <div className="health-row" key={f.id}>

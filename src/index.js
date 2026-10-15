@@ -9,6 +9,7 @@ const adb = require('./main/adb');
 const netApi = require('./main/net');
 const ai = require('./main/ai');
 const scout = require('./main/scout');
+const updater = require('./main/updater');
 const { findCommand } = require('./main/util');
 
 try {
@@ -111,6 +112,7 @@ app.whenReady().then(() => {
   }
 
   ai.setEmitter((payload) => send('ai:event', payload));
+  updater.setEmitter((payload) => send('update:event', payload));
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -194,6 +196,9 @@ handle('adb:start', () => adb.start((ev) => send('adb:event', ev)));
 handle('adb:stop', () => adb.stop());
 
 handle('tba:fetch', (endpoint, key) => netApi.fetchBlueAlliance(endpoint, key || storage.getSettings().tbaApiKey));
+handle('update:check', (opts) => updater.check(opts || {}));
+handle('update:install', () => updater.install());
+handle('app:version', () => app.getVersion());
 handle('nexus:fetch', (endpoint) => netApi.fetchNexus(endpoint, storage.getSettings().nexusApiKey));
 handle('llm:chat', (req) => {
   const s = storage.getSettings();

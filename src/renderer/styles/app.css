@@ -593,3 +593,11 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 .nx-steps small, .nx-at small { display: block; color: var(--text-3); font-size: 12px; }
 .nx-at { text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 900px) { .nx { grid-template-columns: 1fr; } }
+
+/* update notice */
+.update-card { display: flex; align-items: center; gap: 10px; width: calc(100% - 20px); margin: 0 10px 8px; padding: 9px 11px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); background: var(--accent-soft); color: var(--text); text-align: left; cursor: pointer; animation: pop .25s var(--ease) both; }
+.update-card:hover { border-color: var(--accent); }
+.update-dot { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--accent); color: #fff; flex: none; }
+.update-text { display: flex; flex-direction: column; min-width: 0; }
+.update-text small { color: var(--text-2); font-size: 12px; }
+.update-notes { margin: 14px 0 0; max-height: 200px; overflow: auto; white-space: pre-wrap; font: 12.5px/1.5 inherit; color: var(--text-2); background: var(--surface-2); padding: 10px 12px; border-radius: 10px; }

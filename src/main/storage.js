@@ -7,6 +7,8 @@ const DEFAULT_SETTINGS = {
   roboflowApiKey: '',
   tbaApiKey: '',
   nexusApiKey: '',
+  autoImportFolders: false,
+  autoUpdateCheck: true,
   llmProvider: 'openai',
   llmApiKey: '',
   openaiModel: 'gpt-6-luna',

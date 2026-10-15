@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api, hasDesktop } from '../api';
 import { store, useApp } from '../store';
-import { Badge, Button, Card, Field, Icon, PageHeader, Segmented } from '../components/ui';
+import { Badge, Button, Card, Field, Icon, PageHeader, Segmented, confirmDialog } from '../components/ui';
+import { checkForUpdates, installUpdate, useUpdates } from '../lib/updates';
 
 /** Text/secret setting that saves when the field loses focus. */
 function SettingInput({ name, label, hint, type = 'text', placeholder, mono = false }) {
@@ -19,6 +20,37 @@ function SettingInput({ name, label, hint, type = 'text', placeholder, mono = fa
         {type === 'secret' && <button type="button" className="icon-btn" title={show ? 'Hide' : 'Show'} onClick={() => setShow(!show)}><Icon name="eye" size={16} /></button>}
       </div>
     </Field>
+  );
+}
+
+function UpdatesPanel() {
+  const { settings } = useApp();
+  const u = useUpdates();
+  const info = u.info;
+  const [version, setVersion] = useState('');
+  useEffect(() => { api.update.version().then(setVersion).catch(() => {}); }, []);
+  return (
+    <div className="stack">
+      <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <strong>Version {version || info?.current || '—'}</strong>
+          <p className="muted" style={{ margin: '2px 0 0' }}>
+            {u.checking ? 'Checking…' : u.error ? u.error : info ? (info.available ? `Version ${info.latest} is available.` : 'You’re on the newest version.') : 'Not checked yet.'}
+          </p>
+        </div>
+        <div className="row" style={{ gap: 8 }}>
+          <Button loading={u.checking} onClick={() => checkForUpdates({ force: true, silent: false })}>Check now</Button>
+          {info?.available && (info.canInstall
+            ? <Button variant="primary" icon="download" loading={u.installing} onClick={async () => { if (await confirmDialog({ title: `Install ${info.latest}?`, message: 'Packout will restart on the new version. Your competitions, scouting data and settings are kept.', confirmLabel: 'Install & restart' })) installUpdate(); }}>Install {info.latest}</Button>
+            : <Button variant="primary" icon="external" onClick={() => api.shell.openExternal(info.page)}>Download {info.latest}</Button>)}
+        </div>
+      </div>
+      {u.installing && <div className="progress"><div style={{ width: `${u.percent}%` }} /></div>}
+      <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+        <input type="checkbox" checked={settings.autoUpdateCheck !== false} onChange={(e) => store.updateSettings({ autoUpdateCheck: e.target.checked })} />
+        <span>Check for updates automatically</span>
+      </label>
+    </div>
   );
 }
 
@@ -61,6 +93,10 @@ export default function Settings() {
               <SettingInput name="myTeam" label="Your team number" hint="Highlighted on the Event Live page, with your next match and rank." placeholder="e.g. 1294" />
             </div>
             <p style={{ marginTop: 8 }}><button type="button" className="link-btn" onClick={() => api.shell.openExternal('https://www.thebluealliance.com/account')}>Open thebluealliance.com/account →</button></p>
+          </Card>
+
+          <Card title="Updates" subtitle="Packout checks GitHub for new versions">
+            <UpdatesPanel />
           </Card>
 
           <Card title="FRC Nexus" subtitle="Live queuing times and your Red/Blue position on the Game Plan page">

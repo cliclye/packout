@@ -16,6 +16,7 @@ import Sync from './views/Sync';
 import Settings from './views/Settings';
 import Onboarding from './views/Onboarding';
 import { importPaths } from './lib/importing';
+import UpdateNotice from './components/UpdateNotice';
 
 const NAV = [
   { group: 'Scout', items: [
@@ -134,6 +135,7 @@ function Sidebar({ onNew }) {
           </div>
         ))}
       </nav>
+      <UpdateNotice />
       <div className="sidebar-foot">
         <span className={`save-state ${saveState}`} title="Your data is stored locally on this computer">
           <i /> {saveState === 'saving' ? 'Saving…' : saveState === 'error' ? 'Save failed' : 'Saved locally'}
@@ -157,9 +159,10 @@ export default function App() {
     store.init();
   }, []);
 
-  // Pull anything already sitting in the default folders once the workspace is open.
+  // Optional (Sync page): pull anything sitting in the default folders when the app opens. Off by default so a
+  // fresh install starts empty even if Documents is synced from another computer.
   useEffect(() => {
-    if (!ready || !comp || bootstrapped.current) return;
+    if (!ready || !comp || bootstrapped.current || !settings.autoImportFolders) return;
     bootstrapped.current = true;
     (async () => {
       try {
@@ -170,7 +173,7 @@ export default function App() {
         console.error(e);
       }
     })();
-  }, [ready, comp]);
+  }, [ready, comp, settings.autoImportFolders]);
 
   // Phone transfers land while the user may be on any page.
   useEffect(() => {
