@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { app, net } = require('electron');
+const toolpaths = require('./toolpaths');
 const { isWin, richEnv, findCommand, runProcess, capture, ensureDir, writeFileAtomic } = require('./util');
 const { getSettings } = require('./storage');
 const scout = require('./scout');
@@ -76,6 +77,8 @@ async function findPython() {
   }
   const generic = findCommand(isWin ? ['python', 'py'] : ['python3', 'python']);
   if (generic) candidates.push({ cmd: generic, pre: [] });
+  const managed = toolpaths.managedPython();
+  if (managed) candidates.push({ cmd: managed, pre: [] });
 
   let unsupported = null;
   for (const c of candidates) {
@@ -114,10 +117,10 @@ async function toolStatus() {
 }
 
 /** Creates a private venv and installs the inference stack (one-time, large download). */
-async function setupEnvironment() {
+async function setupEnvironment(onLog) {
   const py = await findPython();
   if (!py.ok) throw new Error(py.message);
-  const log = (message) => emit({ job: 'setup', type: 'log', message });
+  const log = (message) => { emit({ job: 'setup', type: 'log', message }); if (onLog) onLog(message); };
 
   if (!fs.existsSync(venvPython())) {
     log(`Creating virtual environment with Python ${py.version}…`);
@@ -475,7 +478,7 @@ function saveCsv({ robots, dir }) {
 }
 
 module.exports = {
-  setEmitter, cancel, toolStatus, setupEnvironment,
+  setEmitter, cancel, toolStatus, setupEnvironment, findPython, ytBin, ytVenv,
   listRuns, getRun, createRun, updateRun, deleteRun, importDetections, setCover,
   ensureYtDlp, downloadForRun, downloadMatchVideo, detect, trackRun, saveCsv,
   paths: { aiRoot, dataDir },

@@ -10,6 +10,7 @@ const netApi = require('./main/net');
 const ai = require('./main/ai');
 const scout = require('./main/scout');
 const updater = require('./main/updater');
+const tools = require('./main/tools');
 const { findCommand } = require('./main/util');
 
 try {
@@ -217,6 +218,7 @@ handle('tools:status', async () => {
   return { ...status, adb: findCommand(['adb']) };
 });
 
+handle('tools:install-all', (opts) => tools.installAll(opts || {}, (ev) => send('tools:event', ev)));
 handle('tools:update-ytdlp', async () => { await ai.ensureYtDlp({ force: true, onLog: (m) => send('ai:event', { job: 'setup', type: 'log', message: m }) }); return true; });
 handle('video:download', ({ url, matchNumber, jobId }) => ai.downloadMatchVideo({ url, matchNumber, jobId }));
 

@@ -1,3 +1,4 @@
+import ToolInstaller from '../components/ToolInstaller';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, hasDesktop, mediaUrl } from '../api';
 import { store, useApp, useCurrent } from '../store';
@@ -422,6 +423,7 @@ export default function Trace() {
   const processPanel = run && (
     <div className="col">
       <Card title="AI environment" subtitle="One-time setup for the Roboflow detector">
+        {tools && (!tools.python?.ok || !tools.env?.ready || (run.sourceType === 'url' && !tools.ytdlp)) && <div style={{ marginBottom: 10 }}><ToolInstaller missing onDone={refreshTools} label="Install everything needed" /></div>}
         <ToolRow ok={tools?.python?.ok} title="Python 3.9 – 3.12" detail={tools?.python?.ok ? `${tools.python.version} · ${tools.python.path}` : tools?.python?.message || 'Checking…'} />
         <ToolRow
           ok={tools?.env?.ready}
@@ -430,7 +432,7 @@ export default function Trace() {
           action={<Button size="sm" variant="primary" loading={setup.busy} disabled={!tools?.python?.ok} onClick={doSetup}>Install</Button>}
         />
         <ToolRow ok={tools?.roboflowKey} title="Roboflow API key" detail={tools?.roboflowKey ? 'Saved in Settings' : 'Required to run the robot detection model.'} action={<Button size="sm" onClick={() => store.go('settings')}>Add key</Button>} />
-        {run.sourceType === 'url' && <ToolRow ok={Boolean(tools?.ytdlp)} title="yt-dlp" detail={tools?.ytdlp || 'macOS: brew install yt-dlp · Windows: winget install yt-dlp'} action={<Button size="sm" onClick={refreshTools}>Re-check</Button>} />}
+        {run.sourceType === 'url' && <ToolRow ok={Boolean(tools?.ytdlp)} title="yt-dlp" detail={tools?.ytdlp || 'Installed by “Install everything needed” above'} action={<Button size="sm" onClick={refreshTools}>Re-check</Button>} />}
         {(setup.busy || setup.log.length > 0 || setup.error) && (
           <div className="stack" style={{ marginTop: 12 }}>
             {setup.busy && <Progress indeterminate label="Installing packages…" />}

@@ -61,7 +61,7 @@ const browserShim = {
   nexus: { fetch: noDesktop },
   update: { check: async () => ({ available: false, current: '', latest: '', canInstall: false }), install: noDesktop, version: async () => '', onEvent: () => () => {} },
   llm: { chat: noDesktop },
-  tools: { status: async () => ({ python: { ok: false, message: 'Desktop app required' }, env: { ready: false, missing: [] }, ytdlp: null, ffmpeg: null, adb: null, roboflowKey: false }) },
+  tools: { installAll: noDesktop, onEvent: () => () => {}, status: async () => ({ python: { ok: false, message: 'Desktop app required' }, env: { ready: false, missing: [] }, ytdlp: null, ffmpeg: null, adb: null, roboflowKey: false }) },
   video: { download: noDesktop },
   ai: new Proxy({ onEvent: () => () => {}, runs: async () => [], defaultCalibration: async () => null }, {
     get: (t, k) => (k in t ? t[k] : noDesktop),

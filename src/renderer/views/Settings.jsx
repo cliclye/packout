@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api, hasDesktop } from '../api';
 import { store, useApp } from '../store';
 import { Badge, Button, Card, Field, Icon, PageHeader, Segmented, confirmDialog } from '../components/ui';
+import ToolInstaller from '../components/ToolInstaller';
 import { checkForUpdates, installUpdate, useUpdates } from '../lib/updates';
 
 /** Text/secret setting that saves when the field loses focus. */
@@ -140,12 +141,13 @@ export default function Settings() {
           <Card title="Tools on this computer" actions={<Button size="sm" variant="ghost" icon="rotate" onClick={check}>Re-check</Button>}>
             {!hasDesktop ? <p className="muted">Available in the desktop app.</p> : !tools ? <p className="muted">Checking…</p> : (
               <>
+                <ToolInstaller missing={!tools.python?.ok || !tools.ytdlp || !tools.ffmpeg || !tools.adb || !tools.env?.ready} onDone={check} />
                 <ToolRow title="Python 3.9–3.12" ok={tools.python?.ok} detail={tools.python?.ok ? `${tools.python.version} · ${tools.python.path}` : tools.python?.message} />
                 <ToolRow title="AI detector packages" ok={tools.env?.ready} detail={tools.env?.ready ? 'Installed' : 'Install from the AI Trace page'} />
                 <ToolRow title="yt-dlp" ok={Boolean(tools.ytdlp)} detail={(tools.ytdlp || 'Installed automatically on first download') + ' — kept up to date by Packout'} />
                 <div style={{ padding: '8px 0' }}><Button size="sm" icon="download" onClick={async () => { try { await api.tools.updateYtDlp(); store.toast('yt-dlp is up to date', 'success'); check(); } catch (e) { store.toast(e.message, 'error'); } }}>Update yt-dlp now</Button></div>
-                <ToolRow title="ffmpeg" ok={Boolean(tools.ffmpeg)} detail={tools.ffmpeg || 'Optional — merges separate audio/video streams (brew install ffmpeg)'} />
-                <ToolRow title="adb (Android platform-tools)" ok={Boolean(tools.adb)} detail={tools.adb || 'brew install android-platform-tools'} />
+                <ToolRow title="ffmpeg" ok={Boolean(tools.ffmpeg)} detail={tools.ffmpeg || 'Optional — merges separate audio/video streams'} />
+                <ToolRow title="adb (Android platform-tools)" ok={Boolean(tools.adb)} detail={tools.adb || 'Needed to import from scouting phones over USB'} />
                 <p className="muted" style={{ marginTop: 10 }}>AI workspace: <code>{tools.workDir}</code></p>
               </>
             )}

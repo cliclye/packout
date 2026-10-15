@@ -50,7 +50,7 @@ contextBridge.exposeInMainWorld('packout', {
   update: { check: (opts) => call('update:check', opts), install: () => call('update:install'), version: () => call('app:version'), onEvent: subscribe('update:event') },
   nexus: { fetch: (endpoint) => call('nexus:fetch', endpoint) },
   llm: { chat: (req) => call('llm:chat', req) },
-  tools: { status: () => call('tools:status'), updateYtDlp: () => call('tools:update-ytdlp') },
+  tools: { status: () => call('tools:status'), updateYtDlp: () => call('tools:update-ytdlp'), installAll: (opts) => call('tools:install-all', opts), onEvent: subscribe('tools:event') },
   video: { download: (req) => call('video:download', req) },
   ai: {
     setup: () => call('ai:setup'),

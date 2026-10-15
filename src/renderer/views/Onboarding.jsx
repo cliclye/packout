@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api';
 import { store } from '../store';
 import { Button, Icon, Logo } from '../components/ui';
+import ToolInstaller from '../components/ToolInstaller';
 
 const FEATURES = [
   ['picklist', 'Picklists that adapt to your strategy'],
@@ -23,9 +24,9 @@ export default function Onboarding() {
 
   const rows = tools && [
     ['Python 3.9–3.12', tools.python?.ok, 'AI path tracing', tools.python?.message],
-    ['yt-dlp', Boolean(tools.ytdlp), 'Downloading match video', 'brew install yt-dlp'],
-    ['adb', Boolean(tools.adb), 'Phone sync', 'brew install android-platform-tools'],
-    ['ffmpeg', Boolean(tools.ffmpeg), 'Video merging (optional)', 'brew install ffmpeg'],
+    ['yt-dlp', Boolean(tools.ytdlp), 'Downloading match video', 'installed for you below'],
+    ['adb', Boolean(tools.adb), 'Phone sync', 'installed for you below'],
+    ['ffmpeg', Boolean(tools.ffmpeg), 'Video merging (optional)', 'installed for you below'],
   ];
 
   return (
@@ -56,6 +57,7 @@ export default function Onboarding() {
                   </div>
                 ))}
               </div>
+              {rows && <ToolInstaller missing={rows.some((r) => !r[1])} onDone={() => api.tools.status().then(setTools).catch(() => {})} label="Install everything for me" />}
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <Button variant="ghost" icon="arrowLeft" onClick={() => setStep(0)}>Back</Button>
                 <Button variant="primary" icon="arrowRight" onClick={() => setStep(2)}>Continue</Button>

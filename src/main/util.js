@@ -41,10 +41,11 @@ function extraPathDirs() {
 }
 
 function richEnv(extra = {}) {
+  const own = require('./toolpaths').extraDirs();
   const sep = isWin ? ';' : ':';
   const current = (process.env.PATH || '').split(sep).filter(Boolean);
   const merged = [...current];
-  for (const d of extraPathDirs()) if (!merged.includes(d)) merged.push(d);
+  for (const d of [...own, ...extraPathDirs()]) if (!merged.includes(d)) merged.push(d);
   return { ...process.env, PATH: merged.join(sep), PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8', ...extra };
 }
 
