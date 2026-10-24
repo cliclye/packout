@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { app } = require('electron');
 const { normalizeMatch, normalizePit, normalizePathRun, normalizeVideo } = require('../shared/models');
 const { parsePathCsv, resamplePath } = require('../shared/pathData');
 
@@ -10,7 +11,10 @@ const MAX_DEPTH = 8;
 
 function defaultFolders() {
   const docs = path.join(os.homedir(), 'Documents');
+  const phoneData = path.join(app.getPath('userData'), 'phone-data');
   return [
+    { id: 'phone-match', label: 'Phone Match Data', path: path.join(phoneData, 'ScoutingData') },
+    { id: 'phone-pit', label: 'Phone Pit Data', path: path.join(phoneData, 'PitData') },
     { id: 'match', label: 'Match Data', path: path.join(docs, 'ScoutingData') },
     { id: 'pit', label: 'Pit Data', path: path.join(docs, 'PitData') },
     { id: 'video', label: 'Match Videos', path: path.join(docs, 'MatchVideos') },

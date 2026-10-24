@@ -149,7 +149,7 @@ export default function Sync() {
                   <span className="muted">{adb.devices.length ? `${adb.devices.length} device${adb.devices.length === 1 ? '' : 's'}: ${adb.devices.join(', ')}` : 'No phones connected'}</span>
                   <Button variant={adb.running ? 'secondary' : 'primary'} icon={adb.running ? 'stop' : 'play'} onClick={toggleAdb} disabled={!adb.available}>{adb.running ? 'Stop' : 'Start'}</Button>
                 </div>
-                <p className="muted">Enable USB debugging on each phone. New files are copied to Documents/ScoutingData and Documents/PitData and imported automatically.</p>
+                <p className="muted">Enable USB debugging on each phone. New files are stored safely inside Packout and imported automatically.</p>
                 {adbLog.length > 0 && <LogBox lines={adbLog} height={110} />}
               </div>
             </Card>

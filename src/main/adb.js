@@ -1,5 +1,5 @@
-const os = require('os');
 const path = require('path');
+const { app } = require('electron');
 const { findCommand, capture, ensureDir } = require('./util');
 
 /**
@@ -12,6 +12,12 @@ const FOLDERS = [
   { remote: '/sdcard/Documents/PitData', local: 'PitData', label: 'pit data' },
 ];
 const POLL_MS = 2000;
+
+// macOS can deny a packaged app access to ~/Documents. Keep phone transfers in
+// Packout's own data directory, which Electron always has permission to write.
+function transferDir(folder) {
+  return path.join(app.getPath('userData'), 'phone-data', folder.local);
+}
 
 let timer = null;
 let busy = false;
@@ -42,7 +48,7 @@ async function listRemoteNames(adb, device, remote) {
 }
 
 async function pullFolder(adb, device, folder) {
-  const dest = ensureDir(path.join(os.homedir(), 'Documents', folder.local));
+  const dest = ensureDir(transferDir(folder));
   const listed = await listRemoteNames(adb, device, folder.remote);
   if (!listed.ok) return listed;
   const files = listed.names.filter(isPullableName);
@@ -89,7 +95,7 @@ async function tick() {
         const flag = `${f.remote}/newDataFlag.txt`;
         const has = await capture(adb, ['-s', device, 'shell', 'test', '-f', flag]);
         if (has.code !== 0) continue;
-        const dest = ensureDir(path.join(os.homedir(), 'Documents', f.local));
+        const dest = ensureDir(transferDir(f));
         const pull = await pullFolder(adb, device, f);
         if (pull.ok) {
           await capture(adb, ['-s', device, 'shell', 'rm', flag]);
