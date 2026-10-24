@@ -4,8 +4,10 @@ const { findCommand, capture, ensureDir } = require('./util');
 
 /**
  * Pulls scouting data off Android phones running the Packout scouting app.
- * The app drops `newDataFlag.txt` next to its JSON files when there is something
- * new; we copy the folder and remove the flag (same protocol as the Mac app).
+ * Some scouting-app versions drop `newDataFlag.txt` next to their JSON files.
+ * We use it as an immediate signal when present, but also sync folders when a
+ * phone first connects or their files change so missing flags never block a
+ * transfer.
  */
 const FOLDERS = [
   { remote: '/sdcard/Documents/ScoutingData', local: 'ScoutingData', label: 'match data' },
@@ -23,6 +25,7 @@ let timer = null;
 let busy = false;
 let devices = [];
 let emit = () => {};
+const folderSnapshots = new Map();
 
 /** Android's recycle bin leaves `.trashed-*` files that `adb pull` of a folder often fails on. */
 function isPullableName(name) {
@@ -33,26 +36,25 @@ function isPullableName(name) {
   return true;
 }
 
-async function listRemoteNames(adb, device, remote) {
-  const res = await capture(adb, ['-s', device, 'shell', 'ls', '-1a', remote]);
+async function listRemoteFiles(adb, device, remote) {
+  const script = `test -d "${remote}" || exit 1; for f in "${remote}"/*; do [ -f "$f" ] || continue; name=\${f##*/}; case "$name" in newDataFlag.txt|.*) continue;; esac; stamp=\$(stat -c '%s:%Y' "$f" 2>/dev/null) || continue; printf '%s\\t%s\\n' "$name" "$stamp"; done`;
+  const res = await capture(adb, ['-s', device, 'shell', script]);
   if (res.code !== 0) {
-    return { ok: false, names: [], error: res.tail.split('\n').pop() || 'failed to list remote folder' };
+    return { ok: false, files: [], error: res.tail.split('\n').pop() || 'failed to list remote folder' };
   }
   return {
     ok: true,
-    names: res.stdout
+    files: res.stdout
       .split('\n')
-      .map((l) => l.replace(/\r/g, '').trim())
-      .filter(Boolean),
+      .map((line) => line.replace(/\r/g, '').trim().split('\t'))
+      .filter(([name, stamp]) => isPullableName(name) && Boolean(stamp))
+      .map(([name, stamp]) => ({ name, stamp })),
   };
 }
 
-async function pullFolder(adb, device, folder) {
+async function pullFolder(adb, device, folder, names) {
   const dest = ensureDir(transferDir(folder));
-  const listed = await listRemoteNames(adb, device, folder.remote);
-  if (!listed.ok) return listed;
-  const files = listed.names.filter(isPullableName);
-  for (const name of files) {
+  for (const name of names) {
     const pull = await capture(adb, ['-s', device, 'pull', `${folder.remote}/${name}`, dest]);
     if (pull.code !== 0) {
       return { ok: false, error: pull.tail.split('\n').pop() || 'adb pull failed' };
@@ -87,18 +89,30 @@ async function tick() {
     const found = await listDevices(adb);
     if (found.join() !== devices.join()) {
       devices = found;
+      for (const key of folderSnapshots.keys()) {
+        if (!found.some((device) => key.startsWith(`${device}:`))) folderSnapshots.delete(key);
+      }
       emit({ type: 'devices', devices });
       emit({ type: 'log', message: found.length ? `Connected: ${found.join(', ')}` : 'No devices connected' });
     }
     for (const device of found) {
       for (const f of FOLDERS) {
         const flag = `${f.remote}/newDataFlag.txt`;
+        const listed = await listRemoteFiles(adb, device, f.remote);
+        if (!listed.ok) {
+          emit({ type: 'log', message: `Failed to inspect ${f.label} from ${device}: ${listed.error}` });
+          continue;
+        }
+        const files = listed.files.sort((a, b) => a.name.localeCompare(b.name));
+        const snapshotKey = `${device}:${f.remote}`;
+        const snapshot = files.map(({ name, stamp }) => `${name}:${stamp}`).join('\u0000');
         const has = await capture(adb, ['-s', device, 'shell', 'test', '-f', flag]);
-        if (has.code !== 0) continue;
+        if (has.code !== 0 && folderSnapshots.get(snapshotKey) === snapshot) continue;
         const dest = ensureDir(transferDir(f));
-        const pull = await pullFolder(adb, device, f);
+        const pull = await pullFolder(adb, device, f, files.map(({ name }) => name));
         if (pull.ok) {
-          await capture(adb, ['-s', device, 'shell', 'rm', flag]);
+          folderSnapshots.set(snapshotKey, snapshot);
+          if (has.code === 0) await capture(adb, ['-s', device, 'shell', 'rm', flag]);
           emit({ type: 'log', message: `Pulled ${f.label} from ${device}` });
           emit({ type: 'transferred', path: dest, kind: f.local });
         } else {
