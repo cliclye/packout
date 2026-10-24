@@ -263,6 +263,23 @@ export const store = {
     );
     return total;
   },
+  reconcilePhoneFolder(kind, folder, sourcePaths) {
+    const active = new Set(sourcePaths || []);
+    const prefix = `${folder}/`;
+    const field = kind === 'ScoutingData' ? 'matches' : kind === 'PitData' ? 'pits' : null;
+    if (!field) return 0;
+    let removed = 0;
+    mutateCurrent((c) => {
+      const kept = c[field].filter((record) => {
+        const fromThisPhoneFolder = String(record.sourcePath || '').startsWith(prefix);
+        const keep = !fromThisPhoneFolder || active.has(record.sourcePath);
+        if (!keep) removed++;
+        return keep;
+      });
+      return removed ? { ...c, [field]: kept } : c;
+    }, removed ? `Removed ${removed} ${kind === 'ScoutingData' ? 'match' : 'pit'} record(s) deleted from the phone` : '');
+    return removed;
+  },
   addPathRuns(runs, message) {
     mutateCurrent((c) => ({ ...c, paths: mergeById(c.paths, runs.map(M.normalizePathRun)) }), message || `Added ${runs.length} path(s)`);
   },

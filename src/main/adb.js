@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 const { findCommand, capture, ensureDir } = require('./util');
@@ -54,13 +55,17 @@ async function listRemoteFiles(adb, device, remote) {
 
 async function pullFolder(adb, device, folder, names) {
   const dest = ensureDir(transferDir(folder));
+  const wanted = new Set(names);
+  for (const entry of fs.readdirSync(dest, { withFileTypes: true })) {
+    if (entry.isFile() && !wanted.has(entry.name)) fs.unlinkSync(path.join(dest, entry.name));
+  }
   for (const name of names) {
     const pull = await capture(adb, ['-s', device, 'pull', `${folder.remote}/${name}`, dest]);
     if (pull.code !== 0) {
       return { ok: false, error: pull.tail.split('\n').pop() || 'adb pull failed' };
     }
   }
-  return { ok: true };
+  return { ok: true, paths: names.map((name) => path.join(dest, name)) };
 }
 
 function adbPath() {
@@ -114,7 +119,7 @@ async function tick() {
           folderSnapshots.set(snapshotKey, snapshot);
           if (has.code === 0) await capture(adb, ['-s', device, 'shell', 'rm', flag]);
           emit({ type: 'log', message: `Pulled ${f.label} from ${device}` });
-          emit({ type: 'transferred', path: dest, kind: f.local });
+          emit({ type: 'transferred', path: dest, kind: f.local, paths: pull.paths });
         } else {
           emit({ type: 'log', message: `Failed to pull ${f.label} from ${device}: ${pull.error}` });
         }
