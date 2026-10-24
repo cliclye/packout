@@ -1,7 +1,7 @@
 {
   "name": "packout-desktop",
   "productName": "Packout",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
   "description": "FRC scouting and analysis tool",
   "keywords": [],

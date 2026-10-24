@@ -18,6 +18,43 @@ let busy = false;
 let devices = [];
 let emit = () => {};
 
+/** Android's recycle bin leaves `.trashed-*` files that `adb pull` of a folder often fails on. */
+function isPullableName(name) {
+  const base = String(name || '').replace(/\r/g, '').trim().split('/').pop();
+  if (!base || base === '.' || base === '..') return false;
+  if (base === 'newDataFlag.txt') return false;
+  if (base.startsWith('.')) return false;
+  return true;
+}
+
+async function listRemoteNames(adb, device, remote) {
+  const res = await capture(adb, ['-s', device, 'shell', 'ls', '-1a', remote]);
+  if (res.code !== 0) {
+    return { ok: false, names: [], error: res.tail.split('\n').pop() || 'failed to list remote folder' };
+  }
+  return {
+    ok: true,
+    names: res.stdout
+      .split('\n')
+      .map((l) => l.replace(/\r/g, '').trim())
+      .filter(Boolean),
+  };
+}
+
+async function pullFolder(adb, device, folder) {
+  const dest = ensureDir(path.join(os.homedir(), 'Documents', folder.local));
+  const listed = await listRemoteNames(adb, device, folder.remote);
+  if (!listed.ok) return listed;
+  const files = listed.names.filter(isPullableName);
+  for (const name of files) {
+    const pull = await capture(adb, ['-s', device, 'pull', `${folder.remote}/${name}`, dest]);
+    if (pull.code !== 0) {
+      return { ok: false, error: pull.tail.split('\n').pop() || 'adb pull failed' };
+    }
+  }
+  return { ok: true };
+}
+
 function adbPath() {
   return findCommand(['adb']);
 }
@@ -53,13 +90,13 @@ async function tick() {
         const has = await capture(adb, ['-s', device, 'shell', 'test', '-f', flag]);
         if (has.code !== 0) continue;
         const dest = ensureDir(path.join(os.homedir(), 'Documents', f.local));
-        const pull = await capture(adb, ['-s', device, 'pull', `${f.remote}/.`, dest]);
-        if (pull.code === 0) {
+        const pull = await pullFolder(adb, device, f);
+        if (pull.ok) {
           await capture(adb, ['-s', device, 'shell', 'rm', flag]);
           emit({ type: 'log', message: `Pulled ${f.label} from ${device}` });
           emit({ type: 'transferred', path: dest, kind: f.local });
         } else {
-          emit({ type: 'log', message: `Failed to pull ${f.label} from ${device}: ${pull.tail.split('\n').pop()}` });
+          emit({ type: 'log', message: `Failed to pull ${f.label} from ${device}: ${pull.error}` });
         }
       }
     }
