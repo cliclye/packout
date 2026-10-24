@@ -180,7 +180,7 @@ export default function App() {
     return api.adb.onEvent(async (ev) => {
       if (ev.type !== 'transferred') return;
       try {
-        store.reconcilePhoneFolder(ev.kind, ev.path, ev.paths);
+        store.removePhoneRecords(ev.kind, ev.removed);
         const n = await importPaths([ev.path], 'phone transfer');
         store.toast(n ? `Imported ${n} new record${n === 1 ? '' : 's'} from the phone` : 'Phone transfer finished — nothing new', n ? 'success' : 'info');
       } catch (e) {

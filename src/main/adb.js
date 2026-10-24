@@ -11,7 +11,7 @@ const { findCommand, capture, ensureDir } = require('./util');
  * transfer.
  */
 const FOLDERS = [
-  { remote: '/sdcard/Documents/ScoutingData', local: 'ScoutingData', label: 'match data' },
+  { remote: '/sdcard/Documents/ScoutingData', local: 'ScoutingData', label: 'match data', mirrorDeletes: true },
   { remote: '/sdcard/Documents/PitData', local: 'PitData', label: 'pit data' },
 ];
 const POLL_MS = 2000;
@@ -53,19 +53,52 @@ async function listRemoteFiles(adb, device, remote) {
   };
 }
 
+// Which files each phone gave us last time, so we can tell "deleted on the phone" from "came from another phone".
+const manifestFile = () => path.join(app.getPath('userData'), 'phone-data', 'manifest.json');
+function readManifest() {
+  try {
+    return JSON.parse(fs.readFileSync(manifestFile(), 'utf8'));
+  } catch {
+    return {};
+  }
+}
+function writeManifest(m) {
+  ensureDir(path.dirname(manifestFile()));
+  fs.writeFileSync(manifestFile(), JSON.stringify(m));
+}
+
+/**
+ * Copies a phone's files into the shared transfer folder. This only ever ADDS or updates files, so pulling
+ * from one phone can't wipe what another phone (or an earlier pull) brought in. The one exception is match
+ * data, which mirrors deletions: a file is removed only if this same phone had it before and no longer does
+ * (and no other phone also supplied it). Pit data is never deleted.
+ */
 async function pullFolder(adb, device, folder, names) {
   const dest = ensureDir(transferDir(folder));
-  const wanted = new Set(names);
-  for (const entry of fs.readdirSync(dest, { withFileTypes: true })) {
-    if (entry.isFile() && !wanted.has(entry.name)) fs.unlinkSync(path.join(dest, entry.name));
-  }
   for (const name of names) {
     const pull = await capture(adb, ['-s', device, 'pull', `${folder.remote}/${name}`, dest]);
     if (pull.code !== 0) {
       return { ok: false, error: pull.tail.split('\n').pop() || 'adb pull failed' };
     }
   }
-  return { ok: true, paths: names.map((name) => path.join(dest, name)) };
+  const manifest = readManifest();
+  const key = `${device}|${folder.local}`;
+  const removed = [];
+  if (folder.mirrorDeletes) {
+    const now = new Set(names);
+    for (const name of manifest[key] || []) {
+      if (now.has(name)) continue;
+      const others = Object.entries(manifest).some(([k, list]) => k !== key && k.endsWith(`|${folder.local}`) && list.includes(name));
+      const file = path.join(dest, name);
+      if (!others && fs.existsSync(file)) {
+        fs.unlinkSync(file);
+        removed.push(file);
+      }
+    }
+  }
+  manifest[key] = names;
+  writeManifest(manifest);
+  return { ok: true, paths: names.map((name) => path.join(dest, name)), removed };
 }
 
 function adbPath() {
@@ -119,7 +152,7 @@ async function tick() {
           folderSnapshots.set(snapshotKey, snapshot);
           if (has.code === 0) await capture(adb, ['-s', device, 'shell', 'rm', flag]);
           emit({ type: 'log', message: `Pulled ${f.label} from ${device}` });
-          emit({ type: 'transferred', path: dest, kind: f.local, paths: pull.paths });
+          emit({ type: 'transferred', path: dest, kind: f.local, paths: pull.paths, removed: pull.removed });
         } else {
           emit({ type: 'log', message: `Failed to pull ${f.label} from ${device}: ${pull.error}` });
         }
@@ -152,4 +185,4 @@ function stop() {
   return status();
 }
 
-module.exports = { start, stop, status };
+module.exports = { start, stop, status, _pullFolder: pullFolder };
