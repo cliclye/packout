@@ -1,7 +1,7 @@
 {
   "name": "packout-desktop",
   "productName": "Packout",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "private": true,
   "description": "FRC scouting and analysis tool",
   "keywords": [],
@@ -18,7 +18,8 @@
     "release": "electron-forge release",
     "lint": "echo \"No linting configured\"",
     "test:scout": "node test/scout.test.js",
-    "test:nexus": "node test/nexus.test.js"
+    "test:nexus": "node test/nexus.test.js",
+    "test:adb": "node test/adbpull.test.js"
   },
   "dependencies": {
     "@babel/core": "^8.0.6",
