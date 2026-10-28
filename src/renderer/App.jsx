@@ -12,6 +12,7 @@ import Analysis from './views/Analysis';
 import Film from './views/Film';
 import Trace from './views/Trace';
 import Pit from './views/Pit';
+import Custom from './views/Custom';
 import Sync from './views/Sync';
 import Settings from './views/Settings';
 import Onboarding from './views/Onboarding';
@@ -26,6 +27,7 @@ const NAV = [
     { id: 'picklist', label: 'Picklist', icon: 'picklist' },
     { id: 'teams', label: 'Teams', icon: 'users' },
     { id: 'analysis', label: 'Analysis', icon: 'chart' },
+    { id: 'custom', label: 'Custom Data', icon: 'sliders' },
   ] },
   { group: 'Review', items: [
     { id: 'film', label: 'Film Review', icon: 'film' },
@@ -38,7 +40,7 @@ const NAV = [
   ] },
 ];
 
-const VIEWS = { dashboard: Dashboard, event: Event, strategy: Strategy, picklist: Picklist, teams: Teams, analysis: Analysis, film: Film, trace: Trace, pit: Pit, sync: Sync, settings: Settings };
+const VIEWS = { dashboard: Dashboard, event: Event, strategy: Strategy, picklist: Picklist, teams: Teams, analysis: Analysis, custom: Custom, film: Film, trace: Trace, pit: Pit, sync: Sync, settings: Settings };
 
 function CompSwitcher({ onNew }) {
   const { competitions, currentId } = useApp();

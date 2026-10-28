@@ -4,6 +4,7 @@ const path = require('path');
 const { app } = require('electron');
 const { normalizeMatch, normalizePit, normalizePathRun, normalizeVideo } = require('../shared/models');
 const { parsePathCsv, resamplePath } = require('../shared/pathData');
+const { isDesignRecord, designToRaw } = require('../shared/designSchema');
 
 const VIDEO_EXTS = new Set(['.mp4', '.mov', '.m4v', '.avi', '.mkv', '.webm']);
 const IMAGE_EXTS = ['.jpg', '.jpeg', '.png'];
@@ -92,7 +93,20 @@ function importPath(target) {
         out.skipped++;
         return;
       }
-      if (data.matchNumber !== undefined && data.teamNumber !== undefined) {
+      if (isDesignRecord(data)) {
+        // Written by a Scout Studio design (Scout Runtime on the phone).
+        const raw = designToRaw(data);
+        const base = { ...raw, id: `file:${file}`, sourcePath: file, importedAt: mtimeIso(file) };
+        if (data.form === 'pit') {
+          const photo = Object.values(data.values).find((v) => typeof v === 'string' && /^image_team.*\.jpg$/i.test(v));
+          const direct = photo ? path.join(path.dirname(file), photo) : null;
+          const rec = normalizePit({ ...base, imagePath: direct && fs.existsSync(direct) ? direct : siblingPitImage(file, String(raw.teamNumber).trim()) });
+          if (rec.teamNumber) out.pitRecords.push(rec); else out.skipped++;
+        } else {
+          const rec = normalizeMatch(base);
+          if (rec.teamNumber && rec.matchNumber) out.matchRecords.push(rec); else out.skipped++;
+        }
+      } else if (data.matchNumber !== undefined && data.teamNumber !== undefined) {
         const rec = normalizeMatch({ ...data, id: `file:${file}`, sourcePath: file, importedAt: mtimeIso(file) });
         if (rec.teamNumber && rec.matchNumber) out.matchRecords.push(rec);
         else out.skipped++;

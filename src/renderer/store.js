@@ -34,6 +34,7 @@ const newCompetition = (name, eventKey = '') => ({
   picklist: emptyPicklist(),
   strategyNotes: {},
   tbaSnapshot: null,
+  design: null,
 });
 
 let state = {
@@ -95,6 +96,7 @@ function hydrateCompetition(c) {
     picklist: { ...emptyPicklist(), ...(c.picklist || {}) },
     strategyNotes: c.strategyNotes || {},
     tbaSnapshot: c.tbaSnapshot || null,
+    design: c.design || null, // schema exported from Scout Studio (labels for custom fields)
   };
 }
 
@@ -195,6 +197,16 @@ export const store = {
   setTraceSeed(seed) {
     setState({ traceSeed: seed });
   },
+  /** Schema exported from Scout Studio; only supplies labels for custom fields. */
+  setDesignSchema(schema) {
+    if (!schema || !Array.isArray(schema.forms)) {
+      store.toast('That file is not a Scout Studio schema.', 'error');
+      return;
+    }
+    mutateCurrent((c) => ({ ...c, design: schema }), `Loaded design schema “${schema.meta?.name || 'unnamed'}”`);
+    store.toast('Design schema loaded');
+  },
+
   setSelectedTeam(team) {
     setState({ selectedTeam: team });
   },

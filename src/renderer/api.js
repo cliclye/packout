@@ -43,6 +43,14 @@ const browserShim = {
     a.click();
     return defaultPath;
   } },
+  pdf: { export: async ({ html }) => {
+    const w = window.open('', '_blank');
+    if (!w) throw new Error('Allow pop-ups to export a PDF.');
+    w.document.write(html);
+    w.document.close();
+    w.print();
+    return 'printed';
+  } },
   fs: { readText: noDesktop },
   files: { pathFor: () => '', thumbnail: async () => null },
   shell: { reveal: noDesktop, openExternal: async (url) => window.open(url, '_blank') },

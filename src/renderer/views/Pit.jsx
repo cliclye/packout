@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { mediaUrl } from '../api';
 import { store, useCurrent } from '../store';
 import { Badge, Button, Card, Empty, PageHeader, SearchInput } from '../components/ui';
+import { exportPitPdf } from '../lib/pdfExport';
 import { DRIVETRAINS, naturalNumber, pitLabels } from '../../shared/models';
 
 export default function Pit() {
@@ -25,7 +26,7 @@ export default function Pit() {
   return (
     <div className="page">
       <div className="page-inner">
-        <PageHeader title="Pit Scouting" subtitle="Robot configuration, photos and inspection notes" />
+        <PageHeader title="Pit Scouting" subtitle="Robot configuration, photos and inspection notes" actions={comp.pits.length > 0 && <Button onClick={() => exportPitPdf(comp)}>Export PDF</Button>} />
         {comp.pits.length === 0 ? (
           <Card><Empty icon="wrench" title="No pit records" body="Pit scouting files come from the scouting app on your phones. Sync them or load the demo data." action={<div className="row"><Button variant="primary" onClick={() => store.go('sync')}>Go to Sync</Button><Button onClick={() => store.loadSampleData()}>Load demo data</Button></div>} /></Card>
         ) : (

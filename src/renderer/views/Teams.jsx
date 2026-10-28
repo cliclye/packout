@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { getSummaries, store, useApp, useCurrent } from '../store';
 import { Card, Empty, PageHeader, RankBadge, RoleTag, SearchInput, Segmented, Button, fmt } from '../components/ui';
 import TeamDetail from '../components/TeamDetail';
+import { exportMatchPdf } from '../lib/pdfExport';
 import { naturalNumber } from '../../shared/models';
 
 export default function Teams() {
@@ -33,7 +34,7 @@ export default function Teams() {
   return (
     <div className="page">
       <div className="page-inner">
-        <PageHeader title="Teams" subtitle={`${summaries.length} teams at ${comp.name}`} />
+        <PageHeader title="Teams" subtitle={`${summaries.length} teams at ${comp.name}`} actions={comp.matches.length > 0 && <Button onClick={() => exportMatchPdf(comp)}>Export match PDF</Button>} />
         <div className="split">
           <div className="col">
             <div className="row">

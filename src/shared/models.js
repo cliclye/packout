@@ -36,6 +36,7 @@ function normalizeMatch(d = {}) {
     underDefDuration: toInt(d.underDefDuration),
     notes: d.notes ? String(d.notes) : '',
     scouterName: toStr(d.scouterName),
+    custom: d.custom || null, // full record from a Scout Studio design, if any
     importedAt: d.importedAt || new Date().toISOString(),
   };
 }
@@ -53,6 +54,7 @@ function normalizePit(d = {}) {
     notes: d.notes ? String(d.notes) : '',
     imagePath: d.imagePath || null,
     imageData: d.imageData || null, // embedded preview (shared files)
+    custom: d.custom || null,
     importedAt: d.importedAt || new Date().toISOString(),
   };
 }

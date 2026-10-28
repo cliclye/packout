@@ -183,6 +183,20 @@ handle('files:thumbnail', (file, maxWidth = 640) => {
   const scaled = width > maxWidth ? img.resize({ width: maxWidth, quality: 'good' }) : img;
   return `data:image/jpeg;base64,${scaled.toJPEG(72).toString('base64')}`;
 });
+// Prints generated report HTML to a PDF the user picks a location for. Returns the path, or null if cancelled.
+handle('pdf:export', async ({ html, defaultName, landscape }) => {
+  const r = await dialog.showSaveDialog(mainWindow, { defaultPath: defaultName || 'report.pdf', filters: [{ name: 'PDF', extensions: ['pdf'] }] });
+  if (r.canceled || !r.filePath) return null;
+  const win = new BrowserWindow({ show: false, webPreferences: { sandbox: true, javascript: false } });
+  try {
+    await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    const pdf = await win.webContents.printToPDF({ landscape: Boolean(landscape), pageSize: 'Letter', printBackground: true });
+    fs.writeFileSync(r.filePath, pdf);
+  } finally {
+    win.destroy();
+  }
+  return r.filePath;
+});
 handle('shell:reveal', (file) => shell.showItemInFolder(file));
 handle('shell:open-external', (url) => {
   if (!/^https?:\/\//i.test(url)) throw new Error('Only web links can be opened.');

@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld('packout', {
     open: (filters, title) => call('dialog:open', filters, title),
     save: (opts) => call('dialog:save', opts),
   },
+  pdf: { export: (req) => call('pdf:export', req) },
   fs: { readText: (file) => call('fs:read-text', file) },
   files: { pathFor: (file) => webUtils.getPathForFile(file), thumbnail: (file, w) => call('files:thumbnail', file, w) },
   shell: {
