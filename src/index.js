@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, nativeTheme, session, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { pathToFileURL } = require('url');
+const { Readable } = require('stream');
 
 const storage = require('./main/storage');
 const importer = require('./main/importer');
@@ -77,14 +77,48 @@ function createWindow() {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 }
 
+const MEDIA_TYPES = { '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
+
+/**
+ * Serves a local file, answering HTTP Range requests with 206 partial content.
+ * <video> only lets you seek when the server honours ranges; net.fetch on a
+ * file:// URL ignores them, which made the replay video impossible to scrub.
+ */
+function serveFile(file, range) {
+  const size = fs.statSync(file).size;
+  const type = MEDIA_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream';
+  const m = range && /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+  if (!m || (m[1] === '' && m[2] === '')) {
+    return new Response(Readable.toWeb(fs.createReadStream(file)), {
+      status: 200,
+      headers: { 'Content-Type': type, 'Content-Length': String(size), 'Accept-Ranges': 'bytes' },
+    });
+  }
+  let start;
+  let end;
+  if (m[1] === '') { start = Math.max(0, size - Number(m[2])); end = size - 1; } // suffix range: last N bytes
+  else { start = Number(m[1]); end = m[2] === '' ? size - 1 : Math.min(Number(m[2]), size - 1); }
+  if (start >= size || start > end) {
+    return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
+  }
+  return new Response(Readable.toWeb(fs.createReadStream(file, { start, end })), {
+    status: 206,
+    headers: {
+      'Content-Type': type,
+      'Content-Length': String(end - start + 1),
+      'Content-Range': `bytes ${start}-${end}/${size}`,
+      'Accept-Ranges': 'bytes',
+    },
+  });
+}
+
 app.whenReady().then(() => {
   protocol.handle('packout-media', async (request) => {
     try {
       const url = new URL(request.url);
       const file = decodeURIComponent(url.pathname.replace(/^\//, ''));
       if (!MEDIA_EXTS.has(path.extname(file).toLowerCase()) || !fs.existsSync(file)) return new Response('Not found', { status: 404 });
-      // net.fetch on a file:// URL honours Range headers, so <video> seeking works.
-      return net.fetch(pathToFileURL(file).toString(), { headers: request.headers });
+      return serveFile(file, request.headers.get('range'));
     } catch {
       return new Response('Bad request', { status: 400 });
     }

@@ -146,6 +146,12 @@ function validateCalibration(c) {
 const FOOTPRINT = 0.85;
 // Consecutive frames that must all show every robot before tracking starts.
 const START_STABLE_FRAMES = 6;
+// Length of the autonomous period (2026 REBUILT: 20 s).
+const AUTO_SECONDS = 20;
+// Distance (field widths) a robot must move before it counts as driving, and the
+// typical delay between the buzzer and a robot covering that distance.
+const MOVE_DIST = 0.03;
+const MOVE_LAG = 0.5;
 // Seconds of motion extrapolated when matching a robot to a detection.
 const MAX_PREDICT_SEC = 0.4;
 
@@ -276,9 +282,12 @@ const NO_SHOW = 'no_show';
  *   legacy          bool: exact scouting-ai behaviour (first frame with exactly N boxes, nearest-last-position matching)
  *   frameTimes      seconds per frame (from extractFrames); needed for startTime
  *   startTime       seconds: don't begin tracking before this video time
+ *   matchStart      seconds: when the match (auto) starts; detected from motion when absent
+ *   teleopStart     seconds: when teleop starts; overrides matchStart + autoSeconds
+ *   autoSeconds     length of the autonomous period (default AUTO_SECONDS)
  */
 function trackRobots(frames, autoFrames, teams, opts = {}) {
-  const { redOnLeft = true, manualStarts = null, onProgress = null, legacy = false, frameTimes = null, startTime = 0 } = opts;
+  const { redOnLeft = true, manualStarts = null, onProgress = null, legacy = false, frameTimes = null, startTime = 0, autoSeconds = AUTO_SECONDS } = opts;
   if (!Array.isArray(teams) || teams.length !== 6) {
     throw new Error(`Exactly 6 team slots are required (3 left, 3 right); got ${teams ? teams.length : 0}.`);
   }
@@ -331,7 +340,17 @@ function trackRobots(frames, autoFrames, teams, opts = {}) {
   const last = frames.length - 1;
   if (!legacy) {
     const out = trackOffline(frames, robots.map((r) => r.pos), robots.map((r) => r.team), firstFrameIndex, autoFrames, { ...(opts.tracker || {}), redOnLeft, onProgress });
+    // Auto is a fixed window after the match starts. The detector's Auto/Tele Op
+    // classes are too unreliable to use, so the window comes from (in order) the
+    // user's teleop time, the user's match start, or when the robots start moving.
+    const matchStart = opts.matchStart > 0 ? opts.matchStart : detectMatchStart(out);
+    const autoEnd = opts.teleopStart > 0 ? opts.teleopStart : matchStart + autoSeconds;
+    for (const r of out) {
+      for (const h of r.history) h.isAuto = h.time < autoEnd;
+    }
     return {
+      matchStart: Math.round(matchStart * 10) / 10,
+      autoEnd: Math.round(autoEnd * 10) / 10,
       firstFrameIndex,
       autoStartFound,
       totalFrames: frames.length,
@@ -385,6 +404,27 @@ function findStartFrame(frames, frameTimes, amountShows, startTime = 0) {
     }
   }
   return firstEnough === -1 ? frames.length : firstEnough;
+}
+
+/**
+ * The moment the robots start driving: the first time two robots have each
+ * moved MOVE_DIST from where tracking found them, less the reaction lag. Robots
+ * stand still before the buzzer and nearly all move in the first second of auto.
+ */
+function detectMatchStart(robots) {
+  const t0 = Math.min(...robots.filter((r) => r.history.length).map((r) => r.history[0].time));
+  if (!Number.isFinite(t0)) return 0;
+  const moved = robots
+    .filter((r) => r.history.length)
+    .map((r) => {
+      const h0 = r.history[0];
+      const hit = r.history.find((h) => Math.hypot(h.x - h0.x, (h.y - h0.y) / 2) > MOVE_DIST);
+      return hit ? hit.time : Infinity;
+    })
+    .sort((a, b) => a - b);
+  const second = moved.length > 1 ? moved[1] : moved[0];
+  if (!Number.isFinite(second)) return t0;
+  return Math.max(t0, second - MOVE_LAG);
 }
 
 /** Summary of the frame the tracker would start from (for the confirmation step). */

@@ -86,8 +86,7 @@ export default function Trace() {
   // tracking form
   const [slots, setSlots] = useState(['', '', '', '', '', '']);
   const [redOnLeft, setRedOnLeft] = useState(settings.redOnLeft !== false);
-  const [teleop, setTeleop] = useState('');
-  const [trackStart, setTrackStart] = useState('');
+  const [matchStart, setMatchStart] = useState('');
   const [corners, setCorners] = useState(settings.fieldCalibration || DEFAULT_CAL);
   const [tracking, setTracking] = useState(false);
   const [trackError, setTrackError] = useState('');
@@ -175,7 +174,7 @@ export default function Trace() {
       if (r.teams) setSlots(r.teams);
       else setSlots(['', '', '', '', '', '']);
       if (typeof r.redOnLeft === 'boolean') setRedOnLeft(r.redOnLeft);
-      setTeleop(r.teleopStart ? String(r.teleopStart) : '');
+      setMatchStart(r.matchStart ? String(r.matchStart) : '');
       setMatchLabel(r.matchNumber || '');
       setStep(r.hasDetections ? 'track' : 'process');
     },
@@ -280,13 +279,14 @@ export default function Trace() {
   const showing = teamList.filter((t) => t && t !== 'no_show').length;
   const canTrack = slotErrors.every((e) => !e) && showing > 0 && !tracking;
 
-  const track = async (manualStarts) => {
+  const track = async (manualStarts, startOverride) => {
     setTrackError('');
     setTracking(true);
     try {
-      const params = { teams: teamList, calibration: corners, teleopStart: Number(teleop) || 0, trackStart: Number(trackStart) || 0, redOnLeft, manualStarts: manualStarts || null };
+      const start = startOverride !== undefined ? startOverride : Number(matchStart) || 0;
+      const params = { teams: teamList, calibration: corners, matchStart: start, redOnLeft, manualStarts: manualStarts || null };
       const res = await api.ai.track(run.id, params);
-      await api.ai.update(run.id, { calibration: corners, teams: teamList, redOnLeft, teleopStart: Number(teleop) || 0, matchNumber: matchLabel });
+      await api.ai.update(run.id, { calibration: corners, teams: teamList, redOnLeft, matchStart: start, teleopStart: 0, matchNumber: matchLabel });
       store.updateSettings({ fieldCalibration: corners, redOnLeft });
       if (!res.ok && res.needsManualStart) {
         setManual({ left: Array(res.leftShows).fill(''), right: Array(res.rightShows).fill(''), message: res.message });
@@ -536,11 +536,8 @@ export default function Trace() {
           </div>
         </Card>
         <Card title="Match timing">
-          <Field label="Teleop starts at (video seconds)" hint="Leave blank to rely on the detector’s Auto/Robot classes. Frames before this time are treated as autonomous.">
-            <input className="input" type="number" min="0" value={teleop} onChange={(e) => setTeleop(e.target.value)} placeholder="e.g. 25" style={{ maxWidth: 160 }} />
-          </Field>
-          <Field label="Start tracking at (video seconds)" hint="Optional. Pick a moment when all robots are visible and in their starting spots — the tracker locks each team to a robot there, so a wrong start frame shifts every path.">
-            <input className="input" type="number" min="0" value={trackStart} onChange={(e) => setTrackStart(e.target.value)} placeholder="auto" style={{ maxWidth: 160 }} />
+          <Field label="Match starts at (video seconds)" hint="Leave blank to detect it from when the robots start moving. Auto is the first 20 seconds after the match starts. You can also set it from the Replay view after tracking.">
+            <input className="input" type="number" min="0" step="0.1" value={matchStart} onChange={(e) => setMatchStart(e.target.value)} placeholder="auto-detect" style={{ maxWidth: 160 }} />
           </Field>
         </Card>
         {manual && (
@@ -565,16 +562,16 @@ export default function Trace() {
 
   const reviewPanel = run && result && (
     <div className={full ? 'review-full' : 'grid-main'}>
-      <Card className={full ? 'review-field' : ''} title={viewMode === 'heat' ? 'Where the robots spend time' : viewMode === 'replay' ? 'Path replay' : 'Tracked paths'} subtitle={`Started from frame ${result.firstFrameIndex} (${result.startTime != null ? `${result.startTime}s, ` : ''}${result.startPercent}% into the video)${result.autoStartFound ? '' : ' · manual starting positions'}`}
+      <Card className={full ? 'review-field' : ''} title={viewMode === 'heat' ? 'Where the robots spend time' : viewMode === 'replay' ? 'Path replay' : 'Tracked paths'} subtitle={`Tracked from ${result.startTime != null ? `${result.startTime}s` : `frame ${result.firstFrameIndex}`} · auto ${result.matchStart != null ? `${result.matchStart}–${result.autoEnd}s` : 'unknown'}${result.autoStartFound ? '' : ' · manual starting positions'}`}
         actions={
           <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <Segmented size="sm" value={viewMode} onChange={setViewMode} options={[{ value: 'paths', label: 'Paths' }, { value: 'heat', label: 'Heatmap' }, { value: 'replay', label: 'Replay' }]} />
+            <Segmented size="sm" value={viewMode} onChange={(v) => { setViewMode(v); if (v === 'replay') setFull(false); }} options={[{ value: 'paths', label: 'Paths' }, { value: 'heat', label: 'Heatmap' }, { value: 'replay', label: 'Replay' }]} />
             <Segmented size="sm" value={filter} onChange={setFilter} options={[{ value: 'both', label: 'All' }, { value: 'auto', label: 'Auto' }, { value: 'tele', label: 'Teleop' }]} />
-            <Button size="sm" icon={full ? 'x' : 'eye'} onClick={() => setFull(!full)}>{full ? 'Exit full screen' : 'Full screen'}</Button>
+            {viewMode !== 'replay' && <Button size="sm" icon={full ? 'x' : 'eye'} onClick={() => setFull(!full)}>{full ? 'Exit full screen' : 'Full screen'}</Button>}
           </div>
         }>
         {viewMode === 'replay'
-          ? <PathReplay runs={replayRuns.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} videoSrc={run.videoExists ? mediaUrl(run.videoPath) : null} />
+          ? <PathReplay runs={replayRuns.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} videoSrc={run.videoExists ? mediaUrl(run.videoPath) : null} busy={tracking} onMarkStart={(t) => { const v = Math.round(t * 10) / 10; setMatchStart(String(v)); track(null, v); }} />
           : <FieldView runs={resampled.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} mode={viewMode} />}
         {viewMode !== 'replay' && <FieldLegend mode={viewMode} />}
         {viewMode === 'heat' && hidden.size < resampled.length && <p className="muted" style={{ marginTop: 6 }}>Combined time spent by {resampled.length - hidden.size} selected robot{resampled.length - hidden.size === 1 ? '' : 's'}. Toggle robots on the right to compare.</p>}

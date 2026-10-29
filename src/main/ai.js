@@ -468,14 +468,20 @@ function loadDetections(id) {
 }
 
 /**
- * @param params { teams: string[6], calibration, teleopStart, redOnLeft, manualStarts }
+ * @param params { teams: string[6], calibration, matchStart, teleopStart, redOnLeft, manualStarts }
  */
 function trackRun(id, params) {
-  const { teams, calibration, teleopStart = 0, trackStart = 0, redOnLeft = true, manualStarts = null } = params;
+  const { teams, calibration, teleopStart = 0, matchStart = 0, redOnLeft = true, manualStarts = null } = params;
   const detections = loadDetections(id);
   const { frames, autoFrames, frameTimes } = scout.extractFrames(detections, calibration || scout.DEFAULT_CALIBRATION, Number(teleopStart) || 0);
   try {
-    const result = scout.trackRobots(frames, autoFrames, teams, { redOnLeft, manualStarts, frameTimes, startTime: Number(trackStart) || 0 });
+    const result = scout.trackRobots(frames, autoFrames, teams, {
+      redOnLeft, manualStarts, frameTimes,
+      matchStart: Number(matchStart) || 0,
+      teleopStart: Number(teleopStart) || 0,
+      // start a moment before the buzzer so the robots are seen on their starting spots
+      startTime: Number(matchStart) > 0 ? Math.max(0, Number(matchStart) - 1) : 0,
+    });
     const autoFrameCount = autoFrames.size;
     updateRun(id, { tracked: { at: new Date().toISOString(), teams, startPercent: result.startPercent, autoStartFound: result.autoStartFound } });
     return { ok: true, ...result, frameCount: frames.length, autoFrameCount };
