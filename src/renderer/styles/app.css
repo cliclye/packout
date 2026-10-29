@@ -610,7 +610,8 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 .replay-overlay { position: absolute; inset: 0; pointer-events: none; }
 .replay-video { width: 100%; border-radius: 10px; background: #000; display: block; cursor: pointer; }
 .replay-field { position: relative; min-width: 0; }
-.replay-note { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 6px; background: rgba(0, 0, 0, .6); color: #fff; font-size: 12px; }
+.replay-note { position: absolute; top: 10px; left: 10px; padding: 6px 12px; border: 0; border-radius: 6px; background: rgba(0, 0, 0, .72); color: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+.replay-note:hover { background: rgba(0, 0, 0, .85); }
 .replay-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .replay-scrub { flex: 1 1 240px; min-width: 160px; accent-color: var(--accent, #6b7cff); }
 .replay-time { min-width: 108px; text-align: right; font-variant-numeric: tabular-nums; }

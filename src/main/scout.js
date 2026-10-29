@@ -152,6 +152,8 @@ const AUTO_SECONDS = 20;
 // typical delay between the buzzer and a robot covering that distance.
 const MOVE_DIST = 0.03;
 const MOVE_LAG = 0.5;
+// Fill paths backwards when lock-on comes this many seconds after the requested start.
+const BACKFILL_MIN_GAP = 0.5;
 // Seconds of motion extrapolated when matching a robot to a detection.
 const MAX_PREDICT_SEC = 0.4;
 
@@ -339,7 +341,9 @@ function trackRobots(frames, autoFrames, teams, opts = {}) {
 
   const last = frames.length - 1;
   if (!legacy) {
-    const out = trackOffline(frames, robots.map((r) => r.pos), robots.map((r) => r.team), firstFrameIndex, autoFrames, { ...(opts.tracker || {}), redOnLeft, onProgress });
+    const trackerOpts = { ...(opts.tracker || {}), redOnLeft };
+    const out = trackOffline(frames, robots.map((r) => r.pos), robots.map((r) => r.team), firstFrameIndex, autoFrames, { ...trackerOpts, onProgress });
+    backfill(out, frames, frameTimes, firstFrameIndex, startTime, robots, trackerOpts);
     // Auto is a fixed window after the match starts. The detector's Auto/Tele Op
     // classes are too unreliable to use, so the window comes from (in order) the
     // user's teleop time, the user's match start, or when the robots start moving.
@@ -354,7 +358,7 @@ function trackRobots(frames, autoFrames, teams, opts = {}) {
       firstFrameIndex,
       autoStartFound,
       totalFrames: frames.length,
-      startTime: frameTimes && frameTimes[firstFrameIndex] !== undefined ? Math.round(frameTimes[firstFrameIndex] * 10) / 10 : null,
+      startTime: firstPathTime(out, frameTimes, firstFrameIndex),
       startPercent: frames.length ? Math.round((firstFrameIndex * 1000) / frames.length) / 10 : 0,
       robots: out,
     };
@@ -404,6 +408,37 @@ function findStartFrame(frames, frameTimes, amountShows, startTime = 0) {
     }
   }
   return firstEnough === -1 ? frames.length : firstEnough;
+}
+
+/**
+ * Tracking can only lock on once every robot is in view together, which in some
+ * videos happens well after the match has started. When the user told us where
+ * to start (`startTime`), run the tracker backwards in time from that lock-on
+ * frame to `startTime` and prepend the result, so the paths (and the replay)
+ * cover the whole match instead of beginning late.
+ */
+function backfill(out, frames, frameTimes, startIndex, startTime, robots, trackerOpts) {
+  if (!frameTimes || !(startTime > 0) || frameTimes[startIndex] - startTime < BACKFILL_MIN_GAP) return;
+  let from = startIndex;
+  while (from > 0 && frameTimes[from - 1] >= startTime) from--;
+  // Same frames in reverse with time negated, so the filter still sees time moving forward.
+  const flip = (p) => Object.assign(new Point(p.x, p.y, -p.time), { conf: p.conf, w: p.w, f: p.f });
+  const reversed = [];
+  for (let i = startIndex; i >= from; i--) reversed.push(frames[i].map(flip));
+  const back = trackOffline(reversed, robots.map((r) => flip(r.pos)), robots.map((r) => r.team), 0, new Set(), trackerOpts);
+  back.forEach((b, k) => {
+    const earlier = b.history
+      .map((h) => ({ ...h, time: Math.round(-h.time * 1e4) / 1e4 }))
+      .reverse()
+      .filter((h) => h.time < (out[k].history.length ? out[k].history[0].time : Infinity));
+    out[k].history = earlier.concat(out[k].history);
+  });
+}
+
+function firstPathTime(out, frameTimes, startIndex) {
+  const t = Math.min(...out.filter((r) => r.history.length).map((r) => r.history[0].time));
+  if (Number.isFinite(t)) return Math.round(t * 10) / 10;
+  return frameTimes && frameTimes[startIndex] !== undefined ? Math.round(frameTimes[startIndex] * 10) / 10 : null;
 }
 
 /**

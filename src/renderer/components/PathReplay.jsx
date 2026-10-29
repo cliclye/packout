@@ -244,6 +244,7 @@ export default function PathReplay({ runs, colors, labels, filter, videoSrc, onM
   }, [toggle, seek, toggleTheater, theater]);
 
   const beforeTracking = now < start - 0.05;
+  const afterTracking = now > end + 0.05;
 
   return (
     <div ref={rootRef} className={`replay ${theater ? 'replay-theater' : ''}`}>
@@ -270,7 +271,11 @@ export default function PathReplay({ runs, colors, labels, filter, videoSrc, onM
         <div className="replay-field">
           {/* Stored paths are rotated so red is always on the right; undo that here so the field moves the same way as the footage. */}
           <FieldView runs={runs} colors={colors} labels={labels} filter={filter} mode="paths" time={now} flip={Boolean(hasVideo && redOnLeft)} />
-          {beforeTracking && <div className="replay-note">Paths start at {clock(start)}</div>}
+          {(beforeTracking || afterTracking) && (
+            <button type="button" className="replay-note" onClick={() => seek(beforeTracking ? start : end)}>
+              {beforeTracking ? `No paths yet — tracking starts at ${clock(start)}. Jump there` : `Paths end at ${clock(end)}. Jump back`}
+            </button>
+          )}
         </div>
       </div>
       <div className="replay-controls">
