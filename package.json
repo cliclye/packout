@@ -1,7 +1,7 @@
 {
   "name": "packout-desktop",
   "productName": "Packout",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "private": true,
   "description": "FRC scouting and analysis tool",
   "keywords": [],
@@ -19,6 +19,7 @@
     "lint": "echo \"No linting configured\"",
     "test:scout": "node test/scout.test.js",
     "test:track": "node test/track-sim.test.js",
+    "test:replay": "node test/replay-orientation.test.js",
     "test:design": "node test/design.test.js",
     "test:nexus": "node test/nexus.test.js",
     "test:adb": "node test/adbpull.test.js",

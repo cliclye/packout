@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import fieldSrc from '../assets/field.png';
+import { displayPoint } from '../../shared/fieldProjection';
 import { buildHeatGrid, startedLeft } from '../../shared/pathData';
 
 const FIELD_ASPECT = 1658 / 806;
@@ -61,8 +62,10 @@ function heatCanvas(runs, filter) {
  * props.colors  optional {runId: cssColor} to draw each run in a single colour
  *               (used to tell 6 robots apart)
  * props.time    optional seconds: draw only up to that time, plus a robot marker
+ * props.flip    rotate the field 180° (paths and image) — shows a red-on-left
+ *               match the way the video shows it instead of the shared orientation
  */
-export default function FieldView({ runs = [], filter = 'both', mode = 'paths', side = 'both', time = null, colors = null, labels = null, className = '' }) {
+export default function FieldView({ runs = [], filter = 'both', mode = 'paths', side = 'both', time = null, colors = null, labels = null, flip = false, className = '' }) {
   const ref = useRef(null);
   const wrapRef = useRef(null);
   const [size, setSize] = useState({ w: 640, h: 640 / FIELD_ASPECT });
@@ -104,7 +107,12 @@ export default function FieldView({ runs = [], filter = 'both', mode = 'paths', 
 
     ctx.fillStyle = '#5f5f5f';
     ctx.fillRect(0, 0, W, H);
-    if (img) ctx.drawImage(img, 0, 0, W, H);
+    if (img) {
+      ctx.save();
+      if (flip) { ctx.translate(W, H); ctx.rotate(Math.PI); }
+      ctx.drawImage(img, 0, 0, W, H);
+      ctx.restore();
+    }
     // soften the field so paths pop
     ctx.fillStyle = 'rgba(8, 10, 16, 0.28)';
     ctx.fillRect(0, 0, W, H);
@@ -116,7 +124,10 @@ export default function FieldView({ runs = [], filter = 'both', mode = 'paths', 
       return;
     }
 
-    const px = (p) => [p.x * W, p.y * H];
+    const px = (p) => {
+      const d = displayPoint(p, flip);
+      return [d.x * W, d.y * H];
+    };
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -187,7 +198,7 @@ export default function FieldView({ runs = [], filter = 'both', mode = 'paths', 
         }
       }
     }
-  }, [visible, filter, size, img, heat, time, colors, labels]);
+  }, [visible, filter, size, img, heat, time, colors, labels, flip]);
 
   return (
     <div ref={wrapRef} className={`field-view ${className}`}>

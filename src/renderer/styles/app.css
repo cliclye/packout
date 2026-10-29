@@ -606,6 +606,8 @@ body, .sidebar, .card, .stat, .input, .select, .search, .btn, .chip, .badge, .te
 .replay { display: flex; flex-direction: column; gap: 10px; }
 .replay-stage { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: start; }
 .replay-stage.with-video { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.replay-video-wrap { position: relative; min-width: 0; }
+.replay-overlay { position: absolute; inset: 0; pointer-events: none; }
 .replay-video { width: 100%; border-radius: 10px; background: #000; display: block; cursor: pointer; }
 .replay-field { position: relative; min-width: 0; }
 .replay-note { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 6px; background: rgba(0, 0, 0, .6); color: #fff; font-size: 12px; }

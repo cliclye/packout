@@ -571,7 +571,7 @@ export default function Trace() {
           </div>
         }>
         {viewMode === 'replay'
-          ? <PathReplay runs={replayRuns.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} videoSrc={run.videoExists ? mediaUrl(run.videoPath) : null} busy={tracking} onMarkStart={(t) => { const v = Math.round(t * 10) / 10; setMatchStart(String(v)); track(null, v); }} />
+          ? <PathReplay runs={replayRuns.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} videoSrc={run.videoExists ? mediaUrl(run.videoPath) : null} busy={tracking} calibration={corners} redOnLeft={redOnLeft} onMarkStart={(t) => { const v = Math.round(t * 10) / 10; setMatchStart(String(v)); track(null, v); }} />
           : <FieldView runs={resampled.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} mode={viewMode} />}
         {viewMode !== 'replay' && <FieldLegend mode={viewMode} />}
         {viewMode === 'heat' && hidden.size < resampled.length && <p className="muted" style={{ marginTop: 6 }}>Combined time spent by {resampled.length - hidden.size} selected robot{resampled.length - hidden.size === 1 ? '' : 's'}. Toggle robots on the right to compare.</p>}
