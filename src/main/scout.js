@@ -12,6 +12,9 @@
  * rejected, the first history row is always flagged auto).
  */
 
+const { hungarian } = require('./hungarian');
+const { trackOffline } = require('./track2');
+
 // ---------------------------------------------------------------- geometry --
 
 class Point {
@@ -97,147 +100,6 @@ function estimateXcoord(robot, topLeft, topRight, bottomLeft, bottomRight, itera
   return result === null ? null : 1 - result;
 }
 
-// ------------------------------------------------------------- hungarian ----
-
-/** Kevin Stern's O(n^3) Hungarian algorithm. Returns, per row, its column or -1. */
-function hungarian(costMatrix) {
-  const rows = costMatrix.length;
-  const cols = costMatrix[0].length;
-  const dim = Math.max(rows, cols);
-
-  const cost = [];
-  for (let w = 0; w < dim; w++) {
-    const row = new Float64Array(dim);
-    if (w < rows) {
-      for (let j = 0; j < cols; j++) {
-        const v = costMatrix[w][j];
-        if (!Number.isFinite(v)) throw new Error('Non-finite cost in assignment matrix');
-        row[j] = v;
-      }
-    }
-    cost.push(row);
-  }
-
-  const labelByWorker = new Float64Array(dim);
-  const labelByJob = new Float64Array(dim);
-  const minSlackWorkerByJob = new Int32Array(dim);
-  const minSlackValueByJob = new Float64Array(dim);
-  const committedWorkers = new Array(dim).fill(false);
-  const parentWorkerByCommittedJob = new Int32Array(dim);
-  const matchJobByWorker = new Int32Array(dim).fill(-1);
-  const matchWorkerByJob = new Int32Array(dim).fill(-1);
-
-  const match = (w, j) => {
-    matchJobByWorker[w] = j;
-    matchWorkerByJob[j] = w;
-  };
-
-  // reduce
-  for (let w = 0; w < dim; w++) {
-    let min = Infinity;
-    for (let j = 0; j < dim; j++) if (cost[w][j] < min) min = cost[w][j];
-    for (let j = 0; j < dim; j++) cost[w][j] -= min;
-  }
-  const colMin = new Float64Array(dim).fill(Infinity);
-  for (let w = 0; w < dim; w++) {
-    for (let j = 0; j < dim; j++) if (cost[w][j] < colMin[j]) colMin[j] = cost[w][j];
-  }
-  for (let w = 0; w < dim; w++) {
-    for (let j = 0; j < dim; j++) cost[w][j] -= colMin[j];
-  }
-
-  // initial feasible solution
-  for (let j = 0; j < dim; j++) labelByJob[j] = Infinity;
-  for (let w = 0; w < dim; w++) {
-    for (let j = 0; j < dim; j++) if (cost[w][j] < labelByJob[j]) labelByJob[j] = cost[w][j];
-  }
-
-  // greedy match
-  for (let w = 0; w < dim; w++) {
-    for (let j = 0; j < dim; j++) {
-      if (matchJobByWorker[w] === -1 && matchWorkerByJob[j] === -1 &&
-          cost[w][j] - labelByWorker[w] - labelByJob[j] === 0) {
-        match(w, j);
-      }
-    }
-  }
-
-  const fetchUnmatchedWorker = () => {
-    let w = 0;
-    for (; w < dim; w++) if (matchJobByWorker[w] === -1) break;
-    return w;
-  };
-
-  const initializePhase = (w) => {
-    committedWorkers.fill(false);
-    parentWorkerByCommittedJob.fill(-1);
-    committedWorkers[w] = true;
-    for (let j = 0; j < dim; j++) {
-      minSlackValueByJob[j] = cost[w][j] - labelByWorker[w] - labelByJob[j];
-      minSlackWorkerByJob[j] = w;
-    }
-  };
-
-  const updateLabeling = (slack) => {
-    for (let w = 0; w < dim; w++) if (committedWorkers[w]) labelByWorker[w] += slack;
-    for (let j = 0; j < dim; j++) {
-      if (parentWorkerByCommittedJob[j] !== -1) labelByJob[j] -= slack;
-      else minSlackValueByJob[j] -= slack;
-    }
-  };
-
-  const executePhase = () => {
-    for (;;) {
-      let minSlackWorker = -1;
-      let minSlackJob = -1;
-      let minSlackValue = Infinity;
-      for (let j = 0; j < dim; j++) {
-        if (parentWorkerByCommittedJob[j] === -1 && minSlackValueByJob[j] < minSlackValue) {
-          minSlackValue = minSlackValueByJob[j];
-          minSlackWorker = minSlackWorkerByJob[j];
-          minSlackJob = j;
-        }
-      }
-      if (minSlackValue > 0) updateLabeling(minSlackValue);
-      parentWorkerByCommittedJob[minSlackJob] = minSlackWorker;
-      if (matchWorkerByJob[minSlackJob] === -1) {
-        let committedJob = minSlackJob;
-        let parentWorker = parentWorkerByCommittedJob[committedJob];
-        for (;;) {
-          const temp = matchJobByWorker[parentWorker];
-          match(parentWorker, committedJob);
-          committedJob = temp;
-          if (committedJob === -1) break;
-          parentWorker = parentWorkerByCommittedJob[committedJob];
-        }
-        return;
-      }
-      const worker = matchWorkerByJob[minSlackJob];
-      committedWorkers[worker] = true;
-      for (let j = 0; j < dim; j++) {
-        if (parentWorkerByCommittedJob[j] === -1) {
-          const slack = cost[worker][j] - labelByWorker[worker] - labelByJob[j];
-          if (minSlackValueByJob[j] > slack) {
-            minSlackValueByJob[j] = slack;
-            minSlackWorkerByJob[j] = worker;
-          }
-        }
-      }
-    }
-  };
-
-  let w = fetchUnmatchedWorker();
-  while (w < dim) {
-    initializePhase(w);
-    executePhase();
-    w = fetchUnmatchedWorker();
-  }
-
-  const result = Array.from(matchJobByWorker.subarray(0, rows));
-  for (let i = 0; i < result.length; i++) if (result[i] >= cols) result[i] = -1;
-  return result;
-}
-
 // ------------------------------------------------------------ calibration ---
 
 /**
@@ -280,6 +142,13 @@ function validateCalibration(c) {
 
 // -------------------------------------------------------------- detection ---
 
+// Fraction of the box height (from the top) used as the robot's floor position.
+const FOOTPRINT = 0.85;
+// Consecutive frames that must all show every robot before tracking starts.
+const START_STABLE_FRAMES = 6;
+// Seconds of motion extrapolated when matching a robot to a detection.
+const MAX_PREDICT_SEC = 0.4;
+
 /**
  * Port of AIScout.detect(): groups the flat detections by frame, maps Robot
  * boxes into field coordinates and decides which frames are autonomous.
@@ -288,7 +157,8 @@ function validateCalibration(c) {
  * before `teleopStartSec` (when > 0). Frames without any Robot/Auto detection
  * (e.g. only `Tele Op`) are skipped — indices refer to the kept frames.
  */
-function extractFrames(detections, calibration, teleopStartSec = 0) {
+function extractFrames(detections, calibration, teleopStartSec = 0, opts = {}) {
+  const { legacy = false } = opts;
   const cal = validateCalibration(calibration);
   const TL = new Point(cal.topLeft.x, cal.topLeft.y, 0);
   const BL = new Point(cal.bottomLeft.x, cal.bottomLeft.y, 0);
@@ -296,15 +166,20 @@ function extractFrames(detections, calibration, teleopStartSec = 0) {
   const BR = new Point(cal.bottomRight.x, cal.bottomRight.y, 0);
 
   const frames = [];
+  const frameTimes = [];
   const autoFrames = new Set();
   let current = null;
   let currentFrameId = null;
   let currentIsAuto = false;
+  let currentTime = 0;
 
   const flush = () => {
     if (!current) return;
     if (currentIsAuto) autoFrames.add(frames.length);
+    // Strongest detections first so callers can drop weak extras (false positives).
+    if (!legacy) current.sort((a, b) => b.conf - a.conf);
     frames.push(current);
+    frameTimes.push(currentTime);
   };
 
   for (const det of detections) {
@@ -317,6 +192,7 @@ function extractFrames(detections, calibration, teleopStartSec = 0) {
       currentFrameId = det.frame_id;
       currentIsAuto = false;
       const time = det.frame_id / det.frame_fps;
+      currentTime = time;
       if (teleopStartSec >= 0 && time < teleopStartSec) currentIsAuto = true;
     }
 
@@ -326,16 +202,26 @@ function extractFrames(detections, calibration, teleopStartSec = 0) {
     }
 
     const cx = ((det.x_min + det.x_max) / 2) / det.frame_width;
-    const cy = ((det.y_min + det.y_max) / 2) / det.frame_height;
+    // The field homography describes the floor, so anchor on the robot's
+    // footprint (near the bottom of its box) rather than the middle of its body,
+    // which floats above the floor and skews far robots toward the back wall.
+    const yAnchor = legacy ? (det.y_min + det.y_max) / 2 : det.y_min + (det.y_max - det.y_min) * FOOTPRINT;
+    const cy = yAnchor / det.frame_height;
     const time = det.frame_id / det.frame_fps;
     const probe = new Point(cx, cy, time);
     const x = estimateXcoord(probe, TL, TR, BL, BR, 10, 0, 1);
     const y = estimateYcoord(probe, TL, TR, BL, BR, 10, 0, 1);
-    if (x !== null && y !== null) current.push(new Point(x, y, time));
+    if (x !== null && y !== null) {
+      const pt = new Point(x, y, time);
+      pt.conf = Number.isFinite(det.confidence) ? det.confidence : 0;
+      pt.w = (det.x_max - det.x_min) / det.frame_width;
+      if (Array.isArray(det.feat)) pt.f = det.feat; // colour signature from appearance.py, when present
+      current.push(pt);
+    }
   }
   flush();
 
-  return { frames, autoFrames };
+  return { frames, autoFrames, frameTimes };
 }
 
 // --------------------------------------------------------------- tracking ---
@@ -346,6 +232,8 @@ class FRCRobot {
     this.team = team;
     this.redOnLeft = redOnLeft;
     this.history = [];
+    this.vx = 0;
+    this.vy = 0;
     // Mirrors the Java constructor: the first sample is always recorded as auto.
     this.updatePosition(pos, true);
   }
@@ -355,12 +243,23 @@ class FRCRobot {
     const timeDiff = pos.time - this.pos.time;
     const speed = distance / timeDiff; // NaN for the very first sample -> accepted
     if (speed > 1) return; // teleported too fast: treat as a mismatch
+    if (timeDiff > 0 && Number.isFinite(speed)) {
+      // Smoothed velocity, used by the non-legacy tracker to predict where the robot goes next.
+      this.vx = 0.6 * this.vx + 0.4 * ((pos.x - this.pos.x) / timeDiff);
+      this.vy = 0.6 * this.vy + 0.4 * ((pos.y - this.pos.y) / timeDiff);
+    }
     this.pos = pos;
     // When red is on the left of the video the field is mirrored so that every
     // match shares one orientation in the visualisation.
     const x = this.redOnLeft ? 1 - pos.x : pos.x;
     const y = this.redOnLeft ? 1 - pos.y : pos.y;
     this.history.push({ isAuto: Boolean(isAuto), x, y, time: pos.time });
+  }
+
+  /** Where the robot most likely is at `time`, extrapolating its recent velocity. */
+  predict(time) {
+    const dt = Math.min(Math.max(time - this.pos.time, 0), MAX_PREDICT_SEC);
+    return new Point(this.pos.x + this.vx * dt, this.pos.y + this.vy * dt, time);
   }
 }
 
@@ -374,9 +273,12 @@ const NO_SHOW = 'no_show';
  *   redOnLeft       bool (default true)
  *   manualStarts    { left: number[], right: number[] } y values (0..1) when no frame shows every robot
  *   onProgress      (fraction) => void
+ *   legacy          bool: exact scouting-ai behaviour (first frame with exactly N boxes, nearest-last-position matching)
+ *   frameTimes      seconds per frame (from extractFrames); needed for startTime
+ *   startTime       seconds: don't begin tracking before this video time
  */
 function trackRobots(frames, autoFrames, teams, opts = {}) {
-  const { redOnLeft = true, manualStarts = null, onProgress = null } = opts;
+  const { redOnLeft = true, manualStarts = null, onProgress = null, legacy = false, frameTimes = null, startTime = 0 } = opts;
   if (!Array.isArray(teams) || teams.length !== 6) {
     throw new Error(`Exactly 6 team slots are required (3 left, 3 right); got ${teams ? teams.length : 0}.`);
   }
@@ -386,13 +288,13 @@ function trackRobots(frames, autoFrames, teams, opts = {}) {
   const amountShows = leftShows + rightShows;
   if (amountShows === 0) throw new Error('At least one team must show up.');
 
-  let firstFrameIndex = 0;
-  while (firstFrameIndex < frames.length && frames[firstFrameIndex].length !== amountShows) firstFrameIndex++;
+  let firstFrameIndex = legacy ? 0 : findStartFrame(frames, frameTimes, amountShows, startTime);
+  if (legacy) while (firstFrameIndex < frames.length && frames[firstFrameIndex].length !== amountShows) firstFrameIndex++;
   const autoStartFound = firstFrameIndex < frames.length;
 
   let starting;
   if (autoStartFound) {
-    starting = frames[firstFrameIndex].slice();
+    starting = frames[firstFrameIndex].slice(0, amountShows);
   } else {
     if (!manualStarts) {
       const err = new Error(
@@ -427,12 +329,23 @@ function trackRobots(frames, autoFrames, teams, opts = {}) {
   for (let i = 3; i < 6; i++) if (shows[i]) robots.push(new FRCRobot(rightHalf[ri++], teams[i], redOnLeft));
 
   const last = frames.length - 1;
+  if (!legacy) {
+    const out = trackOffline(frames, robots.map((r) => r.pos), robots.map((r) => r.team), firstFrameIndex, autoFrames, { ...(opts.tracker || {}), redOnLeft, onProgress });
+    return {
+      firstFrameIndex,
+      autoStartFound,
+      totalFrames: frames.length,
+      startTime: frameTimes && frameTimes[firstFrameIndex] !== undefined ? Math.round(frameTimes[firstFrameIndex] * 10) / 10 : null,
+      startPercent: frames.length ? Math.round((firstFrameIndex * 1000) / frames.length) / 10 : 0,
+      robots: out,
+    };
+  }
   for (let i = firstFrameIndex + 1; i < frames.length; i++) {
     if (onProgress && (i % 250 === 0 || i === last)) onProgress(last > 0 ? i / last : 1);
     const dets = frames[i];
     if (dets.length === 0) continue;
 
-    const cost = robots.map((r) => dets.map((d) => r.pos.distanceTo(d)));
+    const cost = robots.map((r) => dets.map((d) => (legacy ? r.pos : r.predict(d.time)).distanceTo(d)));
     const assignment = hungarian(cost);
     const isAuto = autoFrames.has(i);
     for (let j = 0; j < assignment.length; j++) {
@@ -444,16 +357,42 @@ function trackRobots(frames, autoFrames, teams, opts = {}) {
     firstFrameIndex,
     autoStartFound,
     totalFrames: frames.length,
+    startTime: frameTimes && frameTimes[firstFrameIndex] !== undefined ? Math.round(frameTimes[firstFrameIndex] * 10) / 10 : null,
     startPercent: frames.length ? Math.round((firstFrameIndex * 1000) / frames.length) / 10 : 0,
     robots: robots.map((r) => ({ team: r.team, history: r.history })),
   };
 }
 
+/**
+ * First frame (at or after `startTime`) that shows every robot and keeps doing
+ * so for START_STABLE_FRAMES frames. A single frame with N boxes is often a
+ * fluke (a missed robot plus a false positive), which seeds the whole match with
+ * a wrong start; sustained visibility is a far better sign that the boxes are the
+ * real robots. Falls back to the first frame with enough boxes, then -1 -> frames.length.
+ */
+function findStartFrame(frames, frameTimes, amountShows, startTime = 0) {
+  let from = 0;
+  if (frameTimes && startTime > 0) while (from < frames.length && frameTimes[from] < startTime) from++;
+  let firstEnough = -1;
+  let run = 0;
+  for (let i = from; i < frames.length; i++) {
+    if (frames[i].length >= amountShows) {
+      if (firstEnough === -1) firstEnough = i;
+      run++;
+      if (run >= START_STABLE_FRAMES) return i - START_STABLE_FRAMES + 1;
+    } else {
+      run = 0;
+    }
+  }
+  return firstEnough === -1 ? frames.length : firstEnough;
+}
+
 /** Summary of the frame the tracker would start from (for the confirmation step). */
-function describeStart(frames, teams) {
+function describeStart(frames, teams, opts = {}) {
   const amountShows = teams.filter((t) => t !== NO_SHOW).length;
-  let idx = 0;
-  while (idx < frames.length && frames[idx].length !== amountShows) idx++;
+  const idx = opts.legacy
+    ? (() => { let i = 0; while (i < frames.length && frames[i].length !== amountShows) i++; return i; })()
+    : findStartFrame(frames, opts.frameTimes, amountShows, opts.startTime);
   if (idx >= frames.length) return { found: false, amountShows, totalFrames: frames.length };
   return {
     found: true,

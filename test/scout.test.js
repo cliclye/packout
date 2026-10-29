@@ -24,8 +24,8 @@ const calibration = scout.parseCalibrationText(fs.readFileSync(path.join(dir, 'c
 assert(calibration, 'calibration.txt should parse');
 
 const t0 = Date.now();
-const { frames, autoFrames } = scout.extractFrames(detections, calibration, Number(process.env.TELEOP || 0));
-const result = scout.trackRobots(frames, autoFrames, teams, { redOnLeft: true });
+const { frames, autoFrames } = scout.extractFrames(detections, calibration, Number(process.env.TELEOP || 0), { legacy: true });
+const result = scout.trackRobots(frames, autoFrames, teams, { redOnLeft: true, legacy: true });
 console.log(`frames=${frames.length} start=${result.firstFrameIndex} (${result.startPercent}%) took ${Date.now() - t0}ms`);
 
 let failed = 0;

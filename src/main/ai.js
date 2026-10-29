@@ -434,7 +434,29 @@ async function detect(id) {
     const msg = res.tail.split('\n').filter((l) => /ERROR|Error|error/.test(l)).pop() || res.tail.split('\n').slice(-4).join('\n');
     throw new Error('Detection failed.\n' + msg);
   }
+  await addAppearance(id, output);
   return getRun(id);
+}
+
+/**
+ * Best-effort: stamps each detection with a colour signature so the tracker can
+ * keep robots apart when they overlap. Detection results are already usable
+ * without it, so any failure here is reported and ignored.
+ */
+async function addAppearance(id, output) {
+  try {
+    emit({ runId: id, job: 'detect', type: 'log', message: 'Reading robot colours from the video…' });
+    const res = await runProcess(venvPython(), [resourcePath('ai', 'appearance.py'), '--video', getRun(id).videoPath, '--detections', output], {
+      cwd: runDir(id),
+      env: richEnv({}),
+      onStart: track,
+    });
+    if (wasCancelled()) throw new Error('Cancelled');
+    if (res.code !== 0) throw new Error(res.tail.split('\n').slice(-3).join(' '));
+  } catch (e) {
+    if (/Cancelled/.test(e.message)) throw e;
+    emit({ runId: id, job: 'detect', type: 'log', message: `Skipped colour matching (${e.message}). Tracking still works, but crossing robots are harder to tell apart.` });
+  }
 }
 
 // ---------------------------------------------------------------- tracking --
@@ -449,11 +471,11 @@ function loadDetections(id) {
  * @param params { teams: string[6], calibration, teleopStart, redOnLeft, manualStarts }
  */
 function trackRun(id, params) {
-  const { teams, calibration, teleopStart = 0, redOnLeft = true, manualStarts = null } = params;
+  const { teams, calibration, teleopStart = 0, trackStart = 0, redOnLeft = true, manualStarts = null } = params;
   const detections = loadDetections(id);
-  const { frames, autoFrames } = scout.extractFrames(detections, calibration || scout.DEFAULT_CALIBRATION, Number(teleopStart) || 0);
+  const { frames, autoFrames, frameTimes } = scout.extractFrames(detections, calibration || scout.DEFAULT_CALIBRATION, Number(teleopStart) || 0);
   try {
-    const result = scout.trackRobots(frames, autoFrames, teams, { redOnLeft, manualStarts });
+    const result = scout.trackRobots(frames, autoFrames, teams, { redOnLeft, manualStarts, frameTimes, startTime: Number(trackStart) || 0 });
     const autoFrameCount = autoFrames.size;
     updateRun(id, { tracked: { at: new Date().toISOString(), teams, startPercent: result.startPercent, autoStartFound: result.autoStartFound } });
     return { ok: true, ...result, frameCount: frames.length, autoFrameCount };

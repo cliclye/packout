@@ -5,6 +5,7 @@ import { store, useApp, useCurrent } from '../store';
 import { Badge, Button, Card, Empty, Field, Icon, LogBox, PageHeader, Progress, Segmented, Stat, confirmDialog, fmt } from '../components/ui';
 import Calibration from '../components/Calibration';
 import FieldView, { FieldLegend } from '../components/FieldView';
+import PathReplay from '../components/PathReplay';
 import { resamplePath } from '../../shared/pathData';
 import { byNatural } from '../../shared/models';
 
@@ -86,6 +87,7 @@ export default function Trace() {
   const [slots, setSlots] = useState(['', '', '', '', '', '']);
   const [redOnLeft, setRedOnLeft] = useState(settings.redOnLeft !== false);
   const [teleop, setTeleop] = useState('');
+  const [trackStart, setTrackStart] = useState('');
   const [corners, setCorners] = useState(settings.fieldCalibration || DEFAULT_CAL);
   const [tracking, setTracking] = useState(false);
   const [trackError, setTrackError] = useState('');
@@ -282,7 +284,7 @@ export default function Trace() {
     setTrackError('');
     setTracking(true);
     try {
-      const params = { teams: teamList, calibration: corners, teleopStart: Number(teleop) || 0, redOnLeft, manualStarts: manualStarts || null };
+      const params = { teams: teamList, calibration: corners, teleopStart: Number(teleop) || 0, trackStart: Number(trackStart) || 0, redOnLeft, manualStarts: manualStarts || null };
       const res = await api.ai.track(run.id, params);
       await api.ai.update(run.id, { calibration: corners, teams: teamList, redOnLeft, teleopStart: Number(teleop) || 0, matchNumber: matchLabel });
       store.updateSettings({ fieldCalibration: corners, redOnLeft });
@@ -312,6 +314,8 @@ export default function Trace() {
     () => (result ? result.robots.map((r, i) => ({ id: `ai:${run.id}:${r.team}`, teamNumber: r.team, matchNumber: matchLabel, source: 'ai', samples: resamplePath(r.history), raw: r.history.length, color: ROBOT_COLORS[i % ROBOT_COLORS.length] })) : []),
     [result, matchLabel, run?.id]
   );
+  // The tracker already emits one sample per video frame; replay uses them as-is so motion is smooth.
+  const replayRuns = useMemo(() => resampled.map((r, i) => ({ ...r, samples: result.robots[i].history })), [resampled, result]);
   const colors = useMemo(() => Object.fromEntries(resampled.map((r) => [r.id, r.color])), [resampled]);
   const labels = useMemo(() => Object.fromEntries(resampled.map((r) => [r.id, r.teamNumber])), [resampled]);
 
@@ -496,7 +500,7 @@ export default function Trace() {
     <div className={`alliance-box ${color}`}>
       <h4>{title}</h4>
       <div className="team-inputs">
-        {[0, 1, 2].map((i) => {
+        {[2, 1, 0].map((i) => {
           const idx = offset + i;
           const noShow = slots[idx].trim() === 'no_show';
           return (
@@ -528,12 +532,15 @@ export default function Trace() {
             </Field>
             {slotCard('Left side', redOnLeft ? 'red' : 'blue', 0)}
             {slotCard('Right side', redOnLeft ? 'blue' : 'red', 3)}
-            <p className="muted">List each side from the robot closest to the camera to the furthest. Mark robots that did not play as no-show.</p>
+            <p className="muted">List each side with the robot furthest from the camera at the top and the closest at the bottom. Mark robots that did not play as no-show.</p>
           </div>
         </Card>
         <Card title="Match timing">
           <Field label="Teleop starts at (video seconds)" hint="Leave blank to rely on the detector’s Auto/Robot classes. Frames before this time are treated as autonomous.">
             <input className="input" type="number" min="0" value={teleop} onChange={(e) => setTeleop(e.target.value)} placeholder="e.g. 25" style={{ maxWidth: 160 }} />
+          </Field>
+          <Field label="Start tracking at (video seconds)" hint="Optional. Pick a moment when all robots are visible and in their starting spots — the tracker locks each team to a robot there, so a wrong start frame shifts every path.">
+            <input className="input" type="number" min="0" value={trackStart} onChange={(e) => setTrackStart(e.target.value)} placeholder="auto" style={{ maxWidth: 160 }} />
           </Field>
         </Card>
         {manual && (
@@ -558,16 +565,18 @@ export default function Trace() {
 
   const reviewPanel = run && result && (
     <div className={full ? 'review-full' : 'grid-main'}>
-      <Card className={full ? 'review-field' : ''} title={viewMode === 'heat' ? 'Where the robots spend time' : 'Tracked paths'} subtitle={`Started from frame ${result.firstFrameIndex} (${result.startPercent}% into the video)${result.autoStartFound ? '' : ' · manual starting positions'}`}
+      <Card className={full ? 'review-field' : ''} title={viewMode === 'heat' ? 'Where the robots spend time' : viewMode === 'replay' ? 'Path replay' : 'Tracked paths'} subtitle={`Started from frame ${result.firstFrameIndex} (${result.startTime != null ? `${result.startTime}s, ` : ''}${result.startPercent}% into the video)${result.autoStartFound ? '' : ' · manual starting positions'}`}
         actions={
           <div className="row" style={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            <Segmented size="sm" value={viewMode} onChange={setViewMode} options={[{ value: 'paths', label: 'Paths' }, { value: 'heat', label: 'Heatmap' }]} />
+            <Segmented size="sm" value={viewMode} onChange={setViewMode} options={[{ value: 'paths', label: 'Paths' }, { value: 'heat', label: 'Heatmap' }, { value: 'replay', label: 'Replay' }]} />
             <Segmented size="sm" value={filter} onChange={setFilter} options={[{ value: 'both', label: 'All' }, { value: 'auto', label: 'Auto' }, { value: 'tele', label: 'Teleop' }]} />
             <Button size="sm" icon={full ? 'x' : 'eye'} onClick={() => setFull(!full)}>{full ? 'Exit full screen' : 'Full screen'}</Button>
           </div>
         }>
-        <FieldView runs={resampled.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} mode={viewMode} />
-        <FieldLegend mode={viewMode} />
+        {viewMode === 'replay'
+          ? <PathReplay runs={replayRuns.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} videoSrc={run.videoExists ? mediaUrl(run.videoPath) : null} />
+          : <FieldView runs={resampled.filter((r) => !hidden.has(r.id))} colors={colors} labels={labels} filter={filter} mode={viewMode} />}
+        {viewMode !== 'replay' && <FieldLegend mode={viewMode} />}
         {viewMode === 'heat' && hidden.size < resampled.length && <p className="muted" style={{ marginTop: 6 }}>Combined time spent by {resampled.length - hidden.size} selected robot{resampled.length - hidden.size === 1 ? '' : 's'}. Toggle robots on the right to compare.</p>}
       </Card>
       <div className="col">

@@ -22,6 +22,7 @@ const I = {
   download: <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />,
   upload: <path d="M12 21V9M7 14l5-5 5 5M5 3h14" />,
   play: <path d="M7 4l13 8-13 8z" />,
+  pause: <path d="M6 4h4v16H6zM14 4h4v16h-4z" />,
   stop: <rect x="6" y="6" width="12" height="12" rx="1.5" />,
   alert: <path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />,
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 16v-4M12 8h.01" /></>,
